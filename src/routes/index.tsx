@@ -189,13 +189,13 @@ function HomePage() {
   }
 
   const displayName =
-    (user?.user_metadata?.full_name as string | undefined) ||
-    (user?.user_metadata?.name as string | undefined) ||
+    (user?.user_metadata?.["full_name"] as string | undefined) ||
+    (user?.user_metadata?.["name"] as string | undefined) ||
     user?.email?.split("@")[0] ||
     "Minha conta";
   const avatarUrl =
-    (user?.user_metadata?.avatar_url as string | undefined) ||
-    (user?.user_metadata?.picture as string | undefined) ||
+    (user?.user_metadata?.["avatar_url"] as string | undefined) ||
+    (user?.user_metadata?.["picture"] as string | undefined) ||
     null;
   const initial = displayName.trim().charAt(0).toUpperCase() || "U";
 
