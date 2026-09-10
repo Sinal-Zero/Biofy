@@ -26,6 +26,7 @@ const plans = [
       "Até 3 páginas",
       "Links ilimitados",
       "Personalização completa",
+      "Assistente de IA",
       "Analytics",
       "Sem branding",
     ],
@@ -34,13 +35,7 @@ const plans = [
     name: "Master",
     id: "business",
     price: "R$ 41,90/mês",
-    features: [
-      "Até 5 páginas",
-      "Tudo do Pro",
-      "Assistente de IA — em breve",
-      "Analytics avançado",
-      "Recursos profissionais",
-    ],
+    features: ["Até 5 páginas", "Tudo do Pro", "Analytics avançado", "Recursos profissionais"],
   },
 ] as const;
 
