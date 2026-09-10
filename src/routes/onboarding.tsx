@@ -28,7 +28,11 @@ export const Route = createFileRoute("/onboarding")({
 });
 
 function normalizeUsername(value: string) {
-  return value.trim().toLowerCase().replace(/[^a-z0-9._-]/g, "").slice(0, 30);
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]/g, "")
+    .slice(0, 30);
 }
 
 function OnboardingPage() {
@@ -64,7 +68,11 @@ function OnboardingPage() {
       navigate({ to: "/dashboard/editor" });
     } catch (error) {
       const message = error instanceof Error ? error.message.toLowerCase() : "";
-      toast.error(message.includes("duplicate") ? "Esse username acabou de ser escolhido." : "Não foi possível concluir agora.");
+      toast.error(
+        message.includes("duplicate")
+          ? "Esse username acabou de ser escolhido."
+          : "Não foi possível concluir agora.",
+      );
     } finally {
       setLoading(false);
     }
@@ -83,7 +91,8 @@ function OnboardingPage() {
             <p className="mb-2 text-sm font-medium text-primary">Comece do seu jeito</p>
             <h1 className="text-3xl font-bold sm:text-4xl">Crie o endereço da sua Bio</h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
-              Escolha seu username e um visual inicial. Você poderá mudar cores, fontes, links e layout depois.
+              Escolha seu username e um visual inicial. Você poderá mudar cores, fontes, links e
+              layout depois.
             </p>
           </div>
 
@@ -101,13 +110,17 @@ function OnboardingPage() {
                 autoComplete="off"
               />
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">3–30 caracteres: letras minúsculas, números, ponto, hífen ou underline.</p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              3–30 caracteres: letras minúsculas, números, ponto, hífen ou underline.
+            </p>
           </div>
 
           <div>
             <div className="mb-4">
               <h2 className="text-xl font-semibold">Escolha um template</h2>
-              <p className="mt-1 text-sm text-muted-foreground">É só o ponto de partida — nada fica bloqueado.</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                É só o ponto de partida — nada fica bloqueado.
+              </p>
             </div>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {templates.map((template) => {

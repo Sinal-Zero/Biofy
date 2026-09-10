@@ -31,7 +31,9 @@ function BioEditor() {
       <div>
         <p className="text-sm font-medium text-primary">Editor visual</p>
         <h1 className="mt-1 text-3xl font-bold">Minha Bio</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Edite conteúdo e links. As alterações aparecem no preview e são salvas automaticamente.</p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Edite conteúdo e links. As alterações aparecem no preview e são salvas automaticamente.
+        </p>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_390px]">
@@ -76,7 +78,9 @@ function BioEditor() {
             <div className="flex items-center justify-between gap-4">
               <div>
                 <h2 className="text-lg font-semibold">Adicionar bloco</h2>
-                <p className="mt-1 text-xs text-muted-foreground">Links, texto, imagem e redes sociais.</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Links, texto, imagem e redes sociais.
+                </p>
               </div>
               <Plus className="h-5 w-5 text-primary" />
             </div>
@@ -102,7 +106,9 @@ function BioEditor() {
             {bundle.blocks.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center">
                 <p className="text-sm font-medium">Você ainda não possui blocos.</p>
-                <p className="mt-1 text-xs text-muted-foreground">Adicione seu primeiro link para começar.</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Adicione seu primeiro link para começar.
+                </p>
               </div>
             ) : null}
 
@@ -138,12 +144,28 @@ function BioEditor() {
                       onClick={() => patchBlock(block.id, { is_visible: !block.is_visible })}
                       aria-label={block.is_visible ? "Ocultar" : "Mostrar"}
                     >
-                      {block.is_visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                      {block.is_visible ? (
+                        <Eye className="h-4 w-4" />
+                      ) : (
+                        <EyeOff className="h-4 w-4" />
+                      )}
                     </Button>
-                    <Button type="button" variant="ghost" size="icon" onClick={() => duplicateBlock(block.id)} aria-label="Duplicar">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => duplicateBlock(block.id)}
+                      aria-label="Duplicar"
+                    >
                       <Copy className="h-4 w-4" />
                     </Button>
-                    <Button type="button" variant="ghost" size="icon" onClick={() => removeBlock(block.id)} aria-label="Excluir">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeBlock(block.id)}
+                      aria-label="Excluir"
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -154,7 +176,9 @@ function BioEditor() {
                         <Label>Texto</Label>
                         <textarea
                           value={block.config.text ?? ""}
-                          onChange={(event) => patchBlock(block.id, { config: { text: event.target.value } })}
+                          onChange={(event) =>
+                            patchBlock(block.id, { config: { text: event.target.value } })
+                          }
                           className="mt-2 min-h-20 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                           placeholder="Escreva algo sobre você"
                         />
@@ -165,7 +189,9 @@ function BioEditor() {
                         <Input
                           className="mt-2"
                           value={block.config.imageUrl ?? ""}
-                          onChange={(event) => patchBlock(block.id, { config: { imageUrl: event.target.value } })}
+                          onChange={(event) =>
+                            patchBlock(block.id, { config: { imageUrl: event.target.value } })
+                          }
                           placeholder="https://..."
                         />
                       </div>
@@ -177,7 +203,9 @@ function BioEditor() {
                             <Input
                               className="mt-2"
                               value={block.title ?? ""}
-                              onChange={(event) => patchBlock(block.id, { title: event.target.value })}
+                              onChange={(event) =>
+                                patchBlock(block.id, { title: event.target.value })
+                              }
                               placeholder="Nome do link"
                             />
                           </div>
@@ -190,7 +218,8 @@ function BioEditor() {
                             onChange={(event) => patchBlock(block.id, { url: event.target.value })}
                             onBlur={(event) => {
                               const normalized = normalizeUrl(block.type, event.target.value);
-                              if (normalized !== event.target.value) patchBlock(block.id, { url: normalized });
+                              if (normalized !== event.target.value)
+                                patchBlock(block.id, { url: normalized });
                             }}
                             placeholder={def.placeholder ?? "https://"}
                           />

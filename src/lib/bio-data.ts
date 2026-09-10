@@ -260,7 +260,8 @@ export async function fetchAnalytics(pageId: string, days = 30): Promise<Analyti
     if (event.kind === "view") views += 1;
     if (event.kind === "click") {
       clicks += 1;
-      if (event.block_id) clickCounts.set(event.block_id, (clickCounts.get(event.block_id) ?? 0) + 1);
+      if (event.block_id)
+        clickCounts.set(event.block_id, (clickCounts.get(event.block_id) ?? 0) + 1);
     }
   }
 

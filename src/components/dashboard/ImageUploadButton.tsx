@@ -42,8 +42,17 @@ export function ImageUploadButton({
         className="sr-only"
         onChange={(event) => handleFile(event.target.files?.[0])}
       />
-      <Button type="button" variant="outline" onClick={() => inputRef.current?.click()} disabled={uploading}>
-        {uploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ImageUp className="mr-2 h-4 w-4" />}
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => inputRef.current?.click()}
+        disabled={uploading}
+      >
+        {uploading ? (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        ) : (
+          <ImageUp className="mr-2 h-4 w-4" />
+        )}
         {uploading ? "Enviando..." : label}
       </Button>
     </>

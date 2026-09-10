@@ -53,11 +53,20 @@ function AnalyticsPage() {
         <div>
           <p className="text-sm font-medium text-primary">Dados reais</p>
           <h1 className="mt-1 text-3xl font-bold">Analytics</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Visualizações e cliques registrados na sua página publicada. Nenhum número é simulado.</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Visualizações e cliques registrados na sua página publicada. Nenhum número é simulado.
+          </p>
         </div>
         <div className="flex gap-2">
           {[7, 30, 90].map((value) => (
-            <Button key={value} variant={days === value ? "default" : "outline"} size="sm" onClick={() => setDays(value)}>{value} dias</Button>
+            <Button
+              key={value}
+              variant={days === value ? "default" : "outline"}
+              size="sm"
+              onClick={() => setDays(value)}
+            >
+              {value} dias
+            </Button>
           ))}
         </div>
       </div>
@@ -69,15 +78,22 @@ function AnalyticsPage() {
       ) : null}
 
       {error ? (
-        <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-5 text-sm">Não foi possível carregar os analytics agora.</div>
+        <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-5 text-sm">
+          Não foi possível carregar os analytics agora.
+        </div>
       ) : (
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {cards.map((card) => {
             const Icon = card.icon;
             return (
               <div key={card.label} className="rounded-2xl border border-border bg-card p-5">
-                <div className="flex items-center justify-between"><span className="text-sm text-muted-foreground">{card.label}</span><Icon className="h-4 w-4 text-primary" /></div>
-                <strong className="mt-4 block truncate text-2xl font-semibold tracking-tight">{loading ? "—" : card.value}</strong>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">{card.label}</span>
+                  <Icon className="h-4 w-4 text-primary" />
+                </div>
+                <strong className="mt-4 block truncate text-2xl font-semibold tracking-tight">
+                  {loading ? "—" : card.value}
+                </strong>
               </div>
             );
           })}
@@ -87,9 +103,18 @@ function AnalyticsPage() {
       <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
         <h2 className="text-lg font-semibold">Como é calculado</h2>
         <div className="mt-4 grid gap-4 text-sm text-muted-foreground sm:grid-cols-3">
-          <p><strong className="block text-foreground">Visualização</strong>Uma abertura da sua Bio publicada.</p>
-          <p><strong className="block text-foreground">Clique</strong>Um clique em um bloco ou link da página.</p>
-          <p><strong className="block text-foreground">CTR</strong>Cliques divididos por visualizações no período selecionado.</p>
+          <p>
+            <strong className="block text-foreground">Visualização</strong>Uma abertura da sua Bio
+            publicada.
+          </p>
+          <p>
+            <strong className="block text-foreground">Clique</strong>Um clique em um bloco ou link
+            da página.
+          </p>
+          <p>
+            <strong className="block text-foreground">CTR</strong>Cliques divididos por
+            visualizações no período selecionado.
+          </p>
         </div>
       </section>
     </div>
