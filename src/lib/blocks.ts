@@ -164,11 +164,7 @@ export function detectLinkType(raw: string): string {
     if (host === "youtube.com" || host.endsWith(".youtube.com") || host === "youtu.be")
       return "youtube";
     if (host === "tiktok.com" || host.endsWith(".tiktok.com")) return "tiktok";
-    if (
-      host === "wa.me" ||
-      host === "whatsapp.com" ||
-      host.endsWith(".whatsapp.com")
-    )
+    if (host === "wa.me" || host === "whatsapp.com" || host.endsWith(".whatsapp.com"))
       return "whatsapp";
     if (host === "t.me" || host === "telegram.me") return "telegram";
     if (host === "discord.gg" || host === "discord.com" || host.endsWith(".discord.com"))
