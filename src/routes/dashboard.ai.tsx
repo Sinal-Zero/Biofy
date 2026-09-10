@@ -1,5 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Monitor, Smartphone } from "lucide-react";
+import { useState } from "react";
 import { BioPreview } from "@/components/bio/BioPreview";
+import { PhoneFrame } from "@/components/bio/PhoneFrame";
 import { BioAiAssistant } from "@/components/dashboard/BioAiAssistant";
 import { useBio } from "@/components/dashboard/BioContext";
 
@@ -7,8 +10,11 @@ export const Route = createFileRoute("/dashboard/ai")({
   component: AiPage,
 });
 
+type PreviewMode = "mobile" | "desktop";
+
 function AiPage() {
   const { bundle, theme } = useBio();
+  const [previewMode, setPreviewMode] = useState<PreviewMode>("desktop");
 
   return (
     <div className="space-y-5">
@@ -16,7 +22,7 @@ function AiPage() {
         <p className="text-sm font-medium text-primary">Assistente</p>
         <h1 className="text-3xl font-bold">Biofy AI</h1>
         <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-          Peça mudanças à esquerda e acompanhe a página completa sendo atualizada ao vivo.
+          Peça mudanças à esquerda e confira o resultado da página à direita.
         </p>
       </div>
 
@@ -25,33 +31,76 @@ function AiPage() {
 
         <aside className="xl:sticky xl:top-6 xl:self-start">
           <div className="overflow-hidden rounded-[1.5rem] border border-border bg-card shadow-panel transition duration-300">
-            <div className="flex items-center justify-between border-b border-border bg-background/45 px-4 py-3 backdrop-blur-xl">
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="flex shrink-0 gap-1.5" aria-hidden="true">
-                  <span className="h-2.5 w-2.5 rounded-full bg-muted-foreground/40" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-muted-foreground/30" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-muted-foreground/20" />
-                </div>
-                <div className="min-w-0 rounded-lg border border-border bg-background/70 px-3 py-1.5 text-[10px] text-muted-foreground">
-                  <span className="block truncate">biofy.app/{bundle.profile.username || "sua-bio"}</span>
+            <div className="border-b border-border bg-background/45 p-3 backdrop-blur-xl">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-foreground">Checar alterações</p>
+                  <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                    biofy.app/{bundle.profile.username || "sua-bio"}
+                  </p>
                 </div>
               </div>
-              <span className="ml-3 shrink-0 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary">
-                Ao vivo
-              </span>
+
+              <div className="mt-3 grid grid-cols-2 rounded-xl border border-border bg-background/60 p-1">
+                <button
+                  type="button"
+                  onClick={() => setPreviewMode("mobile")}
+                  className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition ${
+                    previewMode === "mobile"
+                      ? "bg-card text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Smartphone className="h-4 w-4" />
+                  Celular
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewMode("desktop")}
+                  className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition ${
+                    previewMode === "desktop"
+                      ? "bg-card text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Monitor className="h-4 w-4" />
+                  Computador
+                </button>
+              </div>
             </div>
 
-            <div className="h-[760px] overflow-auto bg-black/20 2xl:h-[820px]">
-              <BioPreview
-                displayName={bundle.profile.display_name}
-                username={bundle.profile.username}
-                bio={bundle.profile.bio}
-                avatarUrl={bundle.profile.avatar_url}
-                theme={theme}
-                blocks={bundle.blocks}
-                compact
-                className="min-h-full"
-              />
+            <div className="min-h-[760px] bg-black/20 p-4 2xl:min-h-[820px]">
+              {previewMode === "mobile" ? (
+                <div className="mx-auto w-full max-w-[340px] animate-rise">
+                  <PhoneFrame>
+                    <BioPreview
+                      displayName={bundle.profile.display_name}
+                      username={bundle.profile.username}
+                      bio={bundle.profile.bio}
+                      avatarUrl={bundle.profile.avatar_url}
+                      theme={theme}
+                      blocks={bundle.blocks}
+                      compact
+                      showBranding={false}
+                      className="min-h-full"
+                    />
+                  </PhoneFrame>
+                </div>
+              ) : (
+                <div className="h-[760px] overflow-auto rounded-xl border border-border/70 bg-background/40 animate-rise 2xl:h-[820px]">
+                  <BioPreview
+                    displayName={bundle.profile.display_name}
+                    username={bundle.profile.username}
+                    bio={bundle.profile.bio}
+                    avatarUrl={bundle.profile.avatar_url}
+                    theme={theme}
+                    blocks={bundle.blocks}
+                    compact
+                    showBranding={false}
+                    className="min-h-full"
+                  />
+                </div>
+              )}
             </div>
           </div>
         </aside>
