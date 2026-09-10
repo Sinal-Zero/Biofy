@@ -42,6 +42,9 @@ export interface BlockConfig {
   buttonShape?: ButtonShape | "inherit";
   buttonShadow?: boolean;
   animation?: HoverAnim | "inherit";
+  countryCode?: string;
+  areaCode?: string;
+  phoneNumber?: string;
 }
 
 export interface BioBlock {
