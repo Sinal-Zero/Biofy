@@ -1,5 +1,6 @@
 name: Biofy one-time autofix
 
+# Temporary workflow: remove after the repository is clean.
 on:
   push:
     paths:
