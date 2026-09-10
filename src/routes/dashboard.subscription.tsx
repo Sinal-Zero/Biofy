@@ -22,7 +22,13 @@ const plans = [
     name: "Pro",
     id: "pro",
     price: "R$ 21,90/mês",
-    features: ["Até 3 páginas", "Links ilimitados", "Personalização completa", "Analytics", "Sem branding"],
+    features: [
+      "Até 3 páginas",
+      "Links ilimitados",
+      "Personalização completa",
+      "Analytics",
+      "Sem branding",
+    ],
   },
   {
     name: "Master",
