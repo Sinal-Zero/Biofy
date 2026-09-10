@@ -44,8 +44,11 @@ function PublicBioPage() {
   const showBranding = bundle.plan !== "pro" && bundle.plan !== "business";
 
   useEffect(() => {
-    if (tracked.current) return;
+    const key = `biofy:view:${bundle.page.id}`;
+    const lastTracked = Number(sessionStorage.getItem(key) ?? 0);
+    if (tracked.current || (lastTracked && Date.now() - lastTracked < 30 * 60 * 1000)) return;
     tracked.current = true;
+    sessionStorage.setItem(key, String(Date.now()));
     recordAnalytics(bundle.page.id, "view").catch(() => undefined);
   }, [bundle.page.id]);
 

@@ -7,9 +7,12 @@ import { fetchMyBio } from "@/lib/bio-data";
 export const Route = createFileRoute("/dashboard")({
   ssr: false,
   beforeLoad: async () => {
-    const { data, error } = await supabase.auth.getUser();
-    if (error || !data.user) throw redirect({ to: "/login" });
-    return { user: data.user };
+    // Read the locally persisted session first. During a token refresh,
+    // getUser() can briefly fail and incorrectly send an already logged-in
+    // user to the login screen while navigating between dashboard routes.
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session?.user) throw redirect({ to: "/login" });
+    return { user: sessionData.session.user };
   },
   loader: async ({ context }) => {
     const bundle = await fetchMyBio(context.user.id);

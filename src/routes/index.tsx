@@ -259,8 +259,12 @@ function HomePage() {
               <div className="max-w-2xl">
                 <p className="text-sm font-medium text-primary">Templates</p>
                 <h2 className="mt-2 text-3xl font-bold sm:text-4xl">
-                  Comece bonito. Depois faça ser seu.
+                  Escolha uma base que acompanhe o que você faz.
                 </h2>
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
+                  Em vez de espalhar links em vários lugares, reúna portfólio, redes e contato em um
+                  endereço fácil de compartilhar — e atualize tudo sem trocar o link da sua bio.
+                </p>
               </div>
               <Button variant="outline" asChild>
                 <Link to="/signup">Usar um template</Link>

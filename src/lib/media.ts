@@ -25,6 +25,10 @@ export async function uploadBiofyImage(
     throw new Error("A imagem deve ter no máximo 8 MB.");
   }
 
+  if (!userId || !crypto.randomUUID) {
+    throw new Error("Não foi possível validar o envio da imagem.");
+  }
+
   const path = `${userId}/${area}/${crypto.randomUUID()}.${extensionFor(file)}`;
   const { error } = await supabase.storage.from("biofy-media").upload(path, file, {
     cacheControl: "3600",
