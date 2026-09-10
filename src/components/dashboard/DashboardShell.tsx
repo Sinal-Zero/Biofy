@@ -18,6 +18,7 @@ import { useBio } from "./BioContext";
 const navigation = [
   { to: "/dashboard", label: "Visão geral", icon: LayoutDashboard },
   { to: "/dashboard/editor", label: "Minha Bio", icon: Sparkles },
+  { to: "/dashboard/ai", label: "Biofy AI", icon: Sparkles },
   { to: "/dashboard/appearance", label: "Aparência", icon: Paintbrush },
   { to: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/dashboard/subscription", label: "Assinatura", icon: CreditCard },
