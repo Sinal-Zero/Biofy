@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { lovable } from "@/integrations/lovable/index";
+import { supabase } from "@/integrations/supabase/client";
 
 export function GoogleButton({ label = "Continuar com Google" }: { label?: string }) {
   const [loading, setLoading] = useState(false);
@@ -9,16 +9,17 @@ export function GoogleButton({ label = "Continuar com Google" }: { label?: strin
   async function handleClick() {
     setLoading(true);
     try {
-      const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
       });
-      if (result.error) {
+
+      if (error) {
         toast.error("Não foi possível entrar com o Google.");
         setLoading(false);
-        return;
       }
-      if (result.redirected) return;
-      window.location.assign("/dashboard");
     } catch {
       toast.error("Não foi possível entrar com o Google.");
       setLoading(false);
