@@ -145,8 +145,10 @@ export function BioPreview({
     >
       <div
         className={cn(
-          "flex w-full flex-col overflow-hidden border shadow-[0_28px_90px_-46px_rgba(0,0,0,0.78)] transition-all duration-300",
-          compact ? "min-h-full rounded-[1.25rem]" : "min-h-[calc(100vh-2rem)] rounded-[1.75rem] sm:min-h-[calc(100vh-4rem)]",
+          "flex w-full flex-col overflow-hidden shadow-[0_28px_90px_-46px_rgba(0,0,0,0.78)] transition-all duration-300",
+          compact
+            ? "min-h-full rounded-[1.25rem]"
+            : "min-h-[calc(100vh-2rem)] rounded-[1.75rem] sm:min-h-[calc(100vh-4rem)]",
         )}
         style={{
           maxWidth: `${theme.width}px`,
@@ -154,6 +156,8 @@ export function BioPreview({
           backgroundSize: "cover",
           backgroundPosition: "center",
           borderColor: theme.panelBorderColor,
+          borderWidth: `${theme.panelBorderWidth}px`,
+          borderStyle: "solid",
           color: theme.textColor,
         }}
       >
