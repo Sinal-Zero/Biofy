@@ -2,7 +2,6 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { Check, Lock, Pipette, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { BioPreview } from "@/components/bio/BioPreview";
-import { PhoneFrame } from "@/components/bio/PhoneFrame";
 import { useBio } from "@/components/dashboard/BioContext";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,10 +21,12 @@ function normalizeHex(value: string) {
 
 function BrandedColorPicker({
   label,
+  description,
   value,
   onChange,
 }: {
   label: string;
+  description: string;
   value: string;
   onChange: (value: string) => void;
 }) {
@@ -44,47 +45,47 @@ function BrandedColorPicker({
     }
   }
 
+  const pickerValue = /^#[0-9a-f]{6}$/i.test(value) ? value : "#000000";
+
   return (
-    <div className="rounded-2xl border border-border bg-background p-4">
-      <div className="flex items-center justify-between gap-3">
+    <div className="group rounded-2xl border border-border bg-background p-4 transition duration-300 hover:border-primary/30 hover:shadow-soft">
+      <div className="flex items-start justify-between gap-3">
         <div>
           <Label>{label}</Label>
-          <p className="mt-1 text-[11px] text-muted-foreground">Escolha qualquer cor.</p>
+          <p className="mt-1 text-[11px] leading-4 text-muted-foreground">{description}</p>
         </div>
         <span
-          className="h-8 w-8 rounded-xl border border-border shadow-sm"
+          className="h-9 w-9 shrink-0 rounded-xl border border-border shadow-sm transition group-hover:scale-105"
           style={{ backgroundColor: value }}
           aria-hidden="true"
         />
       </div>
 
-      <label className="group relative mt-4 block cursor-pointer overflow-hidden rounded-2xl border border-border bg-card p-3 transition hover:border-primary/40">
-        <div
-          className="h-28 rounded-xl border border-white/10 shadow-inner"
-          style={{
-            background: `linear-gradient(135deg, ${value}, color-mix(in srgb, ${value} 62%, white), color-mix(in srgb, ${value} 70%, black))`,
-          }}
+      <label className="relative mt-4 flex cursor-pointer items-center gap-3 overflow-hidden rounded-xl border border-input bg-card px-3 py-2.5 transition hover:border-primary/40">
+        <span
+          className="h-9 w-9 rounded-lg border border-white/10 shadow-inner"
+          style={{ backgroundColor: value }}
         />
-        <div className="mt-3 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-xs font-medium">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <Pipette className="h-3.5 w-3.5" />
-            </span>
-            Abrir seletor de cor
-          </div>
-          <span className="font-mono text-[11px] uppercase text-muted-foreground">{value}</span>
-        </div>
+        <span className="min-w-0 flex-1">
+          <span className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+            <Pipette className="h-3.5 w-3.5 text-primary" />
+            Escolher cor
+          </span>
+          <span className="mt-0.5 block font-mono text-[10px] uppercase text-muted-foreground">
+            {value}
+          </span>
+        </span>
         <input
           type="color"
-          value={/^#[0-9a-f]{6}$/i.test(value) ? value : "#000000"}
+          value={pickerValue}
           onChange={(event) => onChange(event.target.value.toLowerCase())}
           className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
           aria-label={`Escolher ${label.toLowerCase()}`}
         />
       </label>
 
-      <div className="mt-3 flex items-center gap-2 rounded-xl border border-input bg-card px-3">
-        <span className="text-xs font-semibold text-primary">HEX</span>
+      <div className="mt-2 flex items-center gap-2 rounded-xl border border-input bg-card px-3">
+        <span className="text-[10px] font-semibold tracking-wide text-primary">HEX</span>
         <Input
           value={draft}
           onChange={(event) => setDraft(event.target.value.slice(0, 7))}
@@ -92,7 +93,7 @@ function BrandedColorPicker({
           onKeyDown={(event) => {
             if (event.key === "Enter") event.currentTarget.blur();
           }}
-          className="h-10 border-0 bg-transparent px-1 font-mono text-xs shadow-none focus-visible:ring-0"
+          className="h-9 border-0 bg-transparent px-1 font-mono text-xs shadow-none focus-visible:ring-0"
           aria-label={`${label} em hexadecimal`}
         />
       </div>
@@ -125,19 +126,19 @@ function AppearancePage() {
       <div>
         <p className="text-sm font-medium text-primary">Identidade visual</p>
         <h1 className="mt-1 text-3xl font-bold">Aparência</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Escolha uma base e personalize só o que realmente importa.
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+          Controle a página inteira: fundo externo, caixa central, borda, texto, botões e tipografia.
         </p>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_390px]">
+      <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_520px]">
         <div className="space-y-5">
           <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-lg font-semibold">Estilo base</h2>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Três opções neutras para começar sem complicação.
+                  Use uma base rápida ou personalize tudo abaixo.
                 </p>
               </div>
               <span className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground">
@@ -152,17 +153,27 @@ function AppearancePage() {
                     key={template.id}
                     type="button"
                     onClick={() => applyTemplate(template.id)}
-                    className={`group rounded-2xl border p-3 text-left transition hover:-translate-y-0.5 hover:border-primary/40 ${
+                    className={`group rounded-2xl border p-3 text-left transition duration-300 hover:-translate-y-0.5 hover:border-primary/40 ${
                       active ? "border-primary ring-2 ring-primary/20" : "border-border"
                     }`}
                   >
                     <div
-                      className="relative h-24 overflow-hidden rounded-xl border border-black/5"
-                      style={{ backgroundColor: template.theme.bgColor }}
+                      className="relative h-24 overflow-hidden rounded-xl border"
+                      style={{
+                        backgroundColor: template.theme.pageBgColor,
+                        borderColor: template.theme.panelBorderColor,
+                      }}
                     >
-                      <div className="absolute inset-x-4 top-4 h-3 rounded-full bg-current opacity-15" />
-                      <div className="absolute inset-x-4 top-10 h-7 rounded-lg border border-current opacity-25" />
-                      <div className="absolute inset-x-4 top-[4.6rem] h-2 rounded-full bg-current opacity-10" />
+                      <div
+                        className="absolute inset-3 rounded-lg border"
+                        style={{
+                          backgroundColor: template.theme.bgColor,
+                          borderColor: template.theme.panelBorderColor,
+                        }}
+                      >
+                        <div className="absolute inset-x-3 top-3 h-2 rounded-full bg-current opacity-15" />
+                        <div className="absolute inset-x-3 top-8 h-6 rounded-md border border-current opacity-25" />
+                      </div>
                       {active ? (
                         <span className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground">
                           <Check className="h-3.5 w-3.5" />
@@ -184,10 +195,10 @@ function AppearancePage() {
               <div>
                 <div className="flex items-center gap-2">
                   <Sparkles className="h-4 w-4 text-primary" />
-                  <h2 className="text-lg font-semibold">Personalização</h2>
+                  <h2 className="text-lg font-semibold">Personalização completa</h2>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Cor livre e uma biblioteca maior de fontes para Pro e Master.
+                  Sem paleta predefinida: escolha exatamente as cores que quiser.
                 </p>
               </div>
               <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary">
@@ -196,40 +207,69 @@ function AppearancePage() {
             </div>
 
             {hasProCustomization ? (
-              <div className="mt-5 space-y-5">
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <BrandedColorPicker
-                    label="Fundo"
-                    value={theme.bgColor}
-                    onChange={(bgColor) => patchTheme({ bgType: "solid", bgColor })}
-                  />
-                  <BrandedColorPicker
-                    label="Texto"
-                    value={theme.textColor}
-                    onChange={(textColor) => patchTheme({ textColor })}
-                  />
-                  <BrandedColorPicker
-                    label="Botão"
-                    value={theme.buttonColor}
-                    onChange={(buttonColor) => patchTheme({ buttonColor })}
-                  />
-                  <BrandedColorPicker
-                    label="Texto do botão"
-                    value={theme.buttonTextColor}
-                    onChange={(buttonTextColor) => patchTheme({ buttonTextColor })}
-                  />
+              <div className="mt-5 space-y-6">
+                <div>
+                  <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    Estrutura da página
+                  </p>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <BrandedColorPicker
+                      label="Fundo da página"
+                      description="A área externa que aparece ao redor da sua Bio no computador."
+                      value={theme.pageBgColor}
+                      onChange={(pageBgColor) => patchTheme({ pageBgColor })}
+                    />
+                    <BrandedColorPicker
+                      label="Fundo da caixa central"
+                      description="A superfície principal onde ficam foto, descrição e links."
+                      value={theme.bgColor}
+                      onChange={(bgColor) => patchTheme({ bgType: "solid", bgColor })}
+                    />
+                    <BrandedColorPicker
+                      label="Borda da caixa"
+                      description="Define o contorno da área central da sua Bio."
+                      value={theme.panelBorderColor}
+                      onChange={(panelBorderColor) => patchTheme({ panelBorderColor })}
+                    />
+                    <BrandedColorPicker
+                      label="Texto"
+                      description="Cor principal para nome, ícones e informações em destaque."
+                      value={theme.textColor}
+                      onChange={(textColor) => patchTheme({ textColor })}
+                    />
+                  </div>
                 </div>
 
-                <div className="rounded-2xl border border-border bg-background p-4">
+                <div>
+                  <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    Botões
+                  </p>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <BrandedColorPicker
+                      label="Botão"
+                      description="Cor principal dos botões e links da página."
+                      value={theme.buttonColor}
+                      onChange={(buttonColor) => patchTheme({ buttonColor })}
+                    />
+                    <BrandedColorPicker
+                      label="Texto do botão"
+                      description="Cor do texto e dos ícones dentro dos botões."
+                      value={theme.buttonTextColor}
+                      onChange={(buttonTextColor) => patchTheme({ buttonTextColor })}
+                    />
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-border bg-background p-4 sm:p-5">
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <Label>Fonte</Label>
+                      <Label>Tipografia</Label>
                       <p className="mt-1 text-[11px] text-muted-foreground">
-                        Escolha visualmente a tipografia da sua página.
+                        Veja a aparência da fonte antes de aplicar.
                       </p>
                     </div>
                     <span className="rounded-full border border-border px-2 py-1 text-[10px] text-muted-foreground">
-                      {Object.keys(fontLabels).length} opções
+                      {Object.keys(fontLabels).length} fontes
                     </span>
                   </div>
 
@@ -241,8 +281,10 @@ function AppearancePage() {
                           key={key}
                           type="button"
                           onClick={() => patchTheme({ font: key })}
-                          className={`rounded-xl border px-3 py-3 text-left transition hover:border-primary/40 hover:bg-accent/40 ${
-                            active ? "border-primary bg-primary/[0.06] ring-2 ring-primary/15" : "border-border bg-card"
+                          className={`rounded-xl border px-3 py-3 text-left transition duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-accent/40 ${
+                            active
+                              ? "border-primary bg-primary/[0.06] ring-2 ring-primary/15"
+                              : "border-border bg-card"
                           }`}
                           aria-pressed={active}
                         >
@@ -270,8 +312,8 @@ function AppearancePage() {
                   <div>
                     <p className="text-sm font-semibold">Personalização avançada bloqueada</p>
                     <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                      No Free você usa os três estilos base e a fonte Jakarta. Pro e Master liberam
-                      cores livres e toda a biblioteca de fontes.
+                      No Free você usa os estilos base. Pro e Master liberam cores livres, borda,
+                      fundo externo e toda a biblioteca de fontes.
                     </p>
                     <Link
                       to="/dashboard/subscription"
@@ -286,22 +328,30 @@ function AppearancePage() {
           </section>
         </div>
 
-        <aside className="xl:sticky xl:top-8 xl:self-start">
-          <div className="mb-3 flex items-center justify-between rounded-xl border border-border bg-card px-3 py-2">
-            <span className="text-xs font-medium text-muted-foreground">PREVIEW</span>
-            <span className="text-xs text-muted-foreground">@{bundle.profile.username}</span>
+        <aside className="2xl:sticky 2xl:top-8 2xl:self-start">
+          <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-panel">
+            <div className="flex items-center justify-between border-b border-border px-4 py-3">
+              <div>
+                <p className="text-xs font-semibold text-foreground">Preview no computador</p>
+                <p className="mt-0.5 text-[10px] text-muted-foreground">Atualização em tempo real</p>
+              </div>
+              <span className="max-w-44 truncate text-xs text-muted-foreground">
+                @{bundle.profile.username}
+              </span>
+            </div>
+            <div className="h-[640px] overflow-auto bg-black/20">
+              <BioPreview
+                displayName={bundle.profile.display_name}
+                username={bundle.profile.username}
+                bio={bundle.profile.bio}
+                avatarUrl={bundle.profile.avatar_url}
+                theme={theme}
+                blocks={bundle.blocks}
+                compact
+                className="min-h-full"
+              />
+            </div>
           </div>
-          <PhoneFrame>
-            <BioPreview
-              displayName={bundle.profile.display_name}
-              username={bundle.profile.username}
-              bio={bundle.profile.bio}
-              avatarUrl={bundle.profile.avatar_url}
-              theme={theme}
-              blocks={bundle.blocks}
-              compact
-            />
-          </PhoneFrame>
         </aside>
       </div>
     </div>
