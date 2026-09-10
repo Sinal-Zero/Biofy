@@ -31,6 +31,7 @@ export interface BioTheme {
   textColor: string;
   mutedColor: string;
   font: FontKey;
+  textScale: number;
   buttonStyle: ButtonStyle;
   buttonShape: ButtonShape;
   buttonColor: string;
@@ -104,6 +105,7 @@ export const defaultTheme: BioTheme = {
   textColor: "#ffffff",
   mutedColor: "#b9bad4",
   font: "sans",
+  textScale: 1,
   buttonStyle: "glass",
   buttonShape: "rounded",
   buttonColor: "#ffffff",
