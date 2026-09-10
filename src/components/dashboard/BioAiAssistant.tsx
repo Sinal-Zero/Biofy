@@ -8,7 +8,6 @@ type AiResult = {
   linkTitles: Array<{ id: string; title: string }>;
   tips: string[];
   message: string;
-  interactionId: string | null;
 };
 
 type ChatMessage = {
@@ -22,7 +21,6 @@ export function BioAiAssistant() {
   const { bundle, patchProfile, patchBlock } = useBio();
   const [instruction, setInstruction] = useState("");
   const [loading, setLoading] = useState(false);
-  const [interactionId, setInteractionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const composerRef = useRef<HTMLTextAreaElement>(null);
@@ -41,6 +39,11 @@ export function BioAiAssistant() {
   async function generate() {
     const cleanInstruction = instruction.trim();
     if (!cleanInstruction || loading) return;
+
+    const history = messages.slice(-6).map((message) => ({
+      role: message.role,
+      text: message.text,
+    }));
 
     const userMessage: ChatMessage = {
       id: `u-${Date.now()}`,
@@ -78,7 +81,7 @@ export function BioAiAssistant() {
         },
         body: JSON.stringify({
           instruction: cleanInstruction,
-          previousInteractionId: interactionId,
+          history,
           displayName: bundle.profile.display_name,
           bio: bundle.profile.bio,
           links: bundle.blocks
@@ -102,10 +105,6 @@ export function BioAiAssistant() {
         ]);
         return;
       }
-
-      const nextInteractionId =
-        typeof payload.interactionId === "string" ? payload.interactionId : interactionId;
-      setInteractionId(nextInteractionId);
 
       const bio = typeof payload.bio === "string" ? payload.bio : "";
       const linkTitles = Array.isArray(payload.linkTitles) ? payload.linkTitles : [];
