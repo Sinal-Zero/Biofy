@@ -289,7 +289,9 @@ function BioEditor() {
                         <Icon className="h-4 w-4" />
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold">{block.title || "Novo link"}</p>
+                        <p className="truncate text-sm font-semibold">
+                          {block.title || "Novo link"}
+                        </p>
                         <p className="mt-0.5 text-[11px] text-muted-foreground">
                           {def.label === "Link" ? "URL" : def.label}
                         </p>
@@ -347,7 +349,9 @@ function BioEditor() {
                                 <div className="absolute left-0 top-12 z-30 w-[280px] rounded-2xl border border-border bg-popover p-3 shadow-xl">
                                   <div className="mb-2 flex items-center justify-between">
                                     <span className="text-xs font-semibold">DDD</span>
-                                    <span className="text-[10px] font-medium text-primary">BIOFY</span>
+                                    <span className="text-[10px] font-medium text-primary">
+                                      BIOFY
+                                    </span>
                                   </div>
                                   <div className="grid max-h-52 grid-cols-6 gap-1.5 overflow-y-auto pr-1">
                                     {BRAZIL_DDDS.map((code) => (
