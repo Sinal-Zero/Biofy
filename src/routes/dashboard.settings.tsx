@@ -86,13 +86,15 @@ function SettingsPage() {
         <div className="mt-5 space-y-2">
           <Label htmlFor="settings-username">Username</Label>
           <div className="flex flex-col gap-2 sm:flex-row">
-            <div className="flex flex-1 items-center rounded-xl border border-input bg-background px-3">
-              <span className="text-sm text-muted-foreground">bio-fy.vercel.app/</span>
+            <div className="flex min-w-0 flex-1 items-center overflow-x-auto rounded-xl border border-input bg-background px-3">
+              <span className="shrink-0 whitespace-nowrap text-sm text-muted-foreground">
+                bio-fy.vercel.app/
+              </span>
               <Input
                 id="settings-username"
                 value={username}
                 onChange={(event) => setUsername(normalizeUsername(event.target.value))}
-                className="border-0 bg-transparent px-1 shadow-none focus-visible:ring-0"
+                className="min-w-24 flex-1 border-0 bg-transparent px-1 shadow-none focus-visible:ring-0"
               />
             </div>
             <Button onClick={saveUsername} disabled={saving}>
