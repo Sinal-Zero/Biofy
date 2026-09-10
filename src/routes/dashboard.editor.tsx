@@ -4,6 +4,7 @@ import { useState } from "react";
 import { BioPreview } from "@/components/bio/BioPreview";
 import { PhoneFrame } from "@/components/bio/PhoneFrame";
 import { useBio } from "@/components/dashboard/BioContext";
+import { ImageUploadButton } from "@/components/dashboard/ImageUploadButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -58,6 +59,12 @@ function BioEditor() {
                   value={bundle.profile.avatar_url ?? ""}
                   onChange={(event) => patchProfile({ avatar_url: event.target.value || null })}
                   placeholder="https://..."
+                />
+                <ImageUploadButton
+                  userId={bundle.page.user_id}
+                  area="avatar"
+                  label="Enviar avatar"
+                  onUploaded={(url) => patchProfile({ avatar_url: url })}
                 />
               </div>
               <div className="space-y-2 sm:col-span-2">
@@ -184,15 +191,21 @@ function BioEditor() {
                         />
                       </div>
                     ) : block.type === "image" ? (
-                      <div className="sm:col-span-2">
-                        <Label>URL da imagem</Label>
+                      <div className="space-y-2 sm:col-span-2">
+                        <Label>Imagem</Label>
                         <Input
-                          className="mt-2"
                           value={block.config.imageUrl ?? ""}
                           onChange={(event) =>
                             patchBlock(block.id, { config: { imageUrl: event.target.value } })
                           }
                           placeholder="https://..."
+                        />
+                        <ImageUploadButton
+                          userId={bundle.page.user_id}
+                          area="block"
+                          onUploaded={(url) =>
+                            patchBlock(block.id, { config: { imageUrl: url } })
+                          }
                         />
                       </div>
                     ) : (
