@@ -16,13 +16,19 @@ const plans = [
     name: "Free",
     id: "free",
     price: "R$ 0",
-    features: ["Página pública", "Links básicos", "Templates básicos", "Branding Biofy"],
+    features: [
+      "Até 1 página",
+      "Links básicos",
+      "Templates básicos",
+      "Branding Biofy",
+    ],
   },
   {
     name: "Pro",
     id: "pro",
     price: "R$ 21,90/mês",
     features: [
+      "Até 3 páginas",
       "Links ilimitados",
       "Todos os templates",
       "Personalização avançada",
@@ -31,12 +37,13 @@ const plans = [
     ],
   },
   {
-    name: "Business",
+    name: "Master",
     id: "business",
     price: "R$ 41,90/mês",
     features: [
+      "Até 5 páginas",
       "Tudo do Pro",
-      "Assistente de IA para montar sua Bio",
+      "Assistente de IA para montar sua Bio — em breve",
       "Recursos profissionais",
       "Analytics avançado",
       "Preparado para domínio personalizado",
@@ -71,7 +78,8 @@ function SubscriptionPage() {
         <p className="text-sm font-medium text-primary">Plano e cobrança</p>
         <h1 className="mt-1 text-3xl font-bold">Assinatura</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          A cobrança real ainda não está habilitada. Esta tela não simula pagamento nem upgrade.
+          Os planos estão definidos, mas a cobrança real ainda não está habilitada. A integração
+          com o Asaas será ativada depois, sem simular pagamento ou upgrade enquanto isso.
         </p>
       </div>
 
@@ -79,7 +87,9 @@ function SubscriptionPage() {
         <div className="grid gap-4 sm:grid-cols-3">
           <div>
             <span className="text-xs text-muted-foreground">Plano atual</span>
-            <strong className="mt-1 block text-lg capitalize">{loading ? "—" : currentPlan}</strong>
+            <strong className="mt-1 block text-lg capitalize">
+              {loading ? "—" : currentPlan === "business" ? "Master" : currentPlan}
+            </strong>
           </div>
           <div>
             <span className="text-xs text-muted-foreground">Status</span>
