@@ -1,41 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-const GEMINI_MODEL = "gemini-3.8-flash";
-
-const responseSchema = {
-  type: "object",
-  properties: {
-    bio: { type: "string" },
-    linkTitles: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          id: { type: "string" },
-          title: { type: "string" },
-        },
-        required: ["id", "title"],
-      },
-    },
-    tips: {
-      type: "array",
-      items: { type: "string" },
-    },
-    message: { type: "string" },
-  },
-  required: ["bio", "linkTitles", "tips", "message"],
-} as const;
-
-function providerErrorMessage(status: number) {
-  if (status === 400) return "O Gemini recusou a solicitação. Tente escrever o pedido de outra forma.";
-  if (status === 401 || status === 403)
-    return "A chave do Gemini não foi aceita pelo servidor. Confira a GEMINI_API_KEY na Vercel.";
-  if (status === 404) return "O modelo Gemini configurado não está disponível para esta chave.";
-  if (status === 429) return "O limite do Gemini foi atingido. Aguarde um pouco e tente novamente.";
-  if (status >= 500) return "O Gemini está temporariamente indisponível. Tente novamente em instantes.";
-  return "Não foi possível concluir a resposta da IA.";
-}
-
 export const Route = createFileRoute("/api/ai/bio")({
   server: {
     handlers: {
@@ -115,9 +79,9 @@ export const Route = createFileRoute("/api/ai/bio")({
           return Response.json({ error: "Pedido inválido." }, { status: 400 });
         }
 
-        const instruction = (body.instruction ?? "").trim().slice(0, 1000);
+        const instruction = (body.instruction ?? "").trim().slice(0, 800);
         if (!instruction) {
-          return Response.json({ error: "Escreva o que você quer mudar na sua Bio." }, { status: 400 });
+          return Response.json({ error: "Explique o que você quer melhorar na sua Bio." }, { status: 400 });
         }
 
         const previousInteractionId =
@@ -134,14 +98,38 @@ export const Route = createFileRoute("/api/ai/bio")({
             }))
           : [];
 
-        const prompt = `Você é a Biofy AI, uma assistente especializada em páginas de bio. Fale em português do Brasil, com tom natural, curto e útil. Sua função é editar a página junto com o usuário, não apenas dar dicas genéricas. Nunca invente credenciais, resultados, clientes, números ou fatos. Nunca altere URLs.\n\nPedido atual: ${instruction}\nNome atual: ${String(body.displayName ?? "").slice(0, 100)}\nBio atual: ${String(body.bio ?? "").slice(0, 500)}\nLinks atuais: ${JSON.stringify(links)}\n\nRetorne uma nova bio apenas quando fizer sentido; preserve o conteúdo atual quando o pedido não exigir mudança. Sugira novos títulos somente para ids existentes. A mensagem deve explicar em 1 ou 2 frases o que você fez. Máximo de 3 dicas curtas.`;
+        const prompt = `Você é a Biofy AI, uma assistente de edição de página de bio. Responda em português do Brasil, de forma natural, curta e útil. Sua função é melhorar diretamente a página com base no pedido do usuário. Não invente credenciais, números, resultados, clientes ou fatos. Não altere URLs. Preserve a intenção do usuário e evite clichês.\n\nPedido: ${instruction}\nNome atual: ${String(body.displayName ?? "").slice(0, 100)}\nBio atual: ${String(body.bio ?? "").slice(0, 500)}\nLinks atuais: ${JSON.stringify(links)}\n\nRetorne um JSON com: message (resposta curta ao usuário explicando o que foi feito), bio (nova bio com no máximo 240 caracteres; se não precisar mudar, repita a atual), linkTitles (somente ids existentes e títulos que realmente devem mudar) e tips (no máximo 3 observações curtas).`;
 
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 20000);
+        const responseFormat = {
+          type: "text",
+          mime_type: "application/json",
+          schema: {
+            type: "object",
+            properties: {
+              message: { type: "string" },
+              bio: { type: "string" },
+              linkTitles: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    id: { type: "string" },
+                    title: { type: "string" },
+                  },
+                  required: ["id", "title"],
+                },
+              },
+              tips: { type: "array", items: { type: "string" } },
+            },
+            required: ["message", "bio", "linkTitles", "tips"],
+          },
+        };
 
-        let interactionResponse: Response;
+        let text = "";
+        let interactionId: string | null = null;
+
         try {
-          interactionResponse = await fetch(
+          const interactionResponse = await fetch(
             "https://generativelanguage.googleapis.com/v1beta/interactions",
             {
               method: "POST",
@@ -150,81 +138,110 @@ export const Route = createFileRoute("/api/ai/bio")({
                 "x-goog-api-key": geminiKey,
                 "Api-Revision": "2026-05-20",
               },
-              signal: controller.signal,
               body: JSON.stringify({
-                model: GEMINI_MODEL,
+                model: "gemini-2.5-flash",
                 input: prompt,
+                response_format: responseFormat,
+                generation_config: {
+                  temperature: 0.55,
+                  max_output_tokens: 900,
+                },
                 ...(previousInteractionId
                   ? { previous_interaction_id: previousInteractionId }
                   : {}),
-                response_format: {
-                  type: "text",
-                  mime_type: "application/json",
-                  schema: responseSchema,
-                },
-                generation_config: {
-                  temperature: 0.55,
-                  max_output_tokens: 1100,
-                },
               }),
             },
           );
-        } catch (error) {
-          clearTimeout(timeout);
-          if (error instanceof Error && error.name === "AbortError") {
-            return Response.json(
-              { error: "O Gemini demorou demais para responder. Tente novamente." },
-              { status: 504 },
-            );
+
+          if (interactionResponse.ok) {
+            const interaction = (await interactionResponse.json()) as {
+              id?: string;
+              steps?: Array<{
+                type?: string;
+                content?: Array<{ type?: string; text?: string }>;
+              }>;
+            };
+
+            interactionId = typeof interaction.id === "string" ? interaction.id : null;
+            text =
+              interaction.steps
+                ?.filter((step) => step.type === "model_output")
+                .flatMap((step) => step.content ?? [])
+                .filter((content) => content.type === "text" && typeof content.text === "string")
+                .map((content) => content.text)
+                .join("")
+                .trim() ?? "";
           }
-          return Response.json({ error: "Falha ao conectar com o Gemini." }, { status: 502 });
+        } catch {
+          // The fallback below keeps Biofy AI available if Interactions is temporarily unavailable.
         }
-        clearTimeout(timeout);
-
-        if (!interactionResponse.ok) {
-          return Response.json(
-            {
-              error: providerErrorMessage(interactionResponse.status),
-              providerStatus: interactionResponse.status,
-            },
-            { status: 502 },
-          );
-        }
-
-        const interaction = (await interactionResponse.json()) as {
-          id?: string;
-          status?: string;
-          steps?: Array<{
-            type?: string;
-            content?: Array<{ type?: string; text?: string }>;
-          }>;
-        };
-
-        const text = interaction.steps
-          ?.filter((step) => step.type === "model_output")
-          .flatMap((step) => step.content ?? [])
-          .filter((content) => content.type === "text" && typeof content.text === "string")
-          .map((content) => content.text)
-          .join("")
-          .trim();
 
         if (!text) {
-          return Response.json(
-            { error: "O Gemini respondeu sem conteúdo utilizável. Tente novamente." },
-            { status: 502 },
-          );
+          try {
+            const fallbackResponse = await fetch(
+              "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "x-goog-api-key": geminiKey,
+                },
+                body: JSON.stringify({
+                  contents: [{ role: "user", parts: [{ text: prompt }] }],
+                  generationConfig: {
+                    temperature: 0.55,
+                    maxOutputTokens: 900,
+                    responseMimeType: "application/json",
+                    responseSchema: responseFormat.schema,
+                  },
+                }),
+              },
+            );
+
+            if (!fallbackResponse.ok) {
+              const upstream = (await fallbackResponse.json().catch(() => null)) as
+                | { error?: { message?: string } }
+                | null;
+              const detail = upstream?.error?.message?.toLowerCase() ?? "";
+              const message = detail.includes("quota")
+                ? "A cota do Gemini foi atingida. Tente novamente em alguns minutos."
+                : detail.includes("api key") || detail.includes("api_key")
+                  ? "A chave do Gemini não foi aceita pelo servidor. Revise a GEMINI_API_KEY na Vercel."
+                  : "O Gemini está indisponível no momento. Tente novamente em instantes.";
+              return Response.json({ error: message }, { status: 502 });
+            }
+
+            const fallbackPayload = (await fallbackResponse.json()) as {
+              candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+            };
+            text = fallbackPayload.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? "";
+          } catch {
+            return Response.json(
+              { error: "Não foi possível conectar ao Gemini. Tente novamente em instantes." },
+              { status: 502 },
+            );
+          }
+        }
+
+        if (!text) {
+          return Response.json({ error: "O Gemini retornou uma resposta vazia." }, { status: 502 });
         }
 
         try {
           const parsed = JSON.parse(text) as {
+            message?: unknown;
             bio?: unknown;
             linkTitles?: unknown;
             tips?: unknown;
-            message?: unknown;
           };
 
+          const currentBio = String(body.bio ?? "").slice(0, 240);
           const result = {
-            bio: typeof parsed.bio === "string" ? parsed.bio.slice(0, 240) : "",
+            message:
+              typeof parsed.message === "string" && parsed.message.trim()
+                ? parsed.message.trim().slice(0, 500)
+                : "Atualizei sua Bio com base no seu pedido.",
+            bio: typeof parsed.bio === "string" ? parsed.bio.slice(0, 240) : currentBio,
             linkTitles: Array.isArray(parsed.linkTitles)
               ? parsed.linkTitles
                   .filter(
@@ -236,19 +253,14 @@ export const Route = createFileRoute("/api/ai/bio")({
                   )
                   .filter((item) => links.some((link) => link.id === item.id))
                   .slice(0, 30)
-                  .map((item) => ({ id: item.id, title: item.title.slice(0, 120) }))
-              : [],
+                  .map((item) => ({ id: item.id, title: item.title.slice(0, 120) })),
             tips: Array.isArray(parsed.tips)
               ? parsed.tips
                   .filter((tip): tip is string => typeof tip === "string")
                   .slice(0, 3)
                   .map((tip) => tip.slice(0, 220))
               : [],
-            message:
-              typeof parsed.message === "string"
-                ? parsed.message.slice(0, 500)
-                : "Atualizei sua Bio com base no seu pedido.",
-            interactionId: typeof interaction.id === "string" ? interaction.id : null,
+            interactionId,
           };
 
           return Response.json(result, {
@@ -256,7 +268,7 @@ export const Route = createFileRoute("/api/ai/bio")({
           });
         } catch {
           return Response.json(
-            { error: "O Gemini retornou uma resposta que não consegui interpretar. Tente novamente." },
+            { error: "O Gemini respondeu em um formato inválido. Tente enviar o pedido novamente." },
             { status: 502 },
           );
         }
