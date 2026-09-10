@@ -16,12 +16,7 @@ const plans = [
     name: "Free",
     id: "free",
     price: "R$ 0",
-    features: [
-      "Até 1 página",
-      "Links básicos",
-      "Templates básicos",
-      "Branding Biofy",
-    ],
+    features: ["Até 1 página", "Links básicos", "Templates básicos", "Branding Biofy"],
   },
   {
     name: "Pro",
@@ -78,8 +73,8 @@ function SubscriptionPage() {
         <p className="text-sm font-medium text-primary">Plano e cobrança</p>
         <h1 className="mt-1 text-3xl font-bold">Assinatura</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Os planos estão definidos, mas a cobrança real ainda não está habilitada. A integração
-          com o Asaas será ativada depois, sem simular pagamento ou upgrade enquanto isso.
+          Os planos estão definidos, mas a cobrança real ainda não está habilitada. A integração com
+          o Asaas será ativada depois, sem simular pagamento ou upgrade enquanto isso.
         </p>
       </div>
 
