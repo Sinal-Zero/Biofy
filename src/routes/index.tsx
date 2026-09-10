@@ -12,7 +12,6 @@ import {
   Settings,
   Smartphone,
   Sparkles,
-  UserRound,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { BioPreview } from "@/components/bio/BioPreview";
@@ -119,6 +118,7 @@ const plans = [
       "Links ilimitados",
       "Todos os templates",
       "Personalização avançada",
+      "Assistente de IA",
       "Analytics",
     ],
   },
@@ -129,7 +129,6 @@ const plans = [
     features: [
       "Até 5 páginas",
       "Tudo do Pro",
-      "Assistente de IA para montar sua Bio — em breve",
       "Recursos profissionais",
       "Analytics avançado",
       "Base para domínio próprio",
@@ -291,7 +290,6 @@ function HomePage() {
                   >
                     <Settings className="h-4 w-4" />
                     <span className="flex-1">Configurações</span>
-                    <span className="text-[10px] uppercase tracking-wide">Em breve</span>
                   </button>
 
                   <button
