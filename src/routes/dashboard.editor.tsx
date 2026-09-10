@@ -203,9 +203,7 @@ function BioEditor() {
                         <ImageUploadButton
                           userId={bundle.page.user_id}
                           area="block"
-                          onUploaded={(url) =>
-                            patchBlock(block.id, { config: { imageUrl: url } })
-                          }
+                          onUploaded={(url) => patchBlock(block.id, { config: { imageUrl: url } })}
                         />
                       </div>
                     ) : (
