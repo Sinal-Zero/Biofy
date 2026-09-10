@@ -123,11 +123,9 @@ export function DashboardShell({ children }: { children: ReactNode }) {
             type="button"
             disabled
             className="mt-1 flex w-full cursor-not-allowed items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-muted-foreground opacity-60"
-            title="Em breve"
           >
             <Settings className="h-4 w-4" />
             <span className="flex-1 text-left">Configurações</span>
-            <span className="text-[10px] font-medium uppercase tracking-wide">Em breve</span>
           </button>
 
           <button
