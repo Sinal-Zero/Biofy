@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { BiofyMark } from "@/components/brand/Logo";
 import { fontStacks, mergeTheme, type BioBlock, type BioTheme } from "@/lib/bio-types";
 import { getBlockDef, isSocial } from "@/lib/blocks";
 import { cn } from "@/lib/utils";
@@ -297,22 +298,18 @@ export function BioPreview({
           })}
         </div>
 
-        {mainBlocks.length === 0 && socials.length === 0 && (
-          <p className={cn("mt-10 opacity-60", compact ? "text-[10px]" : "text-xs")}>
-            Adicione seu primeiro bloco para começar.
-          </p>
-        )}
-
         {showBranding && (
-          <div className={cn("mt-auto pt-10", compact ? "text-[9px]" : "text-[11px]")}>
-            <a
-              href="/"
-              className="opacity-60 transition-opacity hover:opacity-100"
-              style={{ color: theme.mutedColor }}
-            >
-              Feito com Biofy
-            </a>
-          </div>
+          <a
+            href="/"
+            className={cn(
+              "mt-auto inline-flex items-center gap-2 pt-10 opacity-70 transition-all hover:opacity-100",
+              compact ? "text-[9px]" : "text-[11px]",
+            )}
+            style={{ color: theme.mutedColor }}
+          >
+            <BiofyMark className={compact ? "h-4 w-4" : "h-5 w-5"} />
+            <span className="font-semibold tracking-tight">Biofy</span>
+          </a>
         )}
       </div>
     </div>
