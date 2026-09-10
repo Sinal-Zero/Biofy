@@ -15,7 +15,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -39,5 +39,5 @@ jobs:
           git config user.name "Biofy CI"
           git config user.email "actions@users.noreply.github.com"
           git add -A
-          git commit -m "style: apply lint autofixes"
+          git commit -m "style: apply final lint autofixes"
           git push origin HEAD:main
