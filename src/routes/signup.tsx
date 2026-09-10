@@ -132,6 +132,17 @@ function SignupPage() {
             {loading ? "Criando..." : "Começar grátis"}
           </Button>
         </form>
+        <p className="text-center text-[11px] leading-5 text-muted-foreground">
+          Ao criar uma conta ou continuar com o Google, você declara que leu e concorda com os{" "}
+          <Link to="/terms" className="font-medium text-foreground hover:underline">
+            Termos de Uso
+          </Link>{" "}
+          e com a{" "}
+          <Link to="/privacy" className="font-medium text-foreground hover:underline">
+            Política de Privacidade
+          </Link>
+          .
+        </p>
       </div>
     </AuthShell>
   );
