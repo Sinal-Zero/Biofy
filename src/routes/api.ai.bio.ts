@@ -1,19 +1,89 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-const GEMINI_TIMEOUT_MS = 12000;
+const GEMINI_TIMEOUT_MS = 15000;
+const GEMINI_MODELS = ["gemini-2.5-flash-lite", "gemini-2.5-flash"] as const;
 
 function mapGeminiError(detail: string, status: number) {
   const normalized = detail.toLowerCase();
   if (status === 429 || normalized.includes("quota") || normalized.includes("resource_exhausted")) {
-    return "A cota do Gemini foi atingida. Tente novamente em alguns minutos.";
+    return "A cota gratuita do Gemini foi atingida. Tente novamente em alguns minutos.";
   }
-  if (status === 401 || status === 403 || normalized.includes("api key") || normalized.includes("api_key")) {
-    return "A chave do Gemini não foi aceita pelo servidor. Revise a GEMINI_API_KEY na Vercel.";
+  if (
+    status === 401 ||
+    status === 403 ||
+    normalized.includes("api key") ||
+    normalized.includes("api_key") ||
+    normalized.includes("permission_denied")
+  ) {
+    return "A GEMINI_API_KEY não foi aceita pelo Google. Confira a chave e as restrições dela no Google AI Studio.";
   }
-  if (normalized.includes("model") && normalized.includes("not found")) {
-    return "O modelo do Gemini configurado não está disponível para esta chave.";
+  if (normalized.includes("model") && (normalized.includes("not found") || normalized.includes("not supported"))) {
+    return "Nenhum dos modelos Gemini configurados está disponível para essa chave.";
   }
-  return "O Gemini está indisponível no momento. Tente novamente em instantes.";
+  if (status >= 500) {
+    return "O serviço do Gemini está temporariamente instável. Tente novamente em alguns instantes.";
+  }
+  return "O Google recusou a solicitação da Biofy AI. Revise a configuração da Gemini API e tente novamente.";
+}
+
+type GeminiAttempt = {
+  response?: Response;
+  detail: string;
+  status: number;
+  timedOut: boolean;
+};
+
+async function requestGemini(
+  geminiKey: string,
+  model: (typeof GEMINI_MODELS)[number],
+  prompt: string,
+  responseSchema: Record<string, unknown>,
+  simplified = false,
+): Promise<GeminiAttempt> {
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": geminiKey,
+        },
+        signal: AbortSignal.timeout(GEMINI_TIMEOUT_MS),
+        body: JSON.stringify({
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          generationConfig: simplified
+            ? {
+                temperature: 0.45,
+                maxOutputTokens: 600,
+                responseMimeType: "application/json",
+              }
+            : {
+                temperature: 0.45,
+                maxOutputTokens: 600,
+                responseMimeType: "application/json",
+                responseSchema,
+              },
+        }),
+      },
+    );
+
+    if (response.ok) return { response, detail: "", status: response.status, timedOut: false };
+
+    const upstream = (await response.json().catch(() => null)) as
+      | { error?: { message?: string; status?: string } }
+      | null;
+    const detail = [upstream?.error?.status, upstream?.error?.message].filter(Boolean).join(": ");
+    return { response, detail, status: response.status, timedOut: false };
+  } catch (error) {
+    const timedOut =
+      error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
+    return {
+      detail: error instanceof Error ? error.message : "network_error",
+      status: 0,
+      timedOut,
+    };
+  }
 }
 
 export const Route = createFileRoute("/api/ai/bio")({
@@ -122,7 +192,7 @@ export const Route = createFileRoute("/api/ai/bio")({
           `Links: ${JSON.stringify(links)}`,
           history.length ? `Conversa recente: ${JSON.stringify(history)}` : "",
           `Pedido atual: ${instruction}`,
-          "Retorne apenas JSON válido com message, bio, linkTitles e tips. bio deve ter no máximo 240 caracteres. linkTitles deve conter apenas ids existentes. tips deve ter no máximo 3 itens curtos.",
+          'Retorne SOMENTE JSON válido no formato: {"message":"resposta curta","bio":"bio com até 240 caracteres","linkTitles":[{"id":"id existente","title":"novo título"}],"tips":["dica curta"]}. Se não precisar mudar a bio, repita a bio atual. Use apenas ids de links existentes.',
         ]
           .filter(Boolean)
           .join("\n");
@@ -148,47 +218,41 @@ export const Route = createFileRoute("/api/ai/bio")({
           required: ["message", "bio", "linkTitles", "tips"],
         };
 
-        let geminiResponse: Response;
-        try {
-          geminiResponse = await fetch(
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "x-goog-api-key": geminiKey,
-              },
-              signal: AbortSignal.timeout(GEMINI_TIMEOUT_MS),
-              body: JSON.stringify({
-                contents: [{ role: "user", parts: [{ text: prompt }] }],
-                generationConfig: {
-                  temperature: 0.45,
-                  maxOutputTokens: 500,
-                  responseMimeType: "application/json",
-                  responseSchema,
-                  thinkingConfig: { thinkingBudget: 0 },
-                },
-              }),
-            },
-          );
-        } catch (error) {
-          const isTimeout = error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
-          return Response.json(
-            {
-              error: isTimeout
-                ? "O Gemini passou do limite de resposta. Envie novamente; a próxima tentativa usa uma chamada nova e rápida."
-                : "Não foi possível conectar ao Gemini agora.",
-            },
-            { status: 502 },
-          );
+        let geminiResponse: Response | undefined;
+        let lastFailure: GeminiAttempt = { detail: "", status: 0, timedOut: false };
+
+        for (const model of GEMINI_MODELS) {
+          const fullAttempt = await requestGemini(geminiKey, model, prompt, responseSchema, false);
+          if (fullAttempt.response?.ok) {
+            geminiResponse = fullAttempt.response;
+            break;
+          }
+          lastFailure = fullAttempt;
+
+          // A 400 normalmente indica incompatibilidade de algum recurso opcional da configuração.
+          // Repetimos uma vez com payload mínimo antes de trocar de modelo.
+          if (fullAttempt.status === 400) {
+            const simpleAttempt = await requestGemini(geminiKey, model, prompt, responseSchema, true);
+            if (simpleAttempt.response?.ok) {
+              geminiResponse = simpleAttempt.response;
+              break;
+            }
+            lastFailure = simpleAttempt;
+          }
+
+          // Erros de chave/permissão e quota não melhoram tentando outro modelo.
+          if ([401, 403, 429].includes(lastFailure.status)) break;
         }
 
-        if (!geminiResponse.ok) {
-          const upstream = (await geminiResponse.json().catch(() => null)) as
-            | { error?: { message?: string } }
-            | null;
+        if (!geminiResponse) {
+          const error = lastFailure.timedOut
+            ? "O Gemini demorou demais para responder. Tente novamente."
+            : mapGeminiError(lastFailure.detail, lastFailure.status);
           return Response.json(
-            { error: mapGeminiError(upstream?.error?.message ?? "", geminiResponse.status) },
+            {
+              error,
+              code: lastFailure.status ? `GEMINI_${lastFailure.status}` : "GEMINI_NETWORK",
+            },
             { status: 502 },
           );
         }
