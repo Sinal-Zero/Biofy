@@ -47,7 +47,6 @@ export interface BlockConfig {
 export interface BioBlock {
   id: string;
   page_id: string;
-  user_id: string;
   type: string;
   title: string | null;
   url: string | null;
@@ -62,13 +61,12 @@ export interface BioProfile {
   display_name: string | null;
   avatar_url: string | null;
   bio: string | null;
-  plan: string;
-  onboarded?: boolean;
 }
 
 export interface BioPage {
   id: string;
   user_id: string;
+  username: string | null;
   template: string;
   theme: Partial<BioTheme>;
   is_published: boolean;
