@@ -187,6 +187,7 @@ export async function createBlock(input: {
 export async function updateBlock(
   id: string,
   patch: {
+    type?: string;
     title?: string | null;
     url?: string | null;
     config?: BlockConfig;
