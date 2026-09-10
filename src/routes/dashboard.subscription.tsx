@@ -108,7 +108,11 @@ function SubscriptionPage() {
             <div>
               <span className="block text-xs text-muted-foreground">Status</span>
               <strong className="mt-1 block font-medium">
-                {loading ? "—" : hasPaidSubscription ? statusLabel(subscription?.status) : "Gratuito"}
+                {loading
+                  ? "—"
+                  : hasPaidSubscription
+                    ? statusLabel(subscription?.status)
+                    : "Gratuito"}
               </strong>
             </div>
             <div>
