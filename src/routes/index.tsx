@@ -1,18 +1,25 @@
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   ArrowRight,
   BarChart3,
   Check,
+  ChevronDown,
+  LayoutDashboard,
   LayoutTemplate,
   Link2,
+  LogOut,
   Palette,
+  Settings,
   Smartphone,
   Sparkles,
+  UserRound,
 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { BioPreview } from "@/components/bio/BioPreview";
 import { PhoneFrame } from "@/components/bio/PhoneFrame";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 import type { BioBlock } from "@/lib/bio-types";
 import { templates } from "@/lib/templates";
 
@@ -131,6 +138,68 @@ const plans = [
 ];
 
 function HomePage() {
+  const navigate = useNavigate();
+  const [user, setUser] = useState<Awaited<ReturnType<typeof supabase.auth.getUser>>["data"]["user"]>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let mounted = true;
+
+    void supabase.auth.getSession().then(({ data }) => {
+      if (mounted) setUser(data.session?.user ?? null);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (mounted) setUser(session?.user ?? null);
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!profileOpen) return;
+
+    function handlePointerDown(event: MouseEvent) {
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setProfileOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setProfileOpen(false);
+    }
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [profileOpen]);
+
+  async function signOut() {
+    setProfileOpen(false);
+    await supabase.auth.signOut();
+    await navigate({ to: "/" });
+  }
+
+  const displayName =
+    (user?.user_metadata?.full_name as string | undefined) ||
+    (user?.user_metadata?.name as string | undefined) ||
+    user?.email?.split("@")[0] ||
+    "Minha conta";
+  const avatarUrl =
+    (user?.user_metadata?.avatar_url as string | undefined) ||
+    (user?.user_metadata?.picture as string | undefined) ||
+    null;
+  const initial = displayName.trim().charAt(0).toUpperCase() || "U";
+
   return (
     <div className="min-h-screen overflow-hidden bg-background text-foreground">
       <header className="fixed inset-x-0 top-0 z-50 border-b border-white/5 bg-background/75 backdrop-blur-xl">
@@ -150,14 +219,103 @@ function HomePage() {
               Preços
             </a>
           </nav>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/login">Entrar</Link>
-            </Button>
-            <Button size="sm" asChild>
-              <Link to="/signup">Criar minha Bio</Link>
-            </Button>
-          </div>
+
+          {user ? (
+            <div ref={profileRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setProfileOpen((open) => !open)}
+                className="group flex h-10 items-center gap-2 rounded-full border border-border bg-card/80 p-1.5 pr-3 shadow-sm transition duration-200 hover:border-primary/30 hover:bg-card"
+                aria-haspopup="menu"
+                aria-expanded={profileOpen}
+              >
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt={displayName}
+                    className="h-7 w-7 rounded-full object-cover"
+                  />
+                ) : (
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
+                    {initial}
+                  </span>
+                )}
+                <span className="hidden max-w-32 truncate text-sm font-medium sm:block">
+                  {displayName}
+                </span>
+                <ChevronDown
+                  className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 ${profileOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+
+              {profileOpen ? (
+                <div
+                  role="menu"
+                  className="absolute right-0 top-12 w-64 origin-top-right animate-in rounded-2xl border border-border bg-popover p-2 shadow-xl fade-in zoom-in-95"
+                >
+                  <div className="border-b border-border px-3 py-3">
+                    <div className="flex items-center gap-3">
+                      {avatarUrl ? (
+                        <img
+                          src={avatarUrl}
+                          alt={displayName}
+                          className="h-10 w-10 rounded-full object-cover"
+                        />
+                      ) : (
+                        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/15 font-semibold text-primary">
+                          {initial}
+                        </span>
+                      )}
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold">{displayName}</p>
+                        <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Link
+                    to="/dashboard"
+                    onClick={() => setProfileOpen(false)}
+                    className="mt-2 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition hover:bg-accent"
+                    role="menuitem"
+                  >
+                    <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
+                    Painel
+                  </Link>
+
+                  <button
+                    type="button"
+                    disabled
+                    className="flex w-full cursor-not-allowed items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-muted-foreground opacity-60"
+                    role="menuitem"
+                  >
+                    <Settings className="h-4 w-4" />
+                    <span className="flex-1">Configurações</span>
+                    <span className="text-[10px] uppercase tracking-wide">Em breve</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => void signOut()}
+                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-destructive transition hover:bg-destructive/10"
+                    role="menuitem"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Sair
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/login">Entrar</Link>
+              </Button>
+              <Button size="sm" asChild>
+                <Link to="/signup">Criar minha Bio</Link>
+              </Button>
+            </div>
+          )}
         </div>
       </header>
 
