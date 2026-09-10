@@ -34,7 +34,9 @@ export function LegalPage({ eyebrow, title, description, updatedAt, sections }: 
           <div className="rounded-3xl border border-border bg-card p-6 shadow-soft sm:p-10">
             <p className="text-sm font-medium text-primary">{eyebrow}</p>
             <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">{title}</h1>
-            <p className="mt-4 text-sm leading-7 text-muted-foreground sm:text-base">{description}</p>
+            <p className="mt-4 text-sm leading-7 text-muted-foreground sm:text-base">
+              {description}
+            </p>
             <p className="mt-4 text-xs text-muted-foreground">Última atualização: {updatedAt}</p>
 
             <div className="mt-10 space-y-9">
