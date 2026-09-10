@@ -1,4 +1,4 @@
-import { Sparkles, WandSparkles } from "lucide-react";
+import { RotateCcw, Sparkles, WandSparkles } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +9,7 @@ type AiResult = {
   bio: string;
   linkTitles: Array<{ id: string; title: string }>;
   tips: string[];
+  interactionId: string | null;
 };
 
 export function BioAiAssistant() {
@@ -16,13 +17,13 @@ export function BioAiAssistant() {
   const [instruction, setInstruction] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AiResult | null>(null);
+  const [interactionId, setInteractionId] = useState<string | null>(null);
 
   async function generate() {
     const cleanInstruction = instruction.trim();
     if (!cleanInstruction || loading) return;
 
     setLoading(true);
-    setResult(null);
 
     try {
       const { data } = await supabase.auth.getSession();
@@ -40,6 +41,7 @@ export function BioAiAssistant() {
         },
         body: JSON.stringify({
           instruction: cleanInstruction,
+          previousInteractionId: interactionId,
           displayName: bundle.profile.display_name,
           bio: bundle.profile.bio,
           links: bundle.blocks
@@ -57,16 +59,29 @@ export function BioAiAssistant() {
         return;
       }
 
+      const nextInteractionId =
+        typeof payload.interactionId === "string" ? payload.interactionId : interactionId;
+
+      setInteractionId(nextInteractionId);
       setResult({
         bio: typeof payload.bio === "string" ? payload.bio : "",
         linkTitles: Array.isArray(payload.linkTitles) ? payload.linkTitles : [],
         tips: Array.isArray(payload.tips) ? payload.tips : [],
+        interactionId: nextInteractionId,
       });
+      setInstruction("");
     } catch {
       toast.error("Falha ao conectar com o Assistente Biofy.");
     } finally {
       setLoading(false);
     }
+  }
+
+  function newConversation() {
+    setInteractionId(null);
+    setResult(null);
+    setInstruction("");
+    toast.success("Nova conversa iniciada.");
   }
 
   function applyBio() {
@@ -100,9 +115,17 @@ export function BioAiAssistant() {
           </div>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">
             Peça uma descrição melhor, títulos mais claros ou uma direção para organizar sua página.
-            Nada é alterado sem você aplicar a sugestão.
+            Você também pode continuar refinando a resposta na mesma conversa. Nada é alterado sem
+            você aplicar a sugestão.
           </p>
         </div>
+
+        {interactionId ? (
+          <Button type="button" size="sm" variant="ghost" onClick={newConversation}>
+            <RotateCcw className="mr-2 h-4 w-4" />
+            Nova conversa
+          </Button>
+        ) : null}
       </div>
 
       <div className="mt-5 flex flex-col gap-3 sm:flex-row">
@@ -110,7 +133,11 @@ export function BioAiAssistant() {
           value={instruction}
           maxLength={800}
           onChange={(event) => setInstruction(event.target.value)}
-          placeholder="Ex.: deixe minha bio mais profissional e melhore os títulos dos links"
+          placeholder={
+            interactionId
+              ? "Ex.: agora deixe mais curto e mais profissional"
+              : "Ex.: deixe minha bio mais profissional e melhore os títulos dos links"
+          }
           className="min-h-24 flex-1 resize-y rounded-xl border border-input bg-background/80 px-3 py-2.5 text-sm outline-none transition placeholder:text-muted-foreground focus:border-primary/50 focus:ring-2 focus:ring-ring"
         />
         <Button
@@ -120,7 +147,7 @@ export function BioAiAssistant() {
           className="sm:self-end"
         >
           <WandSparkles className="mr-2 h-4 w-4" />
-          {loading ? "Criando..." : "Gerar sugestão"}
+          {loading ? "Criando..." : interactionId ? "Continuar" : "Gerar sugestão"}
         </Button>
       </div>
 
