@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { Check, Lock, Sparkles } from "lucide-react";
+import { Check, Lock, Pipette, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { BioPreview } from "@/components/bio/BioPreview";
 import { PhoneFrame } from "@/components/bio/PhoneFrame";
@@ -7,23 +7,12 @@ import { useBio } from "@/components/dashboard/BioContext";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { fetchSubscription } from "@/lib/bio-data";
-import { fontLabels, type FontKey } from "@/lib/bio-types";
+import { fontLabels, fontStacks, type FontKey } from "@/lib/bio-types";
 import { templates } from "@/lib/templates";
 
 export const Route = createFileRoute("/dashboard/appearance")({
   component: AppearancePage,
 });
-
-const COLOR_SWATCHES = [
-  "#111827",
-  "#ffffff",
-  "#6d7bff",
-  "#8b5cf6",
-  "#0ea5e9",
-  "#10b981",
-  "#f59e0b",
-  "#ef4444",
-] as const;
 
 function normalizeHex(value: string) {
   const next = value.trim();
@@ -47,8 +36,9 @@ function BrandedColorPicker({
   function commit() {
     const normalized = normalizeHex(draft);
     if (/^#[0-9a-f]{6}$/i.test(normalized)) {
-      onChange(normalized.toLowerCase());
-      setDraft(normalized.toLowerCase());
+      const clean = normalized.toLowerCase();
+      onChange(clean);
+      setDraft(clean);
     } else {
       setDraft(value);
     }
@@ -57,29 +47,42 @@ function BrandedColorPicker({
   return (
     <div className="rounded-2xl border border-border bg-background p-4">
       <div className="flex items-center justify-between gap-3">
-        <Label>{label}</Label>
+        <div>
+          <Label>{label}</Label>
+          <p className="mt-1 text-[11px] text-muted-foreground">Escolha qualquer cor.</p>
+        </div>
         <span
-          className="h-7 w-7 rounded-full border border-border shadow-sm"
+          className="h-8 w-8 rounded-xl border border-border shadow-sm"
           style={{ backgroundColor: value }}
           aria-hidden="true"
         />
       </div>
-      <div className="mt-3 grid grid-cols-8 gap-2">
-        {COLOR_SWATCHES.map((color) => (
-          <button
-            key={color}
-            type="button"
-            onClick={() => onChange(color)}
-            className={`aspect-square rounded-full border-2 transition hover:scale-110 ${
-              value.toLowerCase() === color.toLowerCase()
-                ? "border-primary ring-2 ring-primary/20"
-                : "border-border"
-            }`}
-            style={{ backgroundColor: color }}
-            aria-label={`Usar cor ${color}`}
-          />
-        ))}
-      </div>
+
+      <label className="group relative mt-4 block cursor-pointer overflow-hidden rounded-2xl border border-border bg-card p-3 transition hover:border-primary/40">
+        <div
+          className="h-28 rounded-xl border border-white/10 shadow-inner"
+          style={{
+            background: `linear-gradient(135deg, ${value}, color-mix(in srgb, ${value} 62%, white), color-mix(in srgb, ${value} 70%, black))`,
+          }}
+        />
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-xs font-medium">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Pipette className="h-3.5 w-3.5" />
+            </span>
+            Abrir seletor de cor
+          </div>
+          <span className="font-mono text-[11px] uppercase text-muted-foreground">{value}</span>
+        </div>
+        <input
+          type="color"
+          value={/^#[0-9a-f]{6}$/i.test(value) ? value : "#000000"}
+          onChange={(event) => onChange(event.target.value.toLowerCase())}
+          className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+          aria-label={`Escolher ${label.toLowerCase()}`}
+        />
+      </label>
+
       <div className="mt-3 flex items-center gap-2 rounded-xl border border-input bg-card px-3">
         <span className="text-xs font-semibold text-primary">HEX</span>
         <Input
@@ -184,7 +187,7 @@ function AppearancePage() {
                   <h2 className="text-lg font-semibold">Personalização</h2>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Cores próprias e tipografia completa para Pro e Master.
+                  Cor livre e uma biblioteca maior de fontes para Pro e Master.
                 </p>
               </div>
               <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary">
@@ -220,27 +223,42 @@ function AppearancePage() {
                 <div className="rounded-2xl border border-border bg-background p-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <Label htmlFor="font-select">Fonte</Label>
+                      <Label>Fonte</Label>
                       <p className="mt-1 text-[11px] text-muted-foreground">
-                        Todas as fontes disponíveis no Biofy.
+                        Escolha visualmente a tipografia da sua página.
                       </p>
                     </div>
                     <span className="rounded-full border border-border px-2 py-1 text-[10px] text-muted-foreground">
                       {Object.keys(fontLabels).length} opções
                     </span>
                   </div>
-                  <select
-                    id="font-select"
-                    value={theme.font}
-                    onChange={(event) => patchTheme({ font: event.target.value as FontKey })}
-                    className="mt-3 h-11 w-full rounded-xl border border-input bg-card px-3 text-sm outline-none transition focus:border-primary/50 focus:ring-2 focus:ring-ring"
-                  >
-                    {Object.entries(fontLabels).map(([key, label]) => (
-                      <option key={key} value={key}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
+
+                  <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                    {(Object.entries(fontLabels) as Array<[FontKey, string]>).map(([key, label]) => {
+                      const active = theme.font === key;
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => patchTheme({ font: key })}
+                          className={`rounded-xl border px-3 py-3 text-left transition hover:border-primary/40 hover:bg-accent/40 ${
+                            active ? "border-primary bg-primary/[0.06] ring-2 ring-primary/15" : "border-border bg-card"
+                          }`}
+                          aria-pressed={active}
+                        >
+                          <span
+                            className="block truncate text-lg text-foreground"
+                            style={{ fontFamily: fontStacks[key] }}
+                          >
+                            Biofy
+                          </span>
+                          <span className="mt-1 block truncate text-[11px] text-muted-foreground">
+                            {label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             ) : (
@@ -253,7 +271,7 @@ function AppearancePage() {
                     <p className="text-sm font-semibold">Personalização avançada bloqueada</p>
                     <p className="mt-1 text-xs leading-5 text-muted-foreground">
                       No Free você usa os três estilos base e a fonte Jakarta. Pro e Master liberam
-                      cores próprias e todas as fontes.
+                      cores livres e toda a biblioteca de fontes.
                     </p>
                     <Link
                       to="/dashboard/subscription"
