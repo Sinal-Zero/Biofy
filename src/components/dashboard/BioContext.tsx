@@ -36,7 +36,6 @@ interface BioContextValue {
   bundle: BioBundle;
   theme: BioTheme;
   saveState: SaveState;
-  publishing: boolean;
   patchProfile: (patch: ProfilePatch) => void;
   patchTheme: (patch: Partial<BioTheme>) => void;
   applyTemplate: (templateId: string) => void;
@@ -53,7 +52,6 @@ interface BioContextValue {
   duplicateBlock: (id: string) => Promise<void>;
   removeBlock: (id: string) => Promise<void>;
   moveBlock: (fromId: string, toIndex: number) => void;
-  publish: () => Promise<void>;
   refresh: () => Promise<void>;
 }
 
@@ -76,7 +74,6 @@ export function BioProvider({
 }) {
   const [bundle, setBundle] = useState<BioBundle>(initial);
   const [saveState, setSaveState] = useState<SaveState>("idle");
-  const [publishing, setPublishing] = useState(false);
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const bundleRef = useRef(bundle);
@@ -284,28 +281,6 @@ export function BioProvider({
     [schedule],
   );
 
-  const publish = useCallback(async () => {
-    if (!bundleRef.current.profile.username) {
-      toast.error("Escolha seu username antes de publicar.");
-      return;
-    }
-
-    setPublishing(true);
-    try {
-      const now = new Date().toISOString();
-      await updatePage(bundleRef.current.page.id, { is_published: true, published_at: now });
-      setBundle((prev) => ({
-        ...prev,
-        page: { ...prev.page, is_published: true, published_at: now },
-      }));
-      toast.success("Sua Bio foi publicada!");
-    } catch {
-      toast.error("Não foi possível publicar agora.");
-    } finally {
-      setPublishing(false);
-    }
-  }, []);
-
   const refresh = useCallback(async () => {
     const next = await fetchMyBio(userId);
     setBundle(next);
@@ -316,7 +291,6 @@ export function BioProvider({
       bundle,
       theme,
       saveState,
-      publishing,
       patchProfile,
       patchTheme,
       applyTemplate,
@@ -325,14 +299,12 @@ export function BioProvider({
       duplicateBlock,
       removeBlock,
       moveBlock,
-      publish,
       refresh,
     }),
     [
       bundle,
       theme,
       saveState,
-      publishing,
       patchProfile,
       patchTheme,
       applyTemplate,
@@ -341,7 +313,6 @@ export function BioProvider({
       duplicateBlock,
       removeBlock,
       moveBlock,
-      publish,
       refresh,
     ],
   );
