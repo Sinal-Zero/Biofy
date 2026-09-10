@@ -27,7 +27,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Apply safe ESLint fixes
-        run: bunx eslint . --fix
+        run: bunx eslint . --fix || true
 
       - name: Commit fixes
         run: |
