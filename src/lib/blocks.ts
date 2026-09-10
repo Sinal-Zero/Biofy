@@ -146,3 +146,46 @@ export function normalizeUrl(type: string, raw: string): string {
   if (/^(https?:|mailto:|tel:)/i.test(value)) return value;
   return `https://${value}`;
 }
+
+export function detectLinkType(raw: string): string {
+  const value = raw.trim().toLowerCase();
+  if (!value) return "link";
+
+  if (value.startsWith("mailto:")) return "email";
+
+  const normalized = /^(https?:\/\/)/i.test(value) ? value : `https://${value}`;
+
+  try {
+    const host = new URL(normalized).hostname.replace(/^www\./, "");
+
+    if (host === "instagram.com" || host.endsWith(".instagram.com")) return "instagram";
+    if (host === "open.spotify.com" || host === "spotify.com" || host.endsWith(".spotify.com"))
+      return "spotify";
+    if (host === "youtube.com" || host.endsWith(".youtube.com") || host === "youtu.be")
+      return "youtube";
+    if (host === "tiktok.com" || host.endsWith(".tiktok.com")) return "tiktok";
+    if (
+      host === "wa.me" ||
+      host === "whatsapp.com" ||
+      host.endsWith(".whatsapp.com")
+    )
+      return "whatsapp";
+    if (host === "t.me" || host === "telegram.me") return "telegram";
+    if (host === "discord.gg" || host === "discord.com" || host.endsWith(".discord.com"))
+      return "discord";
+    if (host === "linkedin.com" || host.endsWith(".linkedin.com")) return "linkedin";
+    if (host === "x.com" || host === "twitter.com" || host.endsWith(".twitter.com")) return "x";
+
+    return "website";
+  } catch {
+    return "link";
+  }
+}
+
+export function createWhatsAppUrl(countryCode: string, areaCode: string, number: string): string {
+  const country = countryCode.replace(/\D/g, "");
+  const area = areaCode.replace(/\D/g, "");
+  const local = number.replace(/\D/g, "");
+  if (!country || !area || !local) return "";
+  return `https://wa.me/${country}${area}${local}`;
+}
