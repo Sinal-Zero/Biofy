@@ -43,6 +43,7 @@ interface BioContextValue {
   patchBlock: (
     id: string,
     patch: {
+      type?: string;
       title?: string | null;
       url?: string | null;
       config?: BlockConfig;
@@ -192,6 +193,7 @@ export function BioProvider({
           block.id === id
             ? {
                 ...block,
+                ...(patch.type !== undefined ? { type: patch.type } : {}),
                 ...(patch.title !== undefined ? { title: patch.title } : {}),
                 ...(patch.url !== undefined ? { url: patch.url } : {}),
                 ...(patch.is_visible !== undefined ? { is_visible: patch.is_visible } : {}),
@@ -206,6 +208,7 @@ export function BioProvider({
         const current = bundleRef.current.blocks.find((block) => block.id === id);
         if (!current) return;
         await apiUpdateBlock(id, {
+          type: current.type,
           title: current.title,
           url: current.url,
           config: current.config,
