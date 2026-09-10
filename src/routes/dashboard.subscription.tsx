@@ -16,20 +16,13 @@ const plans = [
     name: "Free",
     id: "free",
     price: "R$ 0",
-    features: ["1 página", "Links essenciais", "3 estilos base", "Fonte padrão Biofy"],
+    features: ["1 página", "Links essenciais", "3 estilos base", "Branding Biofy"],
   },
   {
     name: "Pro",
     id: "pro",
     price: "R$ 21,90/mês",
-    features: [
-      "Até 3 páginas",
-      "Links ilimitados",
-      "Cores personalizadas",
-      "Todas as fontes",
-      "Analytics",
-      "Sem branding",
-    ],
+    features: ["Até 3 páginas", "Links ilimitados", "Personalização completa", "Analytics", "Sem branding"],
   },
   {
     name: "Master",
@@ -41,7 +34,6 @@ const plans = [
       "Assistente de IA — em breve",
       "Analytics avançado",
       "Recursos profissionais",
-      "Preparado para domínio personalizado",
     ],
   },
 ] as const;
@@ -87,10 +79,6 @@ function SubscriptionPage() {
       <div>
         <p className="text-sm font-medium text-primary">Plano</p>
         <h1 className="mt-1 text-3xl font-bold">Assinatura</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Seu plano será atualizado automaticamente pelo sistema de pagamentos quando o Asaas for
-          conectado.
-        </p>
       </div>
 
       <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
@@ -170,11 +158,6 @@ function SubscriptionPage() {
           );
         })}
       </section>
-
-      <p className="text-center text-xs text-muted-foreground">
-        Depois da integração, pagamentos confirmados atualizarão o plano sem o usuário precisar
-        informar nada manualmente.
-      </p>
     </div>
   );
 }
