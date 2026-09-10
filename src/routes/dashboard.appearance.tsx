@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { BioPreview } from "@/components/bio/BioPreview";
 import { PhoneFrame } from "@/components/bio/PhoneFrame";
 import { useBio } from "@/components/dashboard/BioContext";
+import { ImageUploadButton } from "@/components/dashboard/ImageUploadButton";
 import { Label } from "@/components/ui/label";
 import {
   fontLabels,
@@ -133,15 +134,22 @@ function AppearancePage() {
                 </>
               ) : null}
               {theme.bgType === "image" ? (
-                <label className="space-y-2 sm:col-span-2">
-                  <span className="text-sm">URL da imagem</span>
+                <div className="space-y-2 sm:col-span-2">
+                  <Label htmlFor="background-image">Imagem de fundo</Label>
                   <input
+                    id="background-image"
                     value={theme.bgImage}
                     onChange={(event) => patchTheme({ bgImage: event.target.value })}
                     placeholder="https://..."
                     className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm"
                   />
-                </label>
+                  <ImageUploadButton
+                    userId={bundle.page.user_id}
+                    area="background"
+                    label="Enviar fundo"
+                    onUploaded={(url) => patchTheme({ bgType: "image", bgImage: url })}
+                  />
+                </div>
               ) : null}
             </div>
           </section>
