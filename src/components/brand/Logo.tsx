@@ -31,9 +31,7 @@ export function Logo({
     >
       <BiofyMark className="h-8 w-8 transition-transform duration-300 group-hover:rotate-6" />
       {showWordmark && (
-        <span className="font-display text-xl font-bold tracking-tight text-foreground">
-          Biofy
-        </span>
+        <span className="font-display text-xl font-bold tracking-tight text-foreground">Biofy</span>
       )}
     </Link>
   );

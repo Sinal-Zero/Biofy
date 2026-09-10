@@ -80,7 +80,10 @@ function LoginPage() {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Senha</Label>
-              <Link to="/forgot-password" className="text-xs text-muted-foreground hover:text-foreground">
+              <Link
+                to="/forgot-password"
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
                 Esqueci minha senha
               </Link>
             </div>

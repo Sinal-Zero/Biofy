@@ -19,7 +19,13 @@ import {
   updateProfile,
   type BioBundle,
 } from "@/lib/bio-data";
-import { mergeTheme, type BioBlock, type BioProfile, type BioTheme, type BlockConfig } from "@/lib/bio-types";
+import {
+  mergeTheme,
+  type BioBlock,
+  type BioProfile,
+  type BioTheme,
+  type BlockConfig,
+} from "@/lib/bio-types";
 import { getTemplate } from "@/lib/templates";
 import { getBlockDef } from "@/lib/blocks";
 
@@ -34,7 +40,15 @@ interface BioContextValue {
   patchTheme: (patch: Partial<BioTheme>) => void;
   applyTemplate: (templateId: string) => void;
   addBlock: (type: string) => Promise<void>;
-  patchBlock: (id: string, patch: { title?: string | null; url?: string | null; config?: BlockConfig; is_visible?: boolean }) => void;
+  patchBlock: (
+    id: string,
+    patch: {
+      title?: string | null;
+      url?: string | null;
+      config?: BlockConfig;
+      is_visible?: boolean;
+    },
+  ) => void;
   duplicateBlock: (id: string) => Promise<void>;
   removeBlock: (id: string) => Promise<void>;
   moveBlock: (fromId: string, toIndex: number) => void;

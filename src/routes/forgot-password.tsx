@@ -12,9 +12,15 @@ export const Route = createFileRoute("/forgot-password")({
   head: () => ({
     meta: [
       { title: "Recuperar senha — Biofy" },
-      { name: "description", content: "Receba um link por e-mail para criar uma nova senha no Biofy." },
+      {
+        name: "description",
+        content: "Receba um link por e-mail para criar uma nova senha no Biofy.",
+      },
       { property: "og:title", content: "Recuperar senha — Biofy" },
-      { property: "og:description", content: "Receba um link por e-mail para criar uma nova senha." },
+      {
+        property: "og:description",
+        content: "Receba um link por e-mail para criar uma nova senha.",
+      },
     ],
   }),
   component: ForgotPasswordPage,

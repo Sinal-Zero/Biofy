@@ -32,22 +32,14 @@ export async function fetchMyBio(userId: string): Promise<BioBundle> {
 
   let profileRow = profileRes.data;
   if (!profileRow) {
-    const created = await supabase
-      .from("profiles")
-      .insert({ id: userId })
-      .select("*")
-      .single();
+    const created = await supabase.from("profiles").insert({ id: userId }).select("*").single();
     if (created.error) throw created.error;
     profileRow = created.data;
   }
 
   let pageRow = pageRes.data;
   if (!pageRow) {
-    const created = await supabase
-      .from("pages")
-      .insert({ user_id: userId })
-      .select("*")
-      .single();
+    const created = await supabase.from("pages").insert({ user_id: userId }).select("*").single();
     if (created.error) throw created.error;
     pageRow = created.data;
   }
@@ -93,7 +85,12 @@ export async function updateProfile(userId: string, patch: Partial<BioProfile>) 
 
 export async function updatePage(
   pageId: string,
-  patch: { theme?: Partial<BioTheme>; template?: string; is_published?: boolean; published_at?: string },
+  patch: {
+    theme?: Partial<BioTheme>;
+    template?: string;
+    is_published?: boolean;
+    published_at?: string;
+  },
 ) {
   const { error } = await supabase.from("pages").update(asJson(patch)).eq("id", pageId);
   if (error) throw error;

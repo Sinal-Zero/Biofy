@@ -70,8 +70,10 @@ export function BioPreview({
 
   function buttonStyleFor(block: BioBlock) {
     const cfg = block.config ?? {};
-    const style = !cfg.buttonStyle || cfg.buttonStyle === "inherit" ? theme.buttonStyle : cfg.buttonStyle;
-    const shape = !cfg.buttonShape || cfg.buttonShape === "inherit" ? theme.buttonShape : cfg.buttonShape;
+    const style =
+      !cfg.buttonStyle || cfg.buttonStyle === "inherit" ? theme.buttonStyle : cfg.buttonStyle;
+    const shape =
+      !cfg.buttonShape || cfg.buttonShape === "inherit" ? theme.buttonShape : cfg.buttonShape;
     const color = cfg.buttonColor || theme.buttonColor;
     const textColor = cfg.buttonTextColor || theme.buttonTextColor;
     const shadow = cfg.buttonShadow ?? theme.buttonShadow;
@@ -189,7 +191,10 @@ export function BioPreview({
         )}
         {bio && (
           <p
-            className={cn("max-w-full whitespace-pre-line", compact ? "mt-2 text-[11px]" : "mt-3 text-sm")}
+            className={cn(
+              "max-w-full whitespace-pre-line",
+              compact ? "mt-2 text-[11px]" : "mt-3 text-sm",
+            )}
             style={{ color: theme.mutedColor }}
           >
             {bio}
@@ -227,7 +232,10 @@ export function BioPreview({
 
         <div
           className="flex w-full flex-col"
-          style={{ gap: `${compact ? Math.max(6, theme.gap * 0.7) : theme.gap}px`, marginTop: compact ? 14 : 26 }}
+          style={{
+            gap: `${compact ? Math.max(6, theme.gap * 0.7) : theme.gap}px`,
+            marginTop: compact ? 14 : 26,
+          }}
         >
           {mainBlocks.map((block) => {
             if (block.type === "text") {
@@ -259,7 +267,9 @@ export function BioPreview({
             const content = (
               <>
                 <Icon size={compact ? 14 : 18} className="shrink-0 opacity-90" />
-                <span className={cn("min-w-0 flex-1 truncate", compact ? "text-[11px]" : "text-sm")}>
+                <span
+                  className={cn("min-w-0 flex-1 truncate", compact ? "text-[11px]" : "text-sm")}
+                >
                   {block.title || "Novo link"}
                 </span>
               </>
