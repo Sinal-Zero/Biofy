@@ -30,13 +30,14 @@ import { getTemplate } from "@/lib/templates";
 import { getBlockDef } from "@/lib/blocks";
 
 export type SaveState = "idle" | "saving" | "saved";
+type ProfilePatch = Partial<Pick<BioProfile, "username" | "display_name" | "avatar_url" | "bio">>;
 
 interface BioContextValue {
   bundle: BioBundle;
   theme: BioTheme;
   saveState: SaveState;
   publishing: boolean;
-  patchProfile: (patch: Partial<BioProfile>) => void;
+  patchProfile: (patch: ProfilePatch) => void;
   patchTheme: (patch: Partial<BioTheme>) => void;
   applyTemplate: (templateId: string) => void;
   addBlock: (type: string) => Promise<void>;
@@ -78,10 +79,16 @@ export function BioProvider({
   const [publishing, setPublishing] = useState(false);
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const bundleRef = useRef(bundle);
 
   useEffect(() => {
+    bundleRef.current = bundle;
+  }, [bundle]);
+
+  useEffect(() => {
+    const activeTimers = timers.current;
     return () => {
-      Object.values(timers.current).forEach(clearTimeout);
+      Object.values(activeTimers).forEach(clearTimeout);
       if (savedTimer.current) clearTimeout(savedTimer.current);
     };
   }, []);
@@ -112,7 +119,7 @@ export function BioProvider({
   const theme = useMemo(() => mergeTheme(bundle.page.theme), [bundle.page.theme]);
 
   const patchProfile = useCallback(
-    (patch: Partial<BioProfile>) => {
+    (patch: ProfilePatch) => {
       setBundle((prev) => ({ ...prev, profile: { ...prev.profile, ...patch } }));
       schedule("profile", async () => {
         await updateProfile(userId, patch);
@@ -128,17 +135,13 @@ export function BioProvider({
         return { ...prev, page: { ...prev.page, theme: nextTheme } };
       });
       schedule("theme", async () => {
-        const merged = { ...mergeTheme(bundleRef.current.page.theme) };
-        await updatePage(bundleRef.current.page.id, { theme: merged });
+        await updatePage(bundleRef.current.page.id, {
+          theme: { ...mergeTheme(bundleRef.current.page.theme) },
+        });
       });
     },
     [schedule],
   );
-
-  const bundleRef = useRef(bundle);
-  useEffect(() => {
-    bundleRef.current = bundle;
-  }, [bundle]);
 
   const applyTemplate = useCallback(
     (templateId: string) => {
@@ -168,7 +171,6 @@ export function BioProvider({
       try {
         const created = await apiCreateBlock({
           page_id: bundleRef.current.page.id,
-          user_id: userId,
           type,
           title: def.social ? def.label : type === "text" ? "" : "Novo link",
           url: null,
@@ -182,27 +184,29 @@ export function BioProvider({
         toast.error("Não foi possível adicionar o bloco.");
       }
     },
-    [finishSave, userId],
+    [finishSave],
   );
 
   const patchBlock = useCallback<BioContextValue["patchBlock"]>(
     (id, patch) => {
       setBundle((prev) => ({
         ...prev,
-        blocks: prev.blocks.map((b) =>
-          b.id === id
+        blocks: prev.blocks.map((block) =>
+          block.id === id
             ? {
-                ...b,
+                ...block,
                 ...(patch.title !== undefined ? { title: patch.title } : {}),
                 ...(patch.url !== undefined ? { url: patch.url } : {}),
                 ...(patch.is_visible !== undefined ? { is_visible: patch.is_visible } : {}),
-                ...(patch.config !== undefined ? { config: { ...b.config, ...patch.config } } : {}),
+                ...(patch.config !== undefined
+                  ? { config: { ...block.config, ...patch.config } }
+                  : {}),
               }
-            : b,
+            : block,
         ),
       }));
       schedule(`block:${id}`, async () => {
-        const current = bundleRef.current.blocks.find((b) => b.id === id);
+        const current = bundleRef.current.blocks.find((block) => block.id === id);
         if (!current) return;
         await apiUpdateBlock(id, {
           title: current.title,
@@ -217,13 +221,12 @@ export function BioProvider({
 
   const duplicateBlock = useCallback(
     async (id: string) => {
-      const source = bundleRef.current.blocks.find((b) => b.id === id);
+      const source = bundleRef.current.blocks.find((block) => block.id === id);
       if (!source) return;
       setSaveState("saving");
       try {
         const created = await apiCreateBlock({
           page_id: source.page_id,
-          user_id: userId,
           type: source.type,
           title: source.title,
           url: source.url,
@@ -237,13 +240,13 @@ export function BioProvider({
         toast.error("Não foi possível duplicar o bloco.");
       }
     },
-    [finishSave, userId],
+    [finishSave],
   );
 
   const removeBlock = useCallback(
     async (id: string) => {
       const snapshot = bundleRef.current.blocks;
-      setBundle((prev) => ({ ...prev, blocks: prev.blocks.filter((b) => b.id !== id) }));
+      setBundle((prev) => ({ ...prev, blocks: prev.blocks.filter((block) => block.id !== id) }));
       setSaveState("saving");
       try {
         await apiDeleteBlock(id);
@@ -261,13 +264,13 @@ export function BioProvider({
     (fromId: string, toIndex: number) => {
       setBundle((prev) => {
         const list = [...prev.blocks];
-        const fromIndex = list.findIndex((b) => b.id === fromId);
+        const fromIndex = list.findIndex((block) => block.id === fromId);
         if (fromIndex < 0) return prev;
         const [moved] = list.splice(fromIndex, 1);
         if (!moved) return prev;
         const clamped = Math.max(0, Math.min(toIndex, list.length));
         list.splice(clamped, 0, moved);
-        const reindexed: BioBlock[] = list.map((b, i) => ({ ...b, position: i }));
+        const reindexed: BioBlock[] = list.map((block, index) => ({ ...block, position: index }));
         return { ...prev, blocks: reindexed };
       });
       schedule(
@@ -282,6 +285,11 @@ export function BioProvider({
   );
 
   const publish = useCallback(async () => {
+    if (!bundleRef.current.profile.username) {
+      toast.error("Escolha seu username antes de publicar.");
+      return;
+    }
+
     setPublishing(true);
     try {
       const now = new Date().toISOString();
@@ -290,6 +298,7 @@ export function BioProvider({
         ...prev,
         page: { ...prev.page, is_published: true, published_at: now },
       }));
+      toast.success("Sua Bio foi publicada!");
     } catch {
       toast.error("Não foi possível publicar agora.");
     } finally {
