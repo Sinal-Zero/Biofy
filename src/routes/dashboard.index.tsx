@@ -33,7 +33,10 @@ function DashboardOverview() {
   const { bundle } = useBio();
   const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
   const activeLinks = useMemo(
-    () => bundle.blocks.filter((block) => block.is_visible).length,
+    () =>
+      bundle.blocks.filter(
+        (block) => block.is_visible && typeof block.url === "string" && block.url.trim().length > 0,
+      ).length,
     [bundle.blocks],
   );
   const publicPath = bundle.profile.username ? `/${bundle.profile.username}` : "";
