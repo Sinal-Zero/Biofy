@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { checkUsername, updateProfile } from "@/lib/bio-data";
+import { checkUsername, updatePage, updateProfile } from "@/lib/bio-data";
 
 export const Route = createFileRoute("/dashboard/settings")({
   component: SettingsPage,
@@ -38,23 +38,26 @@ function SettingsPage() {
       toast.error("Use pelo menos 3 caracteres.");
       return;
     }
-    if (normalized === bundle.profile.username) {
-      toast.message("Nenhuma alteração para salvar.");
-      return;
-    }
 
     setSaving(true);
     try {
-      if (!(await checkUsername(normalized))) {
-        toast.error("Esse username não está disponível.");
-        return;
+      if (normalized !== bundle.profile.username) {
+        if (!(await checkUsername(normalized))) {
+          toast.error("Esse username não está disponível.");
+          return;
+        }
+        await updateProfile(bundle.profile.id, { username: normalized });
       }
-      await updateProfile(bundle.profile.id, { username: normalized });
+
+      await updatePage(bundle.page.id, {
+        is_published: true,
+        published_at: bundle.page.published_at ?? new Date().toISOString(),
+      });
       await refresh();
       setUsername(normalized);
-      toast.success("Username atualizado.");
+      toast.success("Alterações salvas.");
     } catch {
-      toast.error("Não foi possível alterar o username.");
+      toast.error("Não foi possível salvar as alterações.");
     } finally {
       setSaving(false);
     }
@@ -84,7 +87,7 @@ function SettingsPage() {
           <Label htmlFor="settings-username">Username</Label>
           <div className="flex flex-col gap-2 sm:flex-row">
             <div className="flex flex-1 items-center rounded-xl border border-input bg-background px-3">
-              <span className="text-sm text-muted-foreground">biofy.com/</span>
+              <span className="text-sm text-muted-foreground">bio-fy.vercel.app/</span>
               <Input
                 id="settings-username"
                 value={username}
