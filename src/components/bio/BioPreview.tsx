@@ -54,7 +54,7 @@ export function BioPreview({
 }: BioPreviewProps) {
   const theme = useMemo(() => mergeTheme(rawTheme), [rawTheme]);
 
-  const background =
+  const panelBackground =
     theme.bgType === "gradient"
       ? `linear-gradient(${theme.bgAngle}deg, ${theme.bgFrom}, ${theme.bgTo})`
       : theme.bgType === "image" && theme.bgImage
@@ -136,181 +136,193 @@ export function BioPreview({
 
   return (
     <div
-      className={cn("flex min-h-full w-full flex-col", className)}
-      style={{
-        background,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        color: theme.textColor,
-        fontFamily: fontStacks[theme.font],
-      }}
+      className={cn(
+        "flex min-h-full w-full items-start justify-center transition-colors duration-300",
+        compact ? "p-3" : "min-h-screen p-4 sm:p-8 lg:p-12",
+        className,
+      )}
+      style={{ backgroundColor: theme.pageBgColor, fontFamily: fontStacks[theme.font] }}
     >
       <div
         className={cn(
-          "mx-auto flex w-full flex-1 flex-col px-5",
-          compact ? "py-7" : "py-10 sm:py-14",
-          theme.align === "left" ? "items-start text-left" : "items-center text-center",
+          "flex w-full flex-col overflow-hidden border shadow-[0_28px_90px_-46px_rgba(0,0,0,0.78)] transition-all duration-300",
+          compact ? "min-h-full rounded-[1.25rem]" : "min-h-[calc(100vh-2rem)] rounded-[1.75rem] sm:min-h-[calc(100vh-4rem)]",
         )}
-        style={{ maxWidth: `${theme.width}px` }}
+        style={{
+          maxWidth: `${theme.width}px`,
+          background: panelBackground,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          borderColor: theme.panelBorderColor,
+          color: theme.textColor,
+        }}
       >
-        {avatarUrl ? (
-          <img
-            src={avatarUrl}
-            alt={displayName || username || "avatar"}
-            style={{
-              width: compact ? theme.avatarSize * 0.7 : theme.avatarSize,
-              height: compact ? theme.avatarSize * 0.7 : theme.avatarSize,
-              borderRadius: avatarRadius,
-              objectFit: "cover",
-              border: theme.avatarBorder ? `2px solid ${withAlpha(theme.textColor, 0.7)}` : "none",
-            }}
-          />
-        ) : (
-          <div
-            className="flex items-center justify-center font-semibold"
-            style={{
-              width: compact ? theme.avatarSize * 0.7 : theme.avatarSize,
-              height: compact ? theme.avatarSize * 0.7 : theme.avatarSize,
-              borderRadius: avatarRadius,
-              background: withAlpha(theme.textColor, 0.14),
-              border: theme.avatarBorder ? `2px solid ${withAlpha(theme.textColor, 0.5)}` : "none",
-              fontSize: compact ? 20 : 30,
-            }}
-          >
-            {initials}
-          </div>
-        )}
-
-        <h1
-          className={cn("font-semibold", compact ? "mt-3 text-base" : "mt-4 text-2xl")}
-          style={{ color: theme.textColor, letterSpacing: "-0.01em" }}
+        <div
+          className={cn(
+            "mx-auto flex w-full flex-1 flex-col px-5",
+            compact ? "py-7" : "py-10 sm:px-8 sm:py-14",
+            theme.align === "left" ? "items-start text-left" : "items-center text-center",
+          )}
         >
-          {displayName || (username ? `@${username}` : "Seu nome")}
-        </h1>
-        {username && (
-          <p className={compact ? "text-[10px] opacity-70" : "text-xs opacity-70"}>@{username}</p>
-        )}
-        {bio && (
-          <p
-            className={cn(
-              "max-w-full whitespace-pre-line",
-              compact ? "mt-2 text-[11px]" : "mt-3 text-sm",
-            )}
-            style={{ color: theme.mutedColor }}
-          >
-            {bio}
-          </p>
-        )}
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt={displayName || username || "avatar"}
+              style={{
+                width: compact ? theme.avatarSize * 0.7 : theme.avatarSize,
+                height: compact ? theme.avatarSize * 0.7 : theme.avatarSize,
+                borderRadius: avatarRadius,
+                objectFit: "cover",
+                border: theme.avatarBorder ? `2px solid ${withAlpha(theme.textColor, 0.7)}` : "none",
+              }}
+            />
+          ) : (
+            <div
+              className="flex items-center justify-center font-semibold"
+              style={{
+                width: compact ? theme.avatarSize * 0.7 : theme.avatarSize,
+                height: compact ? theme.avatarSize * 0.7 : theme.avatarSize,
+                borderRadius: avatarRadius,
+                background: withAlpha(theme.textColor, 0.14),
+                border: theme.avatarBorder ? `2px solid ${withAlpha(theme.textColor, 0.5)}` : "none",
+                fontSize: compact ? 20 : 30,
+              }}
+            >
+              {initials}
+            </div>
+          )}
 
-        {socials.length > 0 && (
-          <div
-            className={cn("flex flex-wrap items-center gap-3", compact ? "mt-3" : "mt-5")}
-            style={{ justifyContent: theme.align === "left" ? "flex-start" : "center" }}
+          <h1
+            className={cn("font-semibold", compact ? "mt-3 text-base" : "mt-4 text-2xl")}
+            style={{ color: theme.textColor, letterSpacing: "-0.01em" }}
           >
-            {socials.map((block) => {
+            {displayName || (username ? `@${username}` : "Seu nome")}
+          </h1>
+          {username && (
+            <p className={compact ? "text-[10px] opacity-70" : "text-xs opacity-70"}>@{username}</p>
+          )}
+          {bio && (
+            <p
+              className={cn(
+                "max-w-full whitespace-pre-line",
+                compact ? "mt-2 text-[11px]" : "mt-3 text-sm",
+              )}
+              style={{ color: theme.mutedColor }}
+            >
+              {bio}
+            </p>
+          )}
+
+          {socials.length > 0 && (
+            <div
+              className={cn("flex flex-wrap items-center gap-3", compact ? "mt-3" : "mt-5")}
+              style={{ justifyContent: theme.align === "left" ? "flex-start" : "center" }}
+            >
+              {socials.map((block) => {
+                const Icon = getBlockDef(block.type).icon;
+                const El = interactive ? "a" : "div";
+                return (
+                  <El
+                    key={block.id}
+                    {...(interactive
+                      ? {
+                          href: block.url ?? "#",
+                          target: "_blank",
+                          rel: "noreferrer noopener",
+                          onClick: () => onBlockClick?.(block),
+                        }
+                      : {})}
+                    className="transition-transform duration-200 hover:-translate-y-0.5 hover:opacity-80"
+                    aria-label={block.title || getBlockDef(block.type).label}
+                  >
+                    <Icon size={compact ? 16 : 22} color={theme.textColor} />
+                  </El>
+                );
+              })}
+            </div>
+          )}
+
+          <div
+            className="flex w-full flex-col"
+            style={{
+              gap: `${compact ? Math.max(6, theme.gap * 0.7) : theme.gap}px`,
+              marginTop: compact ? 14 : 26,
+            }}
+          >
+            {mainBlocks.map((block) => {
+              if (block.type === "text") {
+                return (
+                  <p
+                    key={block.id}
+                    className={compact ? "text-[11px]" : "text-sm"}
+                    style={{ color: theme.mutedColor, whiteSpace: "pre-line" }}
+                  >
+                    {block.config?.text || block.title || "Seu texto aqui"}
+                  </p>
+                );
+              }
+              if (block.type === "image") {
+                const src = block.config?.imageUrl || block.url;
+                if (!src) return null;
+                return (
+                  <img
+                    key={block.id}
+                    src={src}
+                    alt={block.title || "Imagem"}
+                    className="w-full object-cover"
+                    style={{ borderRadius: shapeRadius[theme.buttonShape] ?? "14px" }}
+                    loading="lazy"
+                  />
+                );
+              }
               const Icon = getBlockDef(block.type).icon;
-              const El = interactive ? "a" : "div";
+              const content = (
+                <>
+                  <Icon size={compact ? 14 : 18} className="shrink-0 opacity-90" />
+                  <span
+                    className={cn("min-w-0 flex-1 truncate", compact ? "text-[11px]" : "text-sm")}
+                  >
+                    {block.title || "Novo link"}
+                  </span>
+                </>
+              );
+              if (interactive && block.url) {
+                return (
+                  <a
+                    key={block.id}
+                    href={block.url}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    onClick={() => onBlockClick?.(block)}
+                    style={buttonStyleFor(block)}
+                    className={animClass(block)}
+                  >
+                    {content}
+                  </a>
+                );
+              }
               return (
-                <El
-                  key={block.id}
-                  {...(interactive
-                    ? {
-                        href: block.url ?? "#",
-                        target: "_blank",
-                        rel: "noreferrer noopener",
-                        onClick: () => onBlockClick?.(block),
-                      }
-                    : {})}
-                  className="transition-transform duration-200 hover:-translate-y-0.5 hover:opacity-80"
-                  aria-label={block.title || getBlockDef(block.type).label}
-                >
-                  <Icon size={compact ? 16 : 22} color={theme.textColor} />
-                </El>
+                <div key={block.id} style={buttonStyleFor(block)} className={animClass(block)}>
+                  {content}
+                </div>
               );
             })}
           </div>
-        )}
 
-        <div
-          className="flex w-full flex-col"
-          style={{
-            gap: `${compact ? Math.max(6, theme.gap * 0.7) : theme.gap}px`,
-            marginTop: compact ? 14 : 26,
-          }}
-        >
-          {mainBlocks.map((block) => {
-            if (block.type === "text") {
-              return (
-                <p
-                  key={block.id}
-                  className={compact ? "text-[11px]" : "text-sm"}
-                  style={{ color: theme.mutedColor, whiteSpace: "pre-line" }}
-                >
-                  {block.config?.text || block.title || "Seu texto aqui"}
-                </p>
-              );
-            }
-            if (block.type === "image") {
-              const src = block.config?.imageUrl || block.url;
-              if (!src) return null;
-              return (
-                <img
-                  key={block.id}
-                  src={src}
-                  alt={block.title || "Imagem"}
-                  className="w-full object-cover"
-                  style={{ borderRadius: shapeRadius[theme.buttonShape] ?? "14px" }}
-                  loading="lazy"
-                />
-              );
-            }
-            const Icon = getBlockDef(block.type).icon;
-            const content = (
-              <>
-                <Icon size={compact ? 14 : 18} className="shrink-0 opacity-90" />
-                <span
-                  className={cn("min-w-0 flex-1 truncate", compact ? "text-[11px]" : "text-sm")}
-                >
-                  {block.title || "Novo link"}
-                </span>
-              </>
-            );
-            if (interactive && block.url) {
-              return (
-                <a
-                  key={block.id}
-                  href={block.url}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  onClick={() => onBlockClick?.(block)}
-                  style={buttonStyleFor(block)}
-                  className={animClass(block)}
-                >
-                  {content}
-                </a>
-              );
-            }
-            return (
-              <div key={block.id} style={buttonStyleFor(block)} className={animClass(block)}>
-                {content}
-              </div>
-            );
-          })}
+          {showBranding && (
+            <a
+              href="/"
+              className={cn(
+                "mt-auto inline-flex items-center gap-2 pt-10 opacity-70 transition-all hover:opacity-100",
+                compact ? "text-[9px]" : "text-[11px]",
+              )}
+              style={{ color: theme.mutedColor }}
+            >
+              <BiofyMark className={compact ? "h-4 w-4" : "h-5 w-5"} />
+              <span className="font-semibold tracking-tight">Biofy</span>
+            </a>
+          )}
         </div>
-
-        {showBranding && (
-          <a
-            href="/"
-            className={cn(
-              "mt-auto inline-flex items-center gap-2 pt-10 opacity-70 transition-all hover:opacity-100",
-              compact ? "text-[9px]" : "text-[11px]",
-            )}
-            style={{ color: theme.mutedColor }}
-          >
-            <BiofyMark className={compact ? "h-4 w-4" : "h-5 w-5"} />
-            <span className="font-semibold tracking-tight">Biofy</span>
-          </a>
-        )}
       </div>
     </div>
   );
