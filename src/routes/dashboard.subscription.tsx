@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Check, Crown } from "lucide-react";
+import { Check, Crown, ExternalLink, ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useBio } from "@/components/dashboard/BioContext";
 import { Button } from "@/components/ui/button";
@@ -16,12 +16,14 @@ const plans = [
     name: "Free",
     id: "free",
     price: "R$ 0",
+    checkoutUrl: null,
     features: ["1 página", "Links essenciais", "3 estilos base", "Branding Biofy"],
   },
   {
     name: "Pro",
     id: "pro",
     price: "R$ 21,90/mês",
+    checkoutUrl: "https://www.asaas.com/c/5a65xpt3sm57axni",
     features: [
       "Até 3 páginas",
       "Links ilimitados",
@@ -35,6 +37,7 @@ const plans = [
     name: "Master",
     id: "business",
     price: "R$ 41,90/mês",
+    checkoutUrl: "https://www.asaas.com/c/ynze63vc9bunge8g",
     features: ["Até 5 páginas", "Tudo do Pro", "Analytics avançado", "Recursos profissionais"],
   },
 ] as const;
@@ -73,13 +76,18 @@ function SubscriptionPage() {
   }, [bundle.page.user_id]);
 
   const currentPlan = subscription?.plan ?? "free";
-  const hasPaidSubscription = currentPlan === "pro" || currentPlan === "business";
+  const hasPaidSubscription =
+    (currentPlan === "pro" || currentPlan === "business") &&
+    (!subscription?.status || ["active", "trialing"].includes(subscription.status));
 
   return (
     <div className="space-y-6">
       <div>
         <p className="text-sm font-medium text-primary">Plano</p>
         <h1 className="mt-1 text-3xl font-bold">Assinatura</h1>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+          Escolha seu plano e conclua o pagamento com segurança pelo Asaas.
+        </p>
       </div>
 
       <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
@@ -99,7 +107,7 @@ function SubscriptionPage() {
               <strong className="mt-1 block font-medium">
                 {loading
                   ? "—"
-                  : hasPaidSubscription
+                  : currentPlan === "pro" || currentPlan === "business"
                     ? statusLabel(subscription?.status)
                     : "Gratuito"}
               </strong>
@@ -107,7 +115,7 @@ function SubscriptionPage() {
             <div>
               <span className="block text-xs text-muted-foreground">Renovação</span>
               <strong className="mt-1 block font-medium">
-                {subscription?.current_period_end
+                {subscription?.current_period_end && hasPaidSubscription
                   ? new Date(subscription.current_period_end).toLocaleDateString("pt-BR")
                   : "—"}
               </strong>
@@ -116,16 +124,28 @@ function SubscriptionPage() {
         </div>
       </section>
 
+      {!hasPaidSubscription ? (
+        <div className="flex items-start gap-3 rounded-2xl border border-primary/20 bg-primary/[0.05] px-4 py-3.5 text-sm">
+          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+          <p className="leading-5 text-muted-foreground">
+            No checkout, use <strong className="font-semibold text-foreground">o mesmo e-mail da sua conta Biofy</strong>.
+            Assim o pagamento é identificado e o plano é ativado automaticamente.
+          </p>
+        </div>
+      ) : null}
+
       <section className="grid gap-4 lg:grid-cols-3">
         {plans.map((plan) => {
-          const current = currentPlan === plan.id;
+          const current = currentPlan === plan.id && (plan.id === "free" || hasPaidSubscription);
+          const canCheckout = Boolean(plan.checkoutUrl) && !hasPaidSubscription;
+
           return (
             <article
               key={plan.id}
-              className={`rounded-2xl border bg-card p-5 transition sm:p-6 ${
+              className={`rounded-2xl border bg-card p-5 transition duration-300 sm:p-6 ${
                 current
                   ? "border-primary ring-2 ring-primary/20"
-                  : "border-border hover:-translate-y-0.5 hover:border-primary/25"
+                  : "border-border hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-soft"
               }`}
             >
               <div className="flex items-center justify-between gap-3">
@@ -150,9 +170,20 @@ function SubscriptionPage() {
                 <div className="mt-6 rounded-xl border border-primary/20 bg-primary/[0.05] px-3 py-2.5 text-center text-xs font-medium text-primary">
                   Você já está neste plano
                 </div>
+              ) : canCheckout && plan.checkoutUrl ? (
+                <Button className="mt-6 w-full" asChild>
+                  <a href={plan.checkoutUrl} target="_blank" rel="noreferrer noopener">
+                    Assinar {plan.name}
+                    <ExternalLink className="ml-2 h-4 w-4" />
+                  </a>
+                </Button>
+              ) : plan.id === "free" ? (
+                <Button className="mt-6 w-full" variant="outline" disabled>
+                  Plano gratuito
+                </Button>
               ) : (
-                <Button className="mt-6 w-full" disabled>
-                  Disponível com Asaas
+                <Button className="mt-6 w-full" variant="outline" disabled>
+                  Cancele o plano atual antes de trocar
                 </Button>
               )}
             </article>
