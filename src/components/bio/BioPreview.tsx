@@ -53,6 +53,7 @@ export function BioPreview({
   className,
 }: BioPreviewProps) {
   const theme = useMemo(() => mergeTheme(rawTheme), [rawTheme]);
+  const textScale = Math.min(1.35, Math.max(0.8, Number(theme.textScale) || 1));
 
   const panelBackground =
     theme.bgType === "gradient"
@@ -189,7 +190,7 @@ export function BioPreview({
                 borderRadius: avatarRadius,
                 background: withAlpha(theme.textColor, 0.14),
                 border: theme.avatarBorder ? `2px solid ${withAlpha(theme.textColor, 0.5)}` : "none",
-                fontSize: compact ? 20 : 30,
+                fontSize: (compact ? 20 : 30) * textScale,
               }}
             >
               {initials}
@@ -197,21 +198,32 @@ export function BioPreview({
           )}
 
           <h1
-            className={cn("font-semibold", compact ? "mt-3 text-base" : "mt-4 text-2xl")}
-            style={{ color: theme.textColor, letterSpacing: "-0.01em" }}
+            className="mt-3 font-semibold"
+            style={{
+              color: theme.textColor,
+              letterSpacing: "-0.01em",
+              fontSize: `${(compact ? 16 : 24) * textScale}px`,
+              lineHeight: 1.2,
+            }}
           >
             {displayName || (username ? `@${username}` : "Seu nome")}
           </h1>
           {username && (
-            <p className={compact ? "text-[10px] opacity-70" : "text-xs opacity-70"}>@{username}</p>
+            <p
+              className="opacity-70"
+              style={{ fontSize: `${(compact ? 10 : 12) * textScale}px` }}
+            >
+              @{username}
+            </p>
           )}
           {bio && (
             <p
-              className={cn(
-                "max-w-full whitespace-pre-line",
-                compact ? "mt-2 text-[11px]" : "mt-3 text-sm",
-              )}
-              style={{ color: theme.mutedColor }}
+              className="mt-2 max-w-full whitespace-pre-line"
+              style={{
+                color: theme.mutedColor,
+                fontSize: `${(compact ? 11 : 14) * textScale}px`,
+                lineHeight: 1.55,
+              }}
             >
               {bio}
             </p>
@@ -239,7 +251,7 @@ export function BioPreview({
                     className="transition-transform duration-200 hover:-translate-y-0.5 hover:opacity-80"
                     aria-label={block.title || getBlockDef(block.type).label}
                   >
-                    <Icon size={compact ? 16 : 22} color={theme.textColor} />
+                    <Icon size={(compact ? 16 : 22) * textScale} color={theme.textColor} />
                   </El>
                 );
               })}
@@ -258,8 +270,12 @@ export function BioPreview({
                 return (
                   <p
                     key={block.id}
-                    className={compact ? "text-[11px]" : "text-sm"}
-                    style={{ color: theme.mutedColor, whiteSpace: "pre-line" }}
+                    style={{
+                      color: theme.mutedColor,
+                      whiteSpace: "pre-line",
+                      fontSize: `${(compact ? 11 : 14) * textScale}px`,
+                      lineHeight: 1.55,
+                    }}
                   >
                     {block.config?.text || block.title || "Seu texto aqui"}
                   </p>
@@ -282,9 +298,10 @@ export function BioPreview({
               const Icon = getBlockDef(block.type).icon;
               const content = (
                 <>
-                  <Icon size={compact ? 14 : 18} className="shrink-0 opacity-90" />
+                  <Icon size={(compact ? 14 : 18) * textScale} className="shrink-0 opacity-90" />
                   <span
-                    className={cn("min-w-0 flex-1 truncate", compact ? "text-[11px]" : "text-sm")}
+                    className="min-w-0 flex-1 truncate"
+                    style={{ fontSize: `${(compact ? 11 : 14) * textScale}px` }}
                   >
                     {block.title || "Novo link"}
                   </span>
@@ -316,11 +333,11 @@ export function BioPreview({
           {showBranding && (
             <a
               href="/"
-              className={cn(
-                "mt-auto inline-flex items-center gap-2 pt-10 opacity-70 transition-all hover:opacity-100",
-                compact ? "text-[9px]" : "text-[11px]",
-              )}
-              style={{ color: theme.mutedColor }}
+              className="mt-auto inline-flex items-center gap-2 pt-10 opacity-70 transition-all hover:opacity-100"
+              style={{
+                color: theme.mutedColor,
+                fontSize: `${(compact ? 9 : 11) * textScale}px`,
+              }}
             >
               <BiofyMark className={compact ? "h-4 w-4" : "h-5 w-5"} />
               <span className="font-semibold tracking-tight">Biofy</span>
