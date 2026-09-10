@@ -21,6 +21,7 @@ export type HoverAnim = "none" | "lift" | "scale" | "glow";
 export interface BioTheme {
   pageBgColor: string;
   panelBorderColor: string;
+  panelBorderWidth: number;
   bgType: BgType;
   bgColor: string;
   bgFrom: string;
@@ -93,6 +94,7 @@ export interface BioPage {
 export const defaultTheme: BioTheme = {
   pageBgColor: "#08090f",
   panelBorderColor: "#ffffff1f",
+  panelBorderWidth: 1,
   bgType: "gradient",
   bgColor: "#0f1020",
   bgFrom: "#111325",
