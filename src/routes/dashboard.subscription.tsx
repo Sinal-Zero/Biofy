@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Check } from "lucide-react";
+import { Check, Crown } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useBio } from "@/components/dashboard/BioContext";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ const plans = [
     name: "Free",
     id: "free",
     price: "R$ 0",
-    features: ["Até 1 página", "Links básicos", "Templates básicos", "Branding Biofy"],
+    features: ["1 página", "Links essenciais", "3 estilos base", "Fonte padrão Biofy"],
   },
   {
     name: "Pro",
@@ -25,8 +25,8 @@ const plans = [
     features: [
       "Até 3 páginas",
       "Links ilimitados",
-      "Todos os templates",
-      "Personalização avançada",
+      "Cores personalizadas",
+      "Todas as fontes",
       "Analytics",
       "Sem branding",
     ],
@@ -38,13 +38,27 @@ const plans = [
     features: [
       "Até 5 páginas",
       "Tudo do Pro",
-      "Assistente de IA para montar sua Bio — em breve",
-      "Recursos profissionais",
+      "Assistente de IA — em breve",
       "Analytics avançado",
+      "Recursos profissionais",
       "Preparado para domínio personalizado",
     ],
   },
 ] as const;
+
+function planLabel(plan: string) {
+  if (plan === "business") return "Master";
+  if (plan === "pro") return "Pro";
+  return "Free";
+}
+
+function statusLabel(status: string | null | undefined) {
+  if (!status || status === "active") return "Ativa";
+  if (status === "trialing") return "Período de teste";
+  if (status === "past_due") return "Pagamento pendente";
+  if (status === "canceled" || status === "cancelled") return "Cancelada";
+  return status;
+}
 
 function SubscriptionPage() {
   const { bundle } = useBio();
@@ -66,39 +80,45 @@ function SubscriptionPage() {
   }, [bundle.page.user_id]);
 
   const currentPlan = subscription?.plan ?? "free";
+  const hasPaidSubscription = currentPlan === "pro" || currentPlan === "business";
 
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-sm font-medium text-primary">Plano e cobrança</p>
+        <p className="text-sm font-medium text-primary">Plano</p>
         <h1 className="mt-1 text-3xl font-bold">Assinatura</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Os planos estão definidos, mas a cobrança real ainda não está habilitada. A integração com
-          o Asaas será ativada depois, sem simular pagamento ou upgrade enquanto isso.
+          Seu plano será atualizado automaticamente pelo sistema de pagamentos quando o Asaas for
+          conectado.
         </p>
       </div>
 
       <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
-        <div className="grid gap-4 sm:grid-cols-3">
-          <div>
-            <span className="text-xs text-muted-foreground">Plano atual</span>
-            <strong className="mt-1 block text-lg capitalize">
-              {loading ? "—" : currentPlan === "business" ? "Master" : currentPlan}
-            </strong>
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <Crown className="h-5 w-5" />
+            </span>
+            <div>
+              <span className="text-xs text-muted-foreground">Seu plano</span>
+              <strong className="block text-xl">{loading ? "—" : planLabel(currentPlan)}</strong>
+            </div>
           </div>
-          <div>
-            <span className="text-xs text-muted-foreground">Status</span>
-            <strong className="mt-1 block text-lg capitalize">
-              {loading ? "—" : (subscription?.status ?? "active")}
-            </strong>
-          </div>
-          <div>
-            <span className="text-xs text-muted-foreground">Próxima cobrança</span>
-            <strong className="mt-1 block text-lg">
-              {subscription?.current_period_end
-                ? new Date(subscription.current_period_end).toLocaleDateString("pt-BR")
-                : "Não aplicável"}
-            </strong>
+          <div className="grid grid-cols-2 gap-4 text-sm sm:text-right">
+            <div>
+              <span className="block text-xs text-muted-foreground">Status</span>
+              <strong className="mt-1 block font-medium">
+                {loading ? "—" : hasPaidSubscription ? statusLabel(subscription?.status) : "Gratuito"}
+              </strong>
+            </div>
+            <div>
+              <span className="block text-xs text-muted-foreground">Renovação</span>
+              <strong className="mt-1 block font-medium">
+                {subscription?.current_period_end
+                  ? new Date(subscription.current_period_end).toLocaleDateString("pt-BR")
+                  : "—"}
+              </strong>
+            </div>
           </div>
         </div>
       </section>
@@ -109,13 +129,17 @@ function SubscriptionPage() {
           return (
             <article
               key={plan.id}
-              className={`rounded-2xl border bg-card p-5 sm:p-6 ${current ? "border-primary ring-2 ring-primary/20" : "border-border"}`}
+              className={`rounded-2xl border bg-card p-5 transition sm:p-6 ${
+                current
+                  ? "border-primary ring-2 ring-primary/20"
+                  : "border-border hover:-translate-y-0.5 hover:border-primary/25"
+              }`}
             >
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-3">
                 <h2 className="text-xl font-semibold">{plan.name}</h2>
                 {current ? (
                   <span className="rounded-full bg-primary/15 px-2.5 py-1 text-[11px] font-medium text-primary">
-                    Atual
+                    Plano atual
                   </span>
                 ) : null}
               </div>
@@ -128,13 +152,25 @@ function SubscriptionPage() {
                   </li>
                 ))}
               </ul>
-              <Button className="mt-6 w-full" variant={current ? "outline" : "default"} disabled>
-                {current ? "Plano atual" : "Upgrade em breve"}
-              </Button>
+
+              {current ? (
+                <div className="mt-6 rounded-xl border border-primary/20 bg-primary/[0.05] px-3 py-2.5 text-center text-xs font-medium text-primary">
+                  Você já está neste plano
+                </div>
+              ) : (
+                <Button className="mt-6 w-full" disabled>
+                  Disponível com Asaas
+                </Button>
+              )}
             </article>
           );
         })}
       </section>
+
+      <p className="text-center text-xs text-muted-foreground">
+        Depois da integração, pagamentos confirmados atualizarão o plano sem o usuário precisar
+        informar nada manualmente.
+      </p>
     </div>
   );
 }
