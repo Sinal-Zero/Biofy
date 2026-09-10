@@ -63,6 +63,8 @@ function OnboardingPage() {
       await updatePage(bundle.page.id, {
         template: selectedTemplate.id,
         theme: { ...selectedTemplate.theme },
+        is_published: true,
+        published_at: new Date().toISOString(),
       });
       toast.success("Sua Bio está pronta para personalizar!");
       navigate({ to: "/dashboard/editor" });
@@ -99,7 +101,7 @@ function OnboardingPage() {
           <div className="rounded-2xl border border-border bg-card p-5 sm:p-6">
             <Label htmlFor="username">Username</Label>
             <div className="mt-2 flex items-center rounded-xl border border-input bg-background px-3 focus-within:ring-2 focus-within:ring-ring">
-              <span className="text-sm text-muted-foreground">biofy.com/</span>
+              <span className="text-sm text-muted-foreground">bio-fy.vercel.app/</span>
               <Input
                 id="username"
                 value={username}
