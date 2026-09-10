@@ -308,7 +308,7 @@ Começar grátis
 
 Pro
 
-R$ 9,90/mês
+R$ 21,90/mês
 
 Tudo do Free
 
@@ -330,9 +330,11 @@ Começar Pro
 
 Business
 
-R$ 19,90/mês
+R$ 41,90/mês
 
 Tudo do Pro
+
+Assistente de IA para montar a Bio a partir das orientações do usuário
 
 Domínio personalizado
 

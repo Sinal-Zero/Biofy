@@ -105,16 +105,17 @@ const plans = [
   },
   {
     name: "Pro",
-    price: "R$ 9,90/mês",
+    price: "R$ 21,90/mês",
     text: "Para criar sem limites",
     features: ["Links ilimitados", "Todos os templates", "Personalização avançada", "Analytics"],
   },
   {
     name: "Business",
-    price: "R$ 19,90/mês",
+    price: "R$ 41,90/mês",
     text: "Para marcas e negócios",
     features: [
       "Tudo do Pro",
+      "Assistente de IA para montar sua Bio",
       "Recursos profissionais",
       "Analytics avançado",
       "Base para domínio próprio",

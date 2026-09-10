@@ -21,7 +21,7 @@ const plans = [
   {
     name: "Pro",
     id: "pro",
-    price: "R$ 9,90/mês",
+    price: "R$ 21,90/mês",
     features: [
       "Links ilimitados",
       "Todos os templates",
@@ -33,9 +33,10 @@ const plans = [
   {
     name: "Business",
     id: "business",
-    price: "R$ 19,90/mês",
+    price: "R$ 41,90/mês",
     features: [
       "Tudo do Pro",
+      "Assistente de IA para montar sua Bio",
       "Recursos profissionais",
       "Analytics avançado",
       "Preparado para domínio personalizado",

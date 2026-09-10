@@ -3,7 +3,13 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
-export function GoogleButton({ label = "Continuar com Google" }: { label?: string }) {
+export function GoogleButton({
+  label = "Continuar com Google",
+  redirectPath = "/dashboard",
+}: {
+  label?: string;
+  redirectPath?: "/dashboard" | "/onboarding";
+}) {
   const [loading, setLoading] = useState(false);
 
   async function handleClick() {
@@ -12,7 +18,7 @@ export function GoogleButton({ label = "Continuar com Google" }: { label?: strin
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo: `${window.location.origin}${redirectPath}`,
         },
       });
 

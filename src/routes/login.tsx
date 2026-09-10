@@ -57,7 +57,7 @@ function LoginPage() {
       }
     >
       <div className="space-y-5">
-        <GoogleButton label="Entrar com Google" />
+        <GoogleButton label="Entrar com Google" redirectPath="/dashboard" />
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
           <span className="h-px flex-1 bg-border" />
           ou
