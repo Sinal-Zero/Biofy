@@ -5,8 +5,7 @@ export const Route = createFileRoute("/api/ai/bio")({
     handlers: {
       POST: async ({ request }) => {
         const geminiKey = process.env["GEMINI_API_KEY"];
-        const supabaseUrl =
-          process.env["SUPABASE_URL"] || process.env["VITE_SUPABASE_URL"];
+        const supabaseUrl = process.env["SUPABASE_URL"] || process.env["VITE_SUPABASE_URL"];
         const supabaseKey =
           process.env["SUPABASE_PUBLISHABLE_KEY"] ||
           process.env["VITE_SUPABASE_PUBLISHABLE_KEY"];
@@ -72,6 +71,7 @@ export const Route = createFileRoute("/api/ai/bio")({
               displayName?: string | null;
               bio?: string | null;
               links?: Array<{ id?: string; title?: string | null; type?: string }>;
+              previousInteractionId?: string | null;
             }
           | null;
 
@@ -84,6 +84,12 @@ export const Route = createFileRoute("/api/ai/bio")({
           return Response.json({ error: "Explique o que você quer melhorar na sua Bio." }, { status: 400 });
         }
 
+        const previousInteractionId =
+          typeof body.previousInteractionId === "string" &&
+          /^int_[A-Za-z0-9_-]+$/.test(body.previousInteractionId)
+            ? body.previousInteractionId
+            : undefined;
+
         const links = Array.isArray(body.links)
           ? body.links.slice(0, 30).map((link) => ({
               id: String(link.id ?? "").slice(0, 100),
@@ -94,8 +100,8 @@ export const Route = createFileRoute("/api/ai/bio")({
 
         const prompt = `Você é o Assistente Biofy. Ajude a pessoa a melhorar uma página de bio de forma objetiva, natural e profissional em português do Brasil. Não invente credenciais, números, resultados, clientes ou fatos. Não altere URLs. Evite clichês e texto genérico.\n\nPedido do usuário: ${instruction}\nNome atual: ${String(body.displayName ?? "").slice(0, 100)}\nBio atual: ${String(body.bio ?? "").slice(0, 500)}\nLinks atuais: ${JSON.stringify(links)}\n\nResponda SOMENTE com JSON válido, sem markdown, no formato exato:\n{"bio":"texto com no máximo 240 caracteres","linkTitles":[{"id":"id existente","title":"título curto"}],"tips":["dica curta","dica curta"]}\nUse somente ids existentes em links atuais. Se não houver melhoria útil para um link, omita-o. Máximo de 4 dicas.`;
 
-        const geminiResponse = await fetch(
-          "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        const interactionResponse = await fetch(
+          "https://generativelanguage.googleapis.com/v1beta/interactions",
           {
             method: "POST",
             headers: {
@@ -103,24 +109,34 @@ export const Route = createFileRoute("/api/ai/bio")({
               "x-goog-api-key": geminiKey,
             },
             body: JSON.stringify({
-              contents: [{ role: "user", parts: [{ text: prompt }] }],
-              generationConfig: {
-                temperature: 0.65,
-                maxOutputTokens: 900,
-                responseMimeType: "application/json",
-              },
+              model: "gemini-2.5-flash",
+              input: prompt,
+              ...(previousInteractionId
+                ? { previous_interaction_id: previousInteractionId }
+                : {}),
             }),
           },
         );
 
-        if (!geminiResponse.ok) {
+        if (!interactionResponse.ok) {
           return Response.json({ error: "A IA não conseguiu responder agora." }, { status: 502 });
         }
 
-        const geminiPayload = (await geminiResponse.json()) as {
-          candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+        const interaction = (await interactionResponse.json()) as {
+          id?: string;
+          steps?: Array<{
+            type?: string;
+            content?: Array<{ type?: string; text?: string }>;
+          }>;
         };
-        const text = geminiPayload.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        const text = interaction.steps
+          ?.filter((step) => step.type === "model_output")
+          .flatMap((step) => step.content ?? [])
+          .filter((content) => content.type === "text" && typeof content.text === "string")
+          .map((content) => content.text)
+          .join("")
+          .trim();
 
         if (!text) {
           return Response.json({ error: "A IA retornou uma resposta vazia." }, { status: 502 });
@@ -154,6 +170,7 @@ export const Route = createFileRoute("/api/ai/bio")({
                   .slice(0, 4)
                   .map((tip) => tip.slice(0, 220))
               : [],
+            interactionId: typeof interaction.id === "string" ? interaction.id : null,
           };
 
           return Response.json(result, {
