@@ -11,37 +11,37 @@ function AiPage() {
   const { bundle, theme } = useBio();
 
   return (
-    <div className="space-y-6">
-      <div>
+    <div className="space-y-5">
+      <div className="flex flex-col gap-1">
         <p className="text-sm font-medium text-primary">Assistente</p>
-        <h1 className="mt-1 text-3xl font-bold">Biofy AI</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-          Converse com a IA à esquerda e veja a página completa mudando em tempo real à direita.
+        <h1 className="text-3xl font-bold">Biofy AI</h1>
+        <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+          Peça mudanças à esquerda e acompanhe a página completa sendo atualizada ao vivo.
         </p>
       </div>
 
-      <div className="grid gap-6 2xl:grid-cols-[minmax(360px,0.72fr)_minmax(620px,1.28fr)] 2xl:items-start">
+      <div className="grid gap-5 xl:grid-cols-[minmax(340px,0.62fr)_minmax(600px,1.38fr)] xl:items-start">
         <BioAiAssistant />
 
-        <aside className="2xl:sticky 2xl:top-8 2xl:self-start">
-          <div className="overflow-hidden rounded-[1.4rem] border border-border bg-card shadow-panel">
-            <div className="flex items-center justify-between border-b border-border bg-background/40 px-4 py-3">
-              <div className="flex items-center gap-3">
-                <div className="flex gap-1.5" aria-hidden="true">
-                  <span className="h-2.5 w-2.5 rounded-full bg-muted-foreground/35" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-muted-foreground/25" />
+        <aside className="xl:sticky xl:top-6 xl:self-start">
+          <div className="overflow-hidden rounded-[1.5rem] border border-border bg-card shadow-panel transition duration-300">
+            <div className="flex items-center justify-between border-b border-border bg-background/45 px-4 py-3 backdrop-blur-xl">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex shrink-0 gap-1.5" aria-hidden="true">
+                  <span className="h-2.5 w-2.5 rounded-full bg-muted-foreground/40" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-muted-foreground/30" />
                   <span className="h-2.5 w-2.5 rounded-full bg-muted-foreground/20" />
                 </div>
-                <div className="hidden min-w-0 rounded-lg border border-border bg-background/60 px-3 py-1.5 text-[10px] text-muted-foreground sm:block">
-                  biofy.app/{bundle.profile.username || "sua-bio"}
+                <div className="min-w-0 rounded-lg border border-border bg-background/70 px-3 py-1.5 text-[10px] text-muted-foreground">
+                  <span className="block truncate">biofy.app/{bundle.profile.username || "sua-bio"}</span>
                 </div>
               </div>
-              <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-                Preview ao vivo
+              <span className="ml-3 shrink-0 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary">
+                Ao vivo
               </span>
             </div>
 
-            <div className="h-[720px] overflow-auto bg-black/20 xl:h-[780px]">
+            <div className="h-[760px] overflow-auto bg-black/20 2xl:h-[820px]">
               <BioPreview
                 displayName={bundle.profile.display_name}
                 username={bundle.profile.username}
