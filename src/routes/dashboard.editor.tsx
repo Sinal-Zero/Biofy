@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Eye, EyeOff, GripVertical, Link2, Plus, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Eye, EyeOff, Globe2, GripVertical, Link2, Phone, Plus, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { BioPreview } from "@/components/bio/BioPreview";
 import { PhoneFrame } from "@/components/bio/PhoneFrame";
 import { useBio } from "@/components/dashboard/BioContext";
@@ -114,12 +114,22 @@ function BioEditor() {
   const { bundle, theme, patchProfile, addBlock, patchBlock, removeBlock, moveBlock } = useBio();
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [openDddId, setOpenDddId] = useState<string | null>(null);
+  const [addMenuOpen, setAddMenuOpen] = useState(false);
+  const starterCreating = useRef(false);
   const bioLength = (bundle.profile.bio ?? "").length;
   const links = useMemo(() => bundle.blocks.filter(isLinkBlock), [bundle.blocks]);
   const legacyBlocks = useMemo(
     () => bundle.blocks.filter((block) => !isLinkBlock(block)),
     [bundle.blocks],
   );
+
+  useEffect(() => {
+    if (links.length > 0 || starterCreating.current) return;
+    starterCreating.current = true;
+    void addBlock("link").finally(() => {
+      starterCreating.current = false;
+    });
+  }, [addBlock, links.length]);
 
   function updateSmartUrl(block: BioBlock, raw: string) {
     const normalized = normalizeUrl("link", raw);
@@ -148,30 +158,17 @@ function BioEditor() {
     });
   }
 
-  function enableWhatsapp(block: BioBlock) {
-    const parsed = parseWhatsAppUrl(block.url);
-    patchBlock(block.id, {
-      type: "whatsapp",
-      url: parsed
-        ? createWhatsAppUrl(parsed.countryCode, parsed.areaCode, parsed.phoneNumber)
-        : null,
-      config: parsed ?? {
-        countryCode: "55",
-        areaCode: "11",
-        phoneNumber: "",
-      },
-    });
+  async function addLink(type: "url" | "phone") {
+    setAddMenuOpen(false);
+    await addBlock(type === "phone" ? "whatsapp" : "link");
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex items-end justify-between gap-3">
         <div>
           <p className="text-sm font-medium text-primary">Editor</p>
           <h1 className="mt-1 text-3xl font-bold">Minha Bio</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Monte sua página sem menus complicados. As alterações são salvas automaticamente.
-          </p>
         </div>
         <div className="inline-flex w-fit items-center rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground">
           {links.length} {links.length === 1 ? "link" : "links"}
@@ -181,12 +178,7 @@ function BioEditor() {
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_390px]">
         <div className="space-y-5">
           <section className="rounded-2xl border border-border bg-card p-5 transition hover:border-primary/20 sm:p-6">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
-                Passo 1
-              </p>
-              <h2 className="mt-1 text-lg font-semibold">Seu perfil</h2>
-            </div>
+            <h2 className="text-lg font-semibold">Perfil</h2>
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="display-name">Nome</Label>
@@ -217,7 +209,7 @@ function BioEditor() {
                   value={bundle.profile.bio ?? ""}
                   maxLength={240}
                   onChange={(event) => patchProfile({ bio: event.target.value })}
-                  placeholder="Conte em poucas palavras quem você é."
+                  placeholder="Sua descrição"
                   className="min-h-24 w-full resize-y rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none transition focus:border-primary/50 focus:ring-2 focus:ring-ring"
                 />
               </div>
@@ -226,38 +218,42 @@ function BioEditor() {
 
           <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
             <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
-                  Passo 2
-                </p>
-                <h2 className="mt-1 text-lg font-semibold">Seus links</h2>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  O Biofy reconhece Instagram, Spotify, YouTube, TikTok, WhatsApp e outros pela URL.
-                </p>
+              <h2 className="text-lg font-semibold">Links</h2>
+              <div className="relative">
+                <Button
+                  type="button"
+                  size="icon"
+                  onClick={() => setAddMenuOpen((open) => !open)}
+                  aria-label="Adicionar"
+                >
+                  <Plus
+                    className={`h-4 w-4 transition-transform duration-200 ${addMenuOpen ? "rotate-45" : ""}`}
+                  />
+                </Button>
+                {addMenuOpen ? (
+                  <div className="absolute right-0 top-12 z-40 w-48 origin-top-right animate-in rounded-2xl border border-border bg-popover p-2 shadow-xl fade-in zoom-in-95">
+                    <button
+                      type="button"
+                      onClick={() => void addLink("url")}
+                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition hover:bg-accent"
+                    >
+                      <Globe2 className="h-4 w-4 text-primary" />
+                      URL
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void addLink("phone")}
+                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition hover:bg-accent"
+                    >
+                      <Phone className="h-4 w-4 text-primary" />
+                      Telefone
+                    </button>
+                  </div>
+                ) : null}
               </div>
-              <Button onClick={() => addBlock("link")} size="sm">
-                <Plus className="mr-1.5 h-4 w-4" />
-                Link
-              </Button>
             </div>
 
             <div className="mt-5 space-y-3">
-              {links.length === 0 ? (
-                <button
-                  type="button"
-                  onClick={() => addBlock("link")}
-                  className="flex w-full flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-background/50 p-8 text-center transition hover:border-primary/40 hover:bg-accent/40"
-                >
-                  <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                    <Plus className="h-5 w-5" />
-                  </span>
-                  <span className="mt-3 text-sm font-medium">Adicionar primeiro link</span>
-                  <span className="mt-1 text-xs text-muted-foreground">
-                    Título + destino. Só isso.
-                  </span>
-                </button>
-              ) : null}
-
               {links.map((block) => {
                 const actualIndex = bundle.blocks.findIndex((item) => item.id === block.id);
                 const liveDetected = detectLinkType(block.url ?? "");
@@ -293,11 +289,9 @@ function BioEditor() {
                         <Icon className="h-4 w-4" />
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold">
-                          {block.title || "Novo link"}
-                        </p>
+                        <p className="truncate text-sm font-semibold">{block.title || "Novo link"}</p>
                         <p className="mt-0.5 text-[11px] text-muted-foreground">
-                          {def.label === "Link" ? "Link comum" : def.label}
+                          {def.label === "Link" ? "URL" : def.label}
                         </p>
                       </div>
                       <Button
@@ -306,7 +300,6 @@ function BioEditor() {
                         size="icon"
                         onClick={() => patchBlock(block.id, { is_visible: !block.is_visible })}
                         aria-label={block.is_visible ? "Ocultar" : "Mostrar"}
-                        title={block.is_visible ? "Ocultar" : "Mostrar"}
                       >
                         {block.is_visible ? (
                           <Eye className="h-4 w-4" />
@@ -320,7 +313,6 @@ function BioEditor() {
                         size="icon"
                         onClick={() => removeBlock(block.id)}
                         aria-label="Excluir"
-                        title="Excluir"
                         className="hover:text-destructive"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -329,20 +321,17 @@ function BioEditor() {
 
                     <div className="mt-4 grid gap-3 sm:grid-cols-2">
                       <div className="space-y-2">
-                        <Label>
-                          Título{" "}
-                          <span className="font-normal text-muted-foreground">(opcional)</span>
-                        </Label>
+                        <Label>Título</Label>
                         <Input
                           value={block.title ?? ""}
                           onChange={(event) => patchBlock(block.id, { title: event.target.value })}
-                          placeholder="Ex.: Meu Instagram"
+                          placeholder="Título do link"
                         />
                       </div>
 
                       {isWhatsapp ? (
                         <div className="space-y-2">
-                          <Label>WhatsApp</Label>
+                          <Label>Número</Label>
                           <div className="grid grid-cols-[92px_1fr] gap-2">
                             <div className="relative">
                               <button
@@ -357,10 +346,8 @@ function BioEditor() {
                               {openDddId === block.id ? (
                                 <div className="absolute left-0 top-12 z-30 w-[280px] rounded-2xl border border-border bg-popover p-3 shadow-xl">
                                   <div className="mb-2 flex items-center justify-between">
-                                    <span className="text-xs font-semibold">Escolha o DDD</span>
-                                    <span className="text-[10px] font-medium text-primary">
-                                      BIOFY
-                                    </span>
+                                    <span className="text-xs font-semibold">DDD</span>
+                                    <span className="text-[10px] font-medium text-primary">BIOFY</span>
                                   </div>
                                   <div className="grid max-h-52 grid-cols-6 gap-1.5 overflow-y-auto pr-1">
                                     {BRAZIL_DDDS.map((code) => (
@@ -400,7 +387,7 @@ function BioEditor() {
                                   phoneNumber: event.target.value.replace(/\D/g, "").slice(0, 9),
                                 })
                               }
-                              placeholder="99999-9999"
+                              placeholder="999999999"
                             />
                           </div>
                           {ddd === "" || isCustomDdd ? (
@@ -413,39 +400,19 @@ function BioEditor() {
                                   areaCode: event.target.value.replace(/\D/g, "").slice(0, 2),
                                 })
                               }
-                              placeholder="Digite o DDD"
+                              placeholder="DDD"
                             />
                           ) : null}
-                          <button
-                            type="button"
-                            onClick={() => patchBlock(block.id, { type: "link", url: null })}
-                            className="text-[11px] font-medium text-muted-foreground hover:text-foreground"
-                          >
-                            Usar URL em vez de número
-                          </button>
                         </div>
                       ) : (
                         <div className="space-y-2">
-                          <Label>Destino</Label>
+                          <Label>URL</Label>
                           <Input
                             value={block.url ?? ""}
                             onChange={(event) => patchBlock(block.id, { url: event.target.value })}
                             onBlur={(event) => updateSmartUrl(block, event.target.value)}
-                            placeholder="Cole o link aqui"
+                            placeholder="https://"
                           />
-                          <div className="flex items-center justify-between gap-3">
-                            <span className="text-[11px] text-muted-foreground">
-                              Ícone detectado pela URL:{" "}
-                              <strong className="font-medium text-foreground">{def.label}</strong>
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => enableWhatsapp(block)}
-                              className="shrink-0 text-[11px] font-semibold text-primary hover:underline"
-                            >
-                              É WhatsApp?
-                            </button>
-                          </div>
                         </div>
                       )}
                     </div>
@@ -460,9 +427,6 @@ function BioEditor() {
               <summary className="cursor-pointer text-sm font-medium">
                 Conteúdo antigo ({legacyBlocks.length})
               </summary>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Esses blocos foram criados no editor anterior e continuam na sua página.
-              </p>
               <div className="mt-3 space-y-2">
                 {legacyBlocks.map((block) => (
                   <div
