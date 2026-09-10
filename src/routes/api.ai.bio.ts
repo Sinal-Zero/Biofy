@@ -1,5 +1,41 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+const GEMINI_MODEL = "gemini-3.8-flash";
+
+const responseSchema = {
+  type: "object",
+  properties: {
+    bio: { type: "string" },
+    linkTitles: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          title: { type: "string" },
+        },
+        required: ["id", "title"],
+      },
+    },
+    tips: {
+      type: "array",
+      items: { type: "string" },
+    },
+    message: { type: "string" },
+  },
+  required: ["bio", "linkTitles", "tips", "message"],
+} as const;
+
+function providerErrorMessage(status: number) {
+  if (status === 400) return "O Gemini recusou a solicitação. Tente escrever o pedido de outra forma.";
+  if (status === 401 || status === 403)
+    return "A chave do Gemini não foi aceita pelo servidor. Confira a GEMINI_API_KEY na Vercel.";
+  if (status === 404) return "O modelo Gemini configurado não está disponível para esta chave.";
+  if (status === 429) return "O limite do Gemini foi atingido. Aguarde um pouco e tente novamente.";
+  if (status >= 500) return "O Gemini está temporariamente indisponível. Tente novamente em instantes.";
+  return "Não foi possível concluir a resposta da IA.";
+}
+
 export const Route = createFileRoute("/api/ai/bio")({
   server: {
     handlers: {
@@ -79,9 +115,9 @@ export const Route = createFileRoute("/api/ai/bio")({
           return Response.json({ error: "Pedido inválido." }, { status: 400 });
         }
 
-        const instruction = (body.instruction ?? "").trim().slice(0, 800);
+        const instruction = (body.instruction ?? "").trim().slice(0, 1000);
         if (!instruction) {
-          return Response.json({ error: "Explique o que você quer melhorar na sua Bio." }, { status: 400 });
+          return Response.json({ error: "Escreva o que você quer mudar na sua Bio." }, { status: 400 });
         }
 
         const previousInteractionId =
@@ -98,32 +134,66 @@ export const Route = createFileRoute("/api/ai/bio")({
             }))
           : [];
 
-        const prompt = `Você é o Assistente Biofy. Ajude a pessoa a melhorar uma página de bio de forma objetiva, natural e profissional em português do Brasil. Não invente credenciais, números, resultados, clientes ou fatos. Não altere URLs. Evite clichês e texto genérico.\n\nPedido do usuário: ${instruction}\nNome atual: ${String(body.displayName ?? "").slice(0, 100)}\nBio atual: ${String(body.bio ?? "").slice(0, 500)}\nLinks atuais: ${JSON.stringify(links)}\n\nResponda SOMENTE com JSON válido, sem markdown, no formato exato:\n{"bio":"texto com no máximo 240 caracteres","linkTitles":[{"id":"id existente","title":"título curto"}],"tips":["dica curta","dica curta"]}\nUse somente ids existentes em links atuais. Se não houver melhoria útil para um link, omita-o. Máximo de 4 dicas.`;
+        const prompt = `Você é a Biofy AI, uma assistente especializada em páginas de bio. Fale em português do Brasil, com tom natural, curto e útil. Sua função é editar a página junto com o usuário, não apenas dar dicas genéricas. Nunca invente credenciais, resultados, clientes, números ou fatos. Nunca altere URLs.\n\nPedido atual: ${instruction}\nNome atual: ${String(body.displayName ?? "").slice(0, 100)}\nBio atual: ${String(body.bio ?? "").slice(0, 500)}\nLinks atuais: ${JSON.stringify(links)}\n\nRetorne uma nova bio apenas quando fizer sentido; preserve o conteúdo atual quando o pedido não exigir mudança. Sugira novos títulos somente para ids existentes. A mensagem deve explicar em 1 ou 2 frases o que você fez. Máximo de 3 dicas curtas.`;
 
-        const interactionResponse = await fetch(
-          "https://generativelanguage.googleapis.com/v1beta/interactions",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-goog-api-key": geminiKey,
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 20000);
+
+        let interactionResponse: Response;
+        try {
+          interactionResponse = await fetch(
+            "https://generativelanguage.googleapis.com/v1beta/interactions",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "x-goog-api-key": geminiKey,
+                "Api-Revision": "2026-05-20",
+              },
+              signal: controller.signal,
+              body: JSON.stringify({
+                model: GEMINI_MODEL,
+                input: prompt,
+                ...(previousInteractionId
+                  ? { previous_interaction_id: previousInteractionId }
+                  : {}),
+                response_format: {
+                  type: "text",
+                  mime_type: "application/json",
+                  schema: responseSchema,
+                },
+                generation_config: {
+                  temperature: 0.55,
+                  max_output_tokens: 1100,
+                },
+              }),
             },
-            body: JSON.stringify({
-              model: "gemini-2.5-flash",
-              input: prompt,
-              ...(previousInteractionId
-                ? { previous_interaction_id: previousInteractionId }
-                : {}),
-            }),
-          },
-        );
+          );
+        } catch (error) {
+          clearTimeout(timeout);
+          if (error instanceof Error && error.name === "AbortError") {
+            return Response.json(
+              { error: "O Gemini demorou demais para responder. Tente novamente." },
+              { status: 504 },
+            );
+          }
+          return Response.json({ error: "Falha ao conectar com o Gemini." }, { status: 502 });
+        }
+        clearTimeout(timeout);
 
         if (!interactionResponse.ok) {
-          return Response.json({ error: "A IA não conseguiu responder agora." }, { status: 502 });
+          return Response.json(
+            {
+              error: providerErrorMessage(interactionResponse.status),
+              providerStatus: interactionResponse.status,
+            },
+            { status: 502 },
+          );
         }
 
         const interaction = (await interactionResponse.json()) as {
           id?: string;
+          status?: string;
           steps?: Array<{
             type?: string;
             content?: Array<{ type?: string; text?: string }>;
@@ -139,7 +209,10 @@ export const Route = createFileRoute("/api/ai/bio")({
           .trim();
 
         if (!text) {
-          return Response.json({ error: "A IA retornou uma resposta vazia." }, { status: 502 });
+          return Response.json(
+            { error: "O Gemini respondeu sem conteúdo utilizável. Tente novamente." },
+            { status: 502 },
+          );
         }
 
         try {
@@ -147,6 +220,7 @@ export const Route = createFileRoute("/api/ai/bio")({
             bio?: unknown;
             linkTitles?: unknown;
             tips?: unknown;
+            message?: unknown;
           };
 
           const result = {
@@ -167,9 +241,13 @@ export const Route = createFileRoute("/api/ai/bio")({
             tips: Array.isArray(parsed.tips)
               ? parsed.tips
                   .filter((tip): tip is string => typeof tip === "string")
-                  .slice(0, 4)
+                  .slice(0, 3)
                   .map((tip) => tip.slice(0, 220))
               : [],
+            message:
+              typeof parsed.message === "string"
+                ? parsed.message.slice(0, 500)
+                : "Atualizei sua Bio com base no seu pedido.",
             interactionId: typeof interaction.id === "string" ? interaction.id : null,
           };
 
@@ -177,7 +255,10 @@ export const Route = createFileRoute("/api/ai/bio")({
             headers: { "Cache-Control": "no-store" },
           });
         } catch {
-          return Response.json({ error: "A IA retornou um formato inesperado." }, { status: 502 });
+          return Response.json(
+            { error: "O Gemini retornou uma resposta que não consegui interpretar. Tente novamente." },
+            { status: 502 },
+          );
         }
       },
     },
