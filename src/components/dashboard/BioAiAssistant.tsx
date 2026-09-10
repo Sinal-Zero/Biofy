@@ -101,11 +101,11 @@ export function BioAiAssistant() {
   }
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/[0.08] via-card to-card p-5 shadow-soft sm:p-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="max-w-2xl">
+    <section className="flex min-h-[680px] flex-col overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-b from-primary/[0.08] via-card to-card p-5 shadow-soft sm:p-6 xl:min-h-[760px]">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
           <div className="flex items-center gap-2 text-primary">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10">
               <Sparkles className="h-4 w-4" />
             </span>
             <div>
@@ -113,22 +113,101 @@ export function BioAiAssistant() {
               <h2 className="text-lg font-semibold text-foreground">Assistente de Bio</h2>
             </div>
           </div>
-          <p className="mt-3 text-sm leading-6 text-muted-foreground">
-            Peça uma descrição melhor, títulos mais claros ou uma direção para organizar sua página.
-            Você também pode continuar refinando a resposta na mesma conversa. Nada é alterado sem
-            você aplicar a sugestão.
+          <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
+            Peça melhorias na descrição, nos títulos e na organização. Acompanhe as mudanças no
+            preview ao lado e aplique apenas o que quiser.
           </p>
         </div>
 
         {interactionId ? (
-          <Button type="button" size="sm" variant="ghost" onClick={newConversation}>
-            <RotateCcw className="mr-2 h-4 w-4" />
-            Nova conversa
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            onClick={newConversation}
+            aria-label="Nova conversa"
+            title="Nova conversa"
+            className="shrink-0"
+          >
+            <RotateCcw className="h-4 w-4" />
           </Button>
         ) : null}
       </div>
 
-      <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+      <div className="mt-5 flex-1 overflow-y-auto pr-1">
+        {!result ? (
+          <div className="flex min-h-56 items-center justify-center rounded-2xl border border-dashed border-border bg-background/35 p-6 text-center">
+            <div className="max-w-sm">
+              <Sparkles className="mx-auto h-5 w-5 text-primary" />
+              <p className="mt-3 text-sm font-medium">O que você quer melhorar?</p>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                Exemplo: “deixe minha bio mais profissional e melhore os títulos dos links”.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {result.bio ? (
+              <div className="rounded-xl border border-border bg-background/70 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Descrição sugerida
+                </p>
+                <p className="mt-2 text-sm leading-6">{result.bio}</p>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="mt-4"
+                  onClick={applyBio}
+                >
+                  Aplicar descrição
+                </Button>
+              </div>
+            ) : null}
+
+            {result.linkTitles.length > 0 ? (
+              <div className="rounded-xl border border-border bg-background/70 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Títulos sugeridos
+                </p>
+                <div className="mt-2 space-y-1.5 text-sm">
+                  {result.linkTitles.map((suggestion) => (
+                    <p key={suggestion.id} className="truncate">
+                      {suggestion.title}
+                    </p>
+                  ))}
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="mt-4"
+                  onClick={applyTitles}
+                >
+                  Aplicar títulos
+                </Button>
+              </div>
+            ) : null}
+
+            {result.tips.length > 0 ? (
+              <div className="rounded-xl border border-border bg-background/70 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Recomendações
+                </p>
+                <ul className="mt-2 space-y-2 text-sm text-muted-foreground">
+                  {result.tips.map((tip) => (
+                    <li key={tip} className="rounded-lg bg-accent/50 px-3 py-2">
+                      {tip}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-5 border-t border-border pt-4">
         <textarea
           value={instruction}
           maxLength={800}
@@ -136,75 +215,21 @@ export function BioAiAssistant() {
           placeholder={
             interactionId
               ? "Ex.: agora deixe mais curto e mais profissional"
-              : "Ex.: deixe minha bio mais profissional e melhore os títulos dos links"
+              : "Peça uma melhoria para sua Bio..."
           }
-          className="min-h-24 flex-1 resize-y rounded-xl border border-input bg-background/80 px-3 py-2.5 text-sm outline-none transition placeholder:text-muted-foreground focus:border-primary/50 focus:ring-2 focus:ring-ring"
+          className="min-h-28 w-full resize-y rounded-xl border border-input bg-background/80 px-3 py-2.5 text-sm outline-none transition placeholder:text-muted-foreground focus:border-primary/50 focus:ring-2 focus:ring-ring"
         />
-        <Button
-          type="button"
-          onClick={() => void generate()}
-          disabled={loading || !instruction.trim()}
-          className="sm:self-end"
-        >
-          <WandSparkles className="mr-2 h-4 w-4" />
-          {loading ? "Criando..." : interactionId ? "Continuar" : "Gerar sugestão"}
-        </Button>
-      </div>
-
-      {result ? (
-        <div className="mt-5 grid gap-3 lg:grid-cols-2">
-          {result.bio ? (
-            <div className="rounded-xl border border-border bg-background/70 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Descrição sugerida
-              </p>
-              <p className="mt-2 text-sm leading-6">{result.bio}</p>
-              <Button type="button" size="sm" variant="outline" className="mt-4" onClick={applyBio}>
-                Aplicar descrição
-              </Button>
-            </div>
-          ) : null}
-
-          {result.linkTitles.length > 0 ? (
-            <div className="rounded-xl border border-border bg-background/70 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Títulos sugeridos
-              </p>
-              <div className="mt-2 space-y-1.5 text-sm">
-                {result.linkTitles.map((suggestion) => (
-                  <p key={suggestion.id} className="truncate">
-                    {suggestion.title}
-                  </p>
-                ))}
-              </div>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="mt-4"
-                onClick={applyTitles}
-              >
-                Aplicar títulos
-              </Button>
-            </div>
-          ) : null}
-
-          {result.tips.length > 0 ? (
-            <div className="rounded-xl border border-border bg-background/70 p-4 lg:col-span-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Recomendações
-              </p>
-              <ul className="mt-2 grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
-                {result.tips.map((tip) => (
-                  <li key={tip} className="rounded-lg bg-accent/50 px-3 py-2">
-                    {tip}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
+        <div className="mt-3 flex justify-end">
+          <Button
+            type="button"
+            onClick={() => void generate()}
+            disabled={loading || !instruction.trim()}
+          >
+            <WandSparkles className="mr-2 h-4 w-4" />
+            {loading ? "Criando..." : interactionId ? "Continuar" : "Gerar sugestão"}
+          </Button>
         </div>
-      ) : null}
+      </div>
     </section>
   );
 }
