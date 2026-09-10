@@ -6,12 +6,12 @@ export type FontKey =
   | "mono"
   | "condensed"
   | "system"
-  | "modern"
-  | "classic"
-  | "humanist"
-  | "rounded"
-  | "editorial"
-  | "technical";
+  | "inter"
+  | "georgia"
+  | "optima"
+  | "trebuchet"
+  | "garamond"
+  | "consolas";
 export type ButtonStyle = "solid" | "outline" | "glass" | "transparent" | "gradient";
 export type ButtonShape = "square" | "rounded" | "pill";
 export type ButtonSize = "sm" | "md" | "lg";
@@ -19,6 +19,8 @@ export type AvatarShape = "circle" | "rounded" | "square";
 export type HoverAnim = "none" | "lift" | "scale" | "glow";
 
 export interface BioTheme {
+  pageBgColor: string;
+  panelBorderColor: string;
   bgType: BgType;
   bgColor: string;
   bgFrom: string;
@@ -89,6 +91,8 @@ export interface BioPage {
 }
 
 export const defaultTheme: BioTheme = {
+  pageBgColor: "#08090f",
+  panelBorderColor: "#ffffff1f",
   bgType: "gradient",
   bgColor: "#0f1020",
   bgFrom: "#111325",
@@ -120,17 +124,17 @@ export function mergeTheme(theme: Partial<BioTheme> | null | undefined): BioThem
 
 export const fontStacks: Record<FontKey, string> = {
   sans: '"Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif',
-  display: '"Space Grotesk", ui-sans-serif, system-ui, sans-serif',
-  serif: '"Playfair Display", Georgia, "Times New Roman", serif',
-  mono: '"JetBrains Mono", "SFMono-Regular", Consolas, monospace',
-  condensed: '"Bebas Neue", Impact, "Arial Narrow", sans-serif',
-  system: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-  modern: 'Inter, ui-sans-serif, system-ui, sans-serif',
-  classic: 'Georgia, "Times New Roman", Times, serif',
-  humanist: 'Optima, Candara, "Segoe UI", sans-serif',
-  rounded: '"Trebuchet MS", "Arial Rounded MT Bold", ui-sans-serif, sans-serif',
-  editorial: 'Garamond, Baskerville, "Times New Roman", serif',
-  technical: 'Consolas, "Liberation Mono", "Courier New", monospace',
+  display: '"Space Grotesk", sans-serif',
+  serif: '"Playfair Display", Georgia, serif',
+  mono: '"JetBrains Mono", ui-monospace, monospace',
+  condensed: '"Bebas Neue", Impact, sans-serif',
+  system: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+  inter: 'Inter, ui-sans-serif, system-ui, sans-serif',
+  georgia: 'Georgia, "Times New Roman", serif',
+  optima: 'Optima, Candara, "Segoe UI", sans-serif',
+  trebuchet: '"Trebuchet MS", Arial, sans-serif',
+  garamond: 'Garamond, Baskerville, "Times New Roman", serif',
+  consolas: 'Consolas, "Liberation Mono", ui-monospace, monospace',
 };
 
 export const fontLabels: Record<FontKey, string> = {
@@ -140,10 +144,10 @@ export const fontLabels: Record<FontKey, string> = {
   mono: "JetBrains Mono",
   condensed: "Bebas Neue",
   system: "System UI",
-  modern: "Inter",
-  classic: "Georgia",
-  humanist: "Optima",
-  rounded: "Trebuchet",
-  editorial: "Garamond",
-  technical: "Consolas",
+  inter: "Inter",
+  georgia: "Georgia",
+  optima: "Optima",
+  trebuchet: "Trebuchet",
+  garamond: "Garamond",
+  consolas: "Consolas",
 };
