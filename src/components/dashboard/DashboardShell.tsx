@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { Logo } from "@/components/brand/Logo";
-import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useBio } from "./BioContext";
 
@@ -28,7 +27,7 @@ const navigation = [
 
 export function DashboardShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
-  const { bundle, saveState, publish, publishing } = useBio();
+  const { bundle, saveState } = useBio();
   const publicUrl = bundle.profile.username ? `/${bundle.profile.username}` : null;
 
   async function signOut() {
@@ -41,14 +40,9 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur-xl lg:hidden">
         <div className="flex h-16 items-center justify-between px-4">
           <Logo />
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">
-              {saveState === "saving" ? "Salvando..." : saveState === "saved" ? "Salvo ✓" : ""}
-            </span>
-            <Button size="sm" onClick={publish} disabled={publishing}>
-              {publishing ? "Publicando..." : "Publicar"}
-            </Button>
-          </div>
+          <span className="text-xs text-muted-foreground">
+            {saveState === "saving" ? "Salvando..." : saveState === "saved" ? "Salvo ✓" : ""}
+          </span>
         </div>
         <nav className="no-scrollbar flex gap-1 overflow-x-auto px-3 pb-3">
           {navigation.map((item) => (
@@ -85,7 +79,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           })}
         </nav>
         <div className="space-y-3 border-t border-sidebar-border p-4">
-          {publicUrl && bundle.page.is_published && (
+          {publicUrl && (
             <Link
               to="/$username"
               params={{ username: bundle.profile.username! }}
@@ -93,7 +87,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
               className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
             >
               <Eye className="h-4 w-4" />
-              Ver Bio publicada
+              Ver minha Bio
             </Link>
           )}
           <button
@@ -109,13 +103,10 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 
       <main className="lg:pl-64">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-          <div className="mb-6 hidden items-center justify-end gap-3 lg:flex">
+          <div className="mb-6 hidden items-center justify-end lg:flex">
             <span className="min-w-20 text-right text-xs text-muted-foreground">
               {saveState === "saving" ? "Salvando..." : saveState === "saved" ? "Salvo ✓" : ""}
             </span>
-            <Button onClick={publish} disabled={publishing}>
-              {publishing ? "Publicando..." : "Publicar"}
-            </Button>
           </div>
           {children}
         </div>
