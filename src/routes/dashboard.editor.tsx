@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Eye, EyeOff, Globe2, GripVertical, Link2, Phone, Plus, Trash2 } from "lucide-react";
+import { Eye, EyeOff, Globe2, GripVertical, Phone, Plus, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BioPreview } from "@/components/bio/BioPreview";
 import { PhoneFrame } from "@/components/bio/PhoneFrame";
@@ -16,71 +16,11 @@ export const Route = createFileRoute("/dashboard/editor")({
 });
 
 const BRAZIL_DDDS = [
-  "11",
-  "12",
-  "13",
-  "14",
-  "15",
-  "16",
-  "17",
-  "18",
-  "19",
-  "21",
-  "22",
-  "24",
-  "27",
-  "28",
-  "31",
-  "32",
-  "33",
-  "34",
-  "35",
-  "37",
-  "38",
-  "41",
-  "42",
-  "43",
-  "44",
-  "45",
-  "46",
-  "49",
-  "51",
-  "53",
-  "54",
-  "55",
-  "61",
-  "62",
-  "63",
-  "64",
-  "65",
-  "66",
-  "67",
-  "68",
-  "69",
-  "71",
-  "73",
-  "74",
-  "75",
-  "77",
-  "79",
-  "81",
-  "82",
-  "83",
-  "84",
-  "85",
-  "86",
-  "87",
-  "88",
-  "89",
-  "91",
-  "92",
-  "93",
-  "94",
-  "95",
-  "96",
-  "97",
-  "98",
-  "99",
+  "11", "12", "13", "14", "15", "16", "17", "18", "19", "21", "22", "24", "27", "28",
+  "31", "32", "33", "34", "35", "37", "38", "41", "42", "43", "44", "45", "46", "49",
+  "51", "53", "54", "55", "61", "62", "63", "64", "65", "66", "67", "68", "69", "71",
+  "73", "74", "75", "77", "79", "81", "82", "83", "84", "85", "86", "87", "88", "89",
+  "91", "92", "93", "94", "95", "96", "97", "98", "99",
 ] as const;
 
 function parseWhatsAppUrl(raw: string | null) {
@@ -118,10 +58,6 @@ function BioEditor() {
   const starterCreating = useRef(false);
   const bioLength = (bundle.profile.bio ?? "").length;
   const links = useMemo(() => bundle.blocks.filter(isLinkBlock), [bundle.blocks]);
-  const legacyBlocks = useMemo(
-    () => bundle.blocks.filter((block) => !isLinkBlock(block)),
-    [bundle.blocks],
-  );
 
   useEffect(() => {
     if (links.length > 0 || starterCreating.current) return;
@@ -338,9 +274,7 @@ function BioEditor() {
                             <div className="relative">
                               <button
                                 type="button"
-                                onClick={() =>
-                                  setOpenDddId(openDddId === block.id ? null : block.id)
-                                }
+                                onClick={() => setOpenDddId(openDddId === block.id ? null : block.id)}
                                 className="flex h-10 w-full items-center justify-center rounded-xl border border-input bg-card text-sm font-medium transition hover:border-primary/50"
                               >
                                 +55 {ddd || "DDD"}
@@ -349,9 +283,7 @@ function BioEditor() {
                                 <div className="absolute left-0 top-12 z-30 w-[280px] rounded-2xl border border-border bg-popover p-3 shadow-xl">
                                   <div className="mb-2 flex items-center justify-between">
                                     <span className="text-xs font-semibold">DDD</span>
-                                    <span className="text-[10px] font-medium text-primary">
-                                      BIOFY
-                                    </span>
+                                    <span className="text-[10px] font-medium text-primary">BIOFY</span>
                                   </div>
                                   <div className="grid max-h-52 grid-cols-6 gap-1.5 overflow-y-auto pr-1">
                                     {BRAZIL_DDDS.map((code) => (
@@ -425,44 +357,6 @@ function BioEditor() {
               })}
             </div>
           </section>
-
-          {legacyBlocks.length > 0 ? (
-            <details className="rounded-2xl border border-border bg-card p-4">
-              <summary className="cursor-pointer text-sm font-medium">
-                Conteúdo antigo ({legacyBlocks.length})
-              </summary>
-              <div className="mt-3 space-y-2">
-                {legacyBlocks.map((block) => (
-                  <div
-                    key={block.id}
-                    className="flex items-center gap-3 rounded-xl border border-border bg-background p-3"
-                  >
-                    <Link2 className="h-4 w-4 text-muted-foreground" />
-                    <span className="flex-1 text-sm capitalize">{block.type}</span>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => patchBlock(block.id, { is_visible: !block.is_visible })}
-                    >
-                      {block.is_visible ? (
-                        <Eye className="h-4 w-4" />
-                      ) : (
-                        <EyeOff className="h-4 w-4" />
-                      )}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeBlock(block.id)}
-                      className="hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </details>
-          ) : null}
         </div>
 
         <aside className="xl:sticky xl:top-8 xl:self-start">
