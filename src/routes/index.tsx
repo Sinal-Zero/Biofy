@@ -101,21 +101,28 @@ const plans = [
     name: "Free",
     price: "R$ 0",
     text: "Para começar",
-    features: ["Página pública", "Username", "Links básicos", "Templates básicos"],
+    features: ["Até 1 página", "Username", "Links básicos", "Templates básicos"],
   },
   {
     name: "Pro",
     price: "R$ 21,90/mês",
-    text: "Para criar sem limites",
-    features: ["Links ilimitados", "Todos os templates", "Personalização avançada", "Analytics"],
+    text: "Para crescer",
+    features: [
+      "Até 3 páginas",
+      "Links ilimitados",
+      "Todos os templates",
+      "Personalização avançada",
+      "Analytics",
+    ],
   },
   {
-    name: "Business",
+    name: "Master",
     price: "R$ 41,90/mês",
     text: "Para marcas e negócios",
     features: [
+      "Até 5 páginas",
       "Tudo do Pro",
-      "Assistente de IA para montar sua Bio",
+      "Assistente de IA para montar sua Bio — em breve",
       "Recursos profissionais",
       "Analytics avançado",
       "Base para domínio próprio",
@@ -326,8 +333,8 @@ function HomePage() {
                 Comece grátis e evolua quando precisar.
               </h2>
               <p className="mt-3 text-sm text-muted-foreground">
-                Os planos pagos estão previstos no produto; a cobrança real será habilitada depois
-                do núcleo do MVP.
+                A cobrança dos planos pagos ainda não está habilitada. A integração com o Asaas
+                será ativada posteriormente.
               </p>
             </div>
             <div className="mt-10 grid gap-4 lg:grid-cols-3">
@@ -378,7 +385,15 @@ function HomePage() {
       <footer className="border-t border-border px-4 py-8 sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <Logo />
-          <span>Biofy — Sua bio. Do seu jeito.</span>
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+            <span>Biofy — Sua bio. Do seu jeito.</span>
+            <Link to="/terms" className="transition hover:text-foreground">
+              Termos de Uso
+            </Link>
+            <Link to="/privacy" className="transition hover:text-foreground">
+              Privacidade
+            </Link>
+          </div>
         </div>
       </footer>
     </div>
