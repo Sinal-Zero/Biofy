@@ -17,6 +17,8 @@ export const Route = createFileRoute("/dashboard/")({
   component: DashboardOverview,
 });
 
+const PUBLIC_BASE_URL = "https://bio-fy.vercel.app";
+
 function DashboardOverview() {
   const { bundle } = useBio();
   const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
@@ -42,8 +44,7 @@ function DashboardOverview() {
 
   async function copyLink() {
     if (!publicPath) return;
-    const url = `${window.location.origin}${publicPath}`;
-    await navigator.clipboard.writeText(url);
+    await navigator.clipboard.writeText(`${PUBLIC_BASE_URL}${publicPath}`);
     toast.success("Link copiado!");
   }
 
@@ -60,7 +61,7 @@ function DashboardOverview() {
         <p className="text-sm font-medium text-primary">Visão geral</p>
         <h1 className="mt-1 text-3xl font-bold">Sua Bio em um só lugar</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Acompanhe o status, publique mudanças e veja os resultados reais dos últimos 30 dias.
+          Acompanhe sua Bio e veja os resultados reais dos últimos 30 dias.
         </p>
       </div>
 
@@ -69,16 +70,14 @@ function DashboardOverview() {
           <div>
             <div className="flex items-center gap-2">
               <span
-                className={`h-2.5 w-2.5 rounded-full ${bundle.page.is_published ? "bg-emerald-400" : "bg-amber-400"}`}
+                className={`h-2.5 w-2.5 rounded-full ${bundle.profile.username ? "bg-emerald-400" : "bg-amber-400"}`}
               />
               <span className="text-sm font-medium">
-                {bundle.page.is_published ? "Publicada" : "Ainda não publicada"}
+                {bundle.profile.username ? "Bio online" : "Escolha um username"}
               </span>
             </div>
             <p className="mt-2 break-all text-sm text-muted-foreground">
-              {publicPath
-                ? `${typeof window !== "undefined" ? window.location.origin : ""}${publicPath}`
-                : "Escolha um username"}
+              {publicPath ? `${PUBLIC_BASE_URL}${publicPath}` : "Escolha um username"}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -86,7 +85,7 @@ function DashboardOverview() {
               <Copy className="mr-2 h-4 w-4" />
               Copiar link
             </Button>
-            {bundle.profile.username && bundle.page.is_published ? (
+            {bundle.profile.username ? (
               <Button variant="outline" asChild>
                 <Link
                   to="/$username"
@@ -158,11 +157,11 @@ function DashboardOverview() {
               <dd className="font-medium">{bundle.blocks.length}</dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="text-muted-foreground">Última publicação</dt>
-              <dd className="font-medium">
-                {bundle.page.published_at
-                  ? new Date(bundle.page.published_at).toLocaleDateString("pt-BR")
-                  : "—"}
+              <dt className="text-muted-foreground">Endereço</dt>
+              <dd className="max-w-[65%] truncate font-medium">
+                {bundle.profile.username
+                  ? `bio-fy.vercel.app/${bundle.profile.username}`
+                  : "Escolha um username"}
               </dd>
             </div>
           </dl>
