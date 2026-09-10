@@ -333,8 +333,8 @@ function HomePage() {
                 Comece grátis e evolua quando precisar.
               </h2>
               <p className="mt-3 text-sm text-muted-foreground">
-                A cobrança dos planos pagos ainda não está habilitada. A integração com o Asaas
-                será ativada posteriormente.
+                A cobrança dos planos pagos ainda não está habilitada. A integração com o Asaas será
+                ativada posteriormente.
               </p>
             </div>
             <div className="mt-10 grid gap-4 lg:grid-cols-3">
