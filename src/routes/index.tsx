@@ -309,11 +309,11 @@ function HomePage() {
       </header>
 
       <main>
-        <section className="px-4 pb-20 pt-28 sm:px-6 sm:pb-24 sm:pt-36 lg:px-8 lg:pb-28">
+        <section className="px-4 pb-24 pt-28 sm:px-6 sm:pb-24 sm:pt-36 lg:px-8 lg:pb-32">
           <div className="mx-auto grid max-w-7xl gap-14 lg:grid-cols-[1.02fr_.98fr] lg:items-center">
             <div className="max-w-3xl biofy-page">
               <p className="biofy-section-label">Biofy para sua presença digital</p>
-              <h1 className="mt-4 max-w-3xl text-[clamp(2.8rem,8vw,5rem)] font-bold leading-[0.98] tracking-[-0.05em]">
+              <h1 className="mt-4 max-w-3xl text-[clamp(3.2rem,10vw,6rem)] font-bold leading-[0.96] tracking-[-0.04em]">
                 Um link para mostrar o que realmente importa.
               </h1>
               <p className="mt-6 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg">
@@ -532,7 +532,7 @@ function HomePage() {
               {plans.map((plan, index) => (
                 <article
                   key={plan.name}
-                  className={`biofy-card flex h-full flex-col p-6 ${index === 1 ? "border-primary/45" : ""}`}
+                  className={`biofy-card flex h-full flex-col p-6 ${index === 1 ? "border-primary/45 bg-primary/5" : ""}`}
                 >
                   <div>
                     <h3 className="text-lg font-semibold">{plan.name}</h3>

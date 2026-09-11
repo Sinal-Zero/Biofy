@@ -92,7 +92,7 @@ function DashboardOverview() {
             </Button>
             {username ? (
               <Button variant="outline" asChild>
-                <Link to="/$username" params={{ username }} target="_blank">
+                <Link to="/$username" params={{ username }} target="_blank" rel="noreferrer noopener">
                   <ExternalLink className="mr-1 h-4 w-4" />
                   Abrir
                 </Link>

@@ -220,7 +220,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[244px] border-r border-sidebar-border bg-sidebar lg:flex lg:flex-col">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[200px] border-r border-sidebar-border bg-sidebar lg:flex lg:flex-col">
         <div className="flex h-20 items-center border-b border-sidebar-border/70 px-5">
           <Logo />
         </div>
@@ -251,6 +251,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
               to="/$username"
               params={{ username }}
               target="_blank"
+              rel="noreferrer noopener"
               className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-xs font-medium text-muted-foreground transition-colors duration-150 hover:bg-sidebar-accent/60 hover:text-foreground"
             >
               <Eye className="h-4 w-4" />
@@ -260,8 +261,8 @@ export function DashboardShell({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      <main className="lg:pl-[244px]">
-        <div className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6 sm:py-7 lg:px-8 lg:py-8 xl:px-10">
+      <main className="lg:pl-[200px]">
+        <div className="mx-auto max-w-[1400px] px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-7 xl:px-10">
           <div className="mb-7 hidden min-h-10 items-center justify-between gap-4 lg:flex">
             <span className="min-w-20 text-xs text-muted-foreground">{saveLabel}</span>
             {renderProfileMenu(desktopMenuRef)}
