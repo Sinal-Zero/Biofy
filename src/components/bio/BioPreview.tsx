@@ -84,7 +84,7 @@ export function BioPreview({
 
     const base: React.CSSProperties = {
       borderRadius: shapeRadius[shape] ?? "14px",
-      padding: compact ? "10px 13px" : (sizePadding[theme.buttonSize] ?? sizePadding.md),
+      padding: compact ? "10px 13px" : (sizePadding[theme.buttonSize] ?? sizePadding["md"]),
       boxShadow: shadow ? `0 10px 26px -14px ${withAlpha(color, 0.9)}` : "none",
       transition:
         "transform 180ms cubic-bezier(.22,1,.36,1), box-shadow 180ms ease, filter 180ms ease, background-color 180ms ease",
