@@ -117,7 +117,9 @@ function SubscriptionPage() {
       <header className="biofy-page-header">
         <p className="biofy-page-kicker">Plano</p>
         <h1 className="biofy-page-title">Assinatura</h1>
-        <p className="biofy-page-description">Gerencie seu plano e acompanhe o status da cobrança.</p>
+        <p className="biofy-page-description">
+          Gerencie seu plano e acompanhe o status da cobrança.
+        </p>
       </header>
 
       <section className="biofy-card p-5 sm:p-6">
@@ -156,7 +158,10 @@ function SubscriptionPage() {
             <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             <div className="min-w-0 flex-1">
               <p className="leading-6 text-muted-foreground">
-                Use <strong className="font-semibold text-foreground">o mesmo e-mail da sua conta Biofy</strong>{" "}
+                Use{" "}
+                <strong className="font-semibold text-foreground">
+                  o mesmo e-mail da sua conta Biofy
+                </strong>{" "}
                 no checkout para ativação automática.
               </p>
               {checkoutPlan ? (
@@ -233,7 +238,11 @@ function SubscriptionPage() {
                   Plano gratuito
                 </Button>
               ) : (
-                <Button className="mt-6 h-auto min-h-10 w-full whitespace-normal py-2.5 text-center leading-5" variant="outline" disabled>
+                <Button
+                  className="mt-6 h-auto min-h-10 w-full whitespace-normal py-2.5 text-center leading-5"
+                  variant="outline"
+                  disabled
+                >
                   Encerre o plano atual antes de trocar
                 </Button>
               )}

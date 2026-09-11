@@ -10,8 +10,7 @@ const buttonVariants = cva(
       variant: {
         default:
           "bg-primary text-primary-foreground shadow-[0_10px_28px_-18px_color-mix(in_oklab,var(--primary)_72%,transparent)] hover:bg-primary/94 hover:shadow-[0_14px_34px_-20px_color-mix(in_oklab,var(--primary)_82%,transparent)]",
-        destructive:
-          "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/92",
+        destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/92",
         outline:
           "border border-border/90 bg-background/35 text-foreground shadow-sm hover:border-primary/25 hover:bg-accent/65 hover:text-accent-foreground",
         secondary:

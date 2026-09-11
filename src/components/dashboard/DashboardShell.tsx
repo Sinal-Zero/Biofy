@@ -201,10 +201,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           </div>
         </div>
         <div className="biofy-fade-edge px-1">
-          <nav
-            className="biofy-scroll-x flex gap-1 px-3 pb-3"
-            aria-label="Navegação do painel"
-          >
+          <nav className="biofy-scroll-x flex gap-1 px-3 pb-3" aria-label="Navegação do painel">
             {navigation.map((item) => {
               const Icon = item.icon;
               return (

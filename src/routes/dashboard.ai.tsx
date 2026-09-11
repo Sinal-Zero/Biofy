@@ -72,9 +72,7 @@ function AiPage() {
       <header className="biofy-page-header">
         <p className="biofy-page-kicker">Assistente</p>
         <h1 className="biofy-page-title">Biofy AI</h1>
-        <p className="biofy-page-description">
-          Peça uma mudança e acompanhe o resultado ao lado.
-        </p>
+        <p className="biofy-page-description">Peça uma mudança e acompanhe o resultado ao lado.</p>
       </header>
 
       <div className="grid gap-5 xl:grid-cols-[minmax(340px,0.62fr)_minmax(560px,1.38fr)] xl:items-stretch">

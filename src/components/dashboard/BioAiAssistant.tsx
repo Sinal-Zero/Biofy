@@ -287,7 +287,7 @@ export function BioAiAssistant() {
   }
 
   return (
-    <section className="flex min-h-[850px] flex-col rounded-[1.5rem] border border-border/90 bg-card/95 shadow-panel xl:min-h-[872px]">
+    <section className="biofy-card flex min-h-[600px] flex-col overflow-hidden sm:min-h-[640px] md:min-h-[680px] xl:min-h-[760px]">
       <div className="flex items-center gap-3 border-b border-border/80 px-4 py-3.5 sm:px-5">
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-primary/[0.08] text-primary">
           <Bot className="h-4.5 w-4.5" />
@@ -364,8 +364,8 @@ export function BioAiAssistant() {
         )}
       </div>
 
-      <div className="mt-auto border-t border-border/80 p-3 sm:p-4">
-        <div className="flex items-center gap-2 rounded-2xl border border-input/90 bg-background/80 p-1.5 shadow-sm transition-[border-color,box-shadow,background-color] duration-200 focus-within:border-primary/45 focus-within:bg-background focus-within:ring-2 focus-within:ring-primary/10">
+      <div className="mt-auto border-t border-border/75 bg-background/20 p-3 sm:p-4">
+        <div className="flex items-center gap-2 rounded-xl border border-input/90 bg-background/80 p-1.5 shadow-sm transition-[border-color,box-shadow,background-color] duration-200 focus-within:border-primary/45 focus-within:bg-background focus-within:ring-2 focus-within:ring-primary/10">
           <input
             value={instruction}
             maxLength={1000}

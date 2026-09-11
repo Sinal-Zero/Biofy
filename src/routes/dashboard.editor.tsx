@@ -160,8 +160,8 @@ function BioEditor() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-end justify-between gap-3">
+    <div className="biofy-page space-y-6 sm:space-y-7">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm font-medium text-primary">Editor</p>
           <h1 className="mt-1 text-3xl font-bold">Minha Bio</h1>
@@ -173,7 +173,7 @@ function BioEditor() {
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_390px]">
         <div className="space-y-5">
-          <section className="rounded-2xl border border-border bg-card p-5 transition hover:border-primary/20 sm:p-6">
+          <section className="biofy-card p-5 sm:p-6">
             <h2 className="text-lg font-semibold">Perfil</h2>
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
@@ -212,7 +212,7 @@ function BioEditor() {
             </div>
           </section>
 
-          <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
+          <section className="biofy-card p-5 sm:p-6">
             <div className="flex items-center justify-between gap-4">
               <h2 className="text-lg font-semibold">Links</h2>
               <div className="relative">
@@ -273,7 +273,7 @@ function BioEditor() {
                       if (draggedId && draggedId !== block.id) moveBlock(draggedId, actualIndex);
                       setDraggedId(null);
                     }}
-                    className={`rounded-2xl border bg-background p-4 transition duration-200 hover:border-primary/30 ${
+                    className={`biofy-muted-panel p-4 transition-[border-color,background-color,transform] duration-200 hover:border-primary/30 ${
                       draggedId === block.id
                         ? "scale-[0.99] border-primary/60 opacity-60"
                         : "border-border"
@@ -342,7 +342,7 @@ function BioEditor() {
                                 +55 {ddd || "DDD"}
                               </button>
                               {openDddId === block.id ? (
-                                <div className="absolute left-0 top-12 z-30 w-[280px] rounded-2xl border border-border bg-popover p-3 shadow-xl">
+                                <div className="absolute left-0 top-12 z-30 w-[min(280px,calc(100vw-3.5rem))] rounded-2xl border border-border/90 bg-popover/95 p-3 shadow-panel backdrop-blur-xl">
                                   <div className="mb-2 flex items-center justify-between">
                                     <span className="text-xs font-semibold">DDD</span>
                                     <span className="text-[10px] font-medium text-primary">
@@ -424,7 +424,7 @@ function BioEditor() {
         </div>
 
         <aside className="xl:sticky xl:top-8 xl:self-start">
-          <div className="mb-3 flex items-center justify-between rounded-xl border border-border bg-card px-3 py-2">
+          <div className="biofy-card mb-3 flex items-center justify-between px-3 py-2.5">
             <span className="text-xs font-medium text-muted-foreground">PREVIEW</span>
             <span className="text-xs text-muted-foreground">@{bundle.profile.username}</span>
           </div>

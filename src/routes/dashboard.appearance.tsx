@@ -54,7 +54,7 @@ function ColorControl({
   }
 
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-border bg-background/55 p-3 transition-all duration-200 hover:border-primary/25">
+    <div className="biofy-muted-panel flex items-center gap-3 p-3 transition-colors duration-200 hover:border-primary/25">
       <label className="relative h-11 w-11 shrink-0 cursor-pointer overflow-hidden rounded-xl border border-white/10 shadow-inner">
         <span className="absolute inset-0" style={{ backgroundColor: pickerColor(value) }} />
         <input
@@ -105,7 +105,7 @@ function RangeControl({
   onChange: (value: number) => void;
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-background/55 p-4">
+    <div className="biofy-muted-panel p-4">
       <div className="flex items-center justify-between gap-4">
         <Label htmlFor={id}>{label}</Label>
         <span className="rounded-lg border border-border bg-card px-2 py-1 text-xs font-medium">
@@ -134,7 +134,7 @@ function PreviewToggle({
   onChange: (mode: PreviewMode) => void;
 }) {
   return (
-    <div className="grid grid-cols-2 rounded-xl border border-border bg-background/55 p-1">
+    <div className="biofy-segmented">
       {(
         [
           ["mobile", Smartphone, "Celular"],
@@ -179,7 +179,7 @@ function AppearancePage() {
   }, [bundle.page.user_id]);
 
   return (
-    <div className="space-y-6 animate-rise">
+    <div className="biofy-page space-y-6 sm:space-y-7">
       <header>
         <p className="text-sm font-medium text-primary">Identidade visual</p>
         <h1 className="mt-1 text-3xl font-bold">Aparência</h1>
@@ -188,10 +188,10 @@ function AppearancePage() {
         </p>
       </header>
 
-      <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_560px]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_500px]">
         <div className="space-y-5">
           {!paid ? (
-            <section className="rounded-2xl border border-border bg-card p-5 shadow-soft sm:p-6">
+            <section className="biofy-card p-5 sm:p-6">
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <h2 className="text-lg font-semibold">Estilo base</h2>
@@ -246,7 +246,7 @@ function AppearancePage() {
             </section>
           ) : null}
 
-          <section className="rounded-2xl border border-border bg-card p-5 shadow-soft sm:p-6">
+          <section className="biofy-card p-5 sm:p-6">
             <div className="flex items-center gap-3">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/[0.08] text-primary">
                 <Palette className="h-4 w-4" />
@@ -401,8 +401,8 @@ function AppearancePage() {
           </section>
         </div>
 
-        <aside className="2xl:sticky 2xl:top-8 2xl:self-start">
-          <div className="overflow-hidden rounded-[1.5rem] border border-border bg-card shadow-panel">
+        <aside className="xl:sticky xl:top-8 xl:self-start">
+          <div className="biofy-card overflow-hidden">
             <div className="border-b border-border p-3">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div>
@@ -415,7 +415,7 @@ function AppearancePage() {
               <PreviewToggle mode={previewMode} onChange={setPreviewMode} />
             </div>
 
-            <div className="min-h-[650px] bg-black/15 p-4">
+            <div className="flex min-h-[620px] items-center justify-center bg-black/[0.08] p-3 sm:p-4">
               {previewMode === "mobile" ? (
                 <div className="mx-auto w-full max-w-[330px] animate-rise">
                   <PhoneFrame>
@@ -433,7 +433,7 @@ function AppearancePage() {
                   </PhoneFrame>
                 </div>
               ) : (
-                <div className="h-[650px] overflow-auto rounded-xl border border-border/70 bg-background/35 animate-rise">
+                <div className="flex min-h-[610px] w-full items-center justify-center overflow-hidden rounded-2xl border border-border/65 bg-background/25">
                   <BioPreview
                     displayName={bundle.profile.display_name}
                     username={bundle.profile.username}

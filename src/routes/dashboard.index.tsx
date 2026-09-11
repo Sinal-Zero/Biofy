@@ -63,7 +63,9 @@ function DashboardOverview() {
       <header className="biofy-page-header">
         <p className="biofy-page-kicker">Visão geral</p>
         <h1 className="biofy-page-title">Sua Bio</h1>
-        <p className="biofy-page-description">Desempenho e atalhos principais dos últimos 30 dias.</p>
+        <p className="biofy-page-description">
+          Desempenho e atalhos principais dos últimos 30 dias.
+        </p>
       </header>
 
       <section className="biofy-card p-5 sm:p-6">
