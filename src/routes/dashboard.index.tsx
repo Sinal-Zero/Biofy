@@ -59,31 +59,31 @@ function DashboardOverview() {
   ];
 
   return (
-    <div className="space-y-6 animate-rise">
-      <header>
-        <p className="text-sm font-medium text-primary">Visão geral</p>
-        <h1 className="mt-1 text-3xl font-bold">Sua Bio</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Desempenho dos últimos 30 dias.</p>
+    <div className="biofy-page space-y-6 sm:space-y-7">
+      <header className="biofy-page-header">
+        <p className="biofy-page-kicker">Visão geral</p>
+        <h1 className="biofy-page-title">Sua Bio</h1>
+        <p className="biofy-page-description">Desempenho e atalhos principais dos últimos 30 dias.</p>
       </header>
 
-      <section className="rounded-2xl border border-border bg-card p-5 shadow-soft transition-all duration-300 hover:border-primary/25 sm:p-6">
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+      <section className="biofy-card p-5 sm:p-6">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <span
-                className={`h-2.5 w-2.5 rounded-full ${username ? "bg-emerald-400" : "bg-amber-400"}`}
+                className={`h-2.5 w-2.5 rounded-full shadow-[0_0_18px_currentColor] ${username ? "bg-emerald-400 text-emerald-400" : "bg-amber-400 text-amber-400"}`}
                 aria-hidden="true"
               />
-              <span className="text-sm font-medium">
+              <span className="text-sm font-semibold">
                 {username ? "Bio online" : "Defina seu username"}
               </span>
             </div>
-            <p className="mt-2 truncate text-sm text-muted-foreground">
-              {username ? getPublicBioDisplay(username) : "Sua URL aparecerá aqui."}
+            <p className="mt-2 max-w-xl truncate text-sm text-muted-foreground">
+              {username ? getPublicBioDisplay(username) : "Sua URL pública aparecerá aqui."}
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
             <Button variant="outline" onClick={copyLink} disabled={!username}>
               <Copy className="mr-2 h-4 w-4" />
               Copiar
@@ -96,7 +96,7 @@ function DashboardOverview() {
                 </Link>
               </Button>
             ) : null}
-            <Button asChild>
+            <Button asChild className="col-span-2 sm:col-auto">
               <Link to="/dashboard/editor">Editar Bio</Link>
             </Button>
           </div>
@@ -107,13 +107,10 @@ function DashboardOverview() {
         {cards.map((card) => {
           const Icon = card.icon;
           return (
-            <article
-              key={card.label}
-              className="group rounded-2xl border border-border bg-card p-5 shadow-soft transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/25"
-            >
-              <div className="flex items-center justify-between">
+            <article key={card.label} className="biofy-card biofy-card-interactive p-5">
+              <div className="flex items-center justify-between gap-3">
                 <span className="text-sm text-muted-foreground">{card.label}</span>
-                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/[0.08] text-primary transition-transform duration-300 group-hover:scale-105">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-primary/10 bg-primary/[0.07] text-primary">
                   <Icon className="h-4 w-4" />
                 </span>
               </div>
