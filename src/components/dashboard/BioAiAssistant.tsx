@@ -129,10 +129,11 @@ export function BioAiAssistant() {
     }
 
     for (const block of payload.addBlocks ?? []) {
-      await addBlock(block.type, {
-        title: block.title ?? undefined,
-        url: block.url ?? undefined,
-      });
+      const initial = {
+        ...(block.title !== undefined ? { title: block.title } : {}),
+        ...(block.url !== undefined ? { url: block.url } : {}),
+      };
+      await addBlock(block.type, initial);
       await nextFrame();
     }
 
@@ -220,8 +221,8 @@ export function BioAiAssistant() {
       const normalizedPayload: AiResult = {
         bio: typeof payload.bio === "string" ? payload.bio : bundle.profile.bio ?? "",
         linkTitles: Array.isArray(payload.linkTitles) ? payload.linkTitles : [],
-        profile: payload.profile,
-        theme: payload.theme,
+        ...(payload.profile ? { profile: payload.profile } : {}),
+        ...(payload.theme ? { theme: payload.theme } : {}),
         blocks: Array.isArray(payload.blocks) ? payload.blocks : [],
         order: Array.isArray(payload.order) ? payload.order : [],
         removeBlockIds: Array.isArray(payload.removeBlockIds) ? payload.removeBlockIds : [],
