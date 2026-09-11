@@ -59,16 +59,21 @@ export function BioPreview({
     theme.bgType === "gradient"
       ? `linear-gradient(${theme.bgAngle}deg, ${theme.bgFrom}, ${theme.bgTo})`
       : theme.bgType === "image" && theme.bgImage
-        ? `linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.55)), url(${theme.bgImage})`
+        ? `linear-gradient(rgba(0,0,0,0.28), rgba(0,0,0,0.48)), url(${theme.bgImage})`
         : theme.bgColor;
 
-  const socials = blocks.filter((b) => b.is_visible && isSocial(b.type) && b.url);
-  const mainBlocks = blocks.filter((b) => b.is_visible && !isSocial(b.type));
+  const socials = blocks.filter((block) => block.is_visible && isSocial(block.type) && block.url);
+  const mainBlocks = blocks.filter((block) => block.is_visible && !isSocial(block.type));
 
   const avatarRadius =
-    theme.avatarShape === "circle" ? "999px" : theme.avatarShape === "rounded" ? "18px" : "4px";
+    theme.avatarShape === "circle"
+      ? "999px"
+      : theme.avatarShape === "rounded"
+        ? "18px"
+        : "4px";
 
   const initials = (displayName || username || "B").trim().charAt(0).toUpperCase();
+  const panelWidth = Math.min(Math.max(Number(theme.width) || 480, 320), 720);
 
   function buttonStyleFor(block: BioBlock) {
     const cfg = block.config ?? {};
@@ -82,7 +87,7 @@ export function BioPreview({
 
     const base: React.CSSProperties = {
       borderRadius: shapeRadius[shape] ?? "14px",
-      padding: compact ? "9px 12px" : (sizePadding[theme.buttonSize] ?? sizePadding["md"]),
+      padding: compact ? "10px 13px" : (sizePadding[theme.buttonSize] ?? sizePadding["md"]),
       boxShadow: shadow ? `0 10px 26px -14px ${withAlpha(color, 0.9)}` : "none",
       transition: "transform 180ms cubic-bezier(.22,1,.36,1), box-shadow 180ms, filter 180ms",
       border: "1px solid transparent",
@@ -138,21 +143,19 @@ export function BioPreview({
   return (
     <div
       className={cn(
-        "flex min-h-full w-full items-start justify-center transition-colors duration-300",
-        compact ? "p-3" : "min-h-screen p-4 sm:p-8 lg:p-12",
+        "flex min-h-full w-full items-start justify-center overflow-x-hidden transition-colors duration-300",
+        compact ? "p-3 pt-8" : "min-h-dvh px-4 py-6 sm:px-6 sm:py-10 lg:py-14",
         className,
       )}
       style={{ backgroundColor: theme.pageBgColor, fontFamily: fontStacks[theme.font] }}
     >
       <div
         className={cn(
-          "flex w-full flex-col overflow-hidden shadow-[0_28px_90px_-46px_rgba(0,0,0,0.78)] transition-all duration-300",
-          compact
-            ? "min-h-full rounded-[1.25rem]"
-            : "min-h-[calc(100vh-2rem)] rounded-[1.75rem] sm:min-h-[calc(100vh-4rem)]",
+          "w-full overflow-hidden border shadow-[0_24px_70px_-36px_rgba(0,0,0,0.72)] transition-all duration-300",
+          compact ? "rounded-[1.35rem]" : "rounded-[1.85rem]",
         )}
         style={{
-          maxWidth: `${theme.width}px`,
+          maxWidth: `${panelWidth}px`,
           background: panelBackground,
           backgroundSize: "cover",
           backgroundPosition: "center",
@@ -164,8 +167,8 @@ export function BioPreview({
       >
         <div
           className={cn(
-            "mx-auto flex w-full flex-1 flex-col px-5",
-            compact ? "py-7" : "py-10 sm:px-8 sm:py-14",
+            "mx-auto flex w-full flex-col px-5",
+            compact ? "py-7" : "px-6 py-10 sm:px-8 sm:py-12",
             theme.align === "left" ? "items-start text-left" : "items-center text-center",
           )}
         >
@@ -212,12 +215,14 @@ export function BioPreview({
           >
             {displayName || (username ? `@${username}` : "Seu nome")}
           </h1>
-          {username && (
+
+          {username ? (
             <p className="opacity-70" style={{ fontSize: `${(compact ? 10 : 12) * textScale}px` }}>
               @{username}
             </p>
-          )}
-          {bio && (
+          ) : null}
+
+          {bio ? (
             <p
               className="mt-2 max-w-full whitespace-pre-line"
               style={{
@@ -228,9 +233,9 @@ export function BioPreview({
             >
               {bio}
             </p>
-          )}
+          ) : null}
 
-          {socials.length > 0 && (
+          {socials.length > 0 ? (
             <div
               className={cn("flex flex-wrap items-center gap-3", compact ? "mt-3" : "mt-5")}
               style={{ justifyContent: theme.align === "left" ? "flex-start" : "center" }}
@@ -257,13 +262,13 @@ export function BioPreview({
                 );
               })}
             </div>
-          )}
+          ) : null}
 
           <div
             className="flex w-full flex-col"
             style={{
-              gap: `${compact ? Math.max(6, theme.gap * 0.7) : theme.gap}px`,
-              marginTop: compact ? 14 : 26,
+              gap: `${compact ? Math.max(7, theme.gap * 0.7) : theme.gap}px`,
+              marginTop: compact ? 16 : 28,
             }}
           >
             {mainBlocks.map((block) => {
@@ -282,6 +287,7 @@ export function BioPreview({
                   </p>
                 );
               }
+
               if (block.type === "image") {
                 const src = block.config?.imageUrl || block.url;
                 if (!src) return null;
@@ -296,6 +302,7 @@ export function BioPreview({
                   />
                 );
               }
+
               const Icon = getBlockDef(block.type).icon;
               const content = (
                 <>
@@ -308,6 +315,7 @@ export function BioPreview({
                   </span>
                 </>
               );
+
               if (interactive && block.url) {
                 return (
                   <a
@@ -323,6 +331,7 @@ export function BioPreview({
                   </a>
                 );
               }
+
               return (
                 <div key={block.id} style={buttonStyleFor(block)} className={animClass(block)}>
                   {content}
@@ -331,10 +340,10 @@ export function BioPreview({
             })}
           </div>
 
-          {showBranding && (
+          {showBranding ? (
             <a
               href="/"
-              className="mt-auto inline-flex items-center gap-2 pt-10 opacity-70 transition-all hover:opacity-100"
+              className="mt-9 inline-flex items-center gap-2 opacity-70 transition-all hover:opacity-100"
               style={{
                 color: theme.mutedColor,
                 fontSize: `${(compact ? 9 : 11) * textScale}px`,
@@ -343,7 +352,7 @@ export function BioPreview({
               <BiofyMark className={compact ? "h-4 w-4" : "h-5 w-5"} />
               <span className="font-semibold tracking-tight">Biofy</span>
             </a>
-          )}
+          ) : null}
         </div>
       </div>
     </div>
