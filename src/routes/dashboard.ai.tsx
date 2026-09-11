@@ -92,7 +92,7 @@ function AiPage() {
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-foreground">Checar alterações</p>
                   <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
-                    biofy.app/{bundle.profile.username || "sua-bio"}
+                    bio-fy.vercel.app/{bundle.profile.username || "sua-bio"}
                   </p>
                 </div>
               </div>
