@@ -5,7 +5,6 @@ import {
   Check,
   ChevronDown,
   LayoutDashboard,
-  LayoutTemplate,
   Link2,
   LogOut,
   Palette,
@@ -72,23 +71,23 @@ const demoBlocks: BioBlock[] = [
 const resources = [
   {
     icon: Palette,
-    title: "Visual do seu jeito",
-    text: "Cores, tipografia, botões, fundo e espaçamento em um único editor.",
+    title: "Identidade visual",
+    text: "Ajuste cores, tipografia, botões, fundo e proporções sem perder consistência.",
   },
   {
     icon: Link2,
-    title: "Links organizados",
-    text: "Reúna portfólio, redes e contato sem espalhar vários endereços.",
+    title: "Links em um só lugar",
+    text: "Organize portfólio, redes, contato e conteúdo em uma página fácil de compartilhar.",
   },
   {
     icon: BarChart3,
-    title: "Analytics",
-    text: "Acompanhe visualizações, cliques e CTR da sua página.",
+    title: "Analytics direto ao ponto",
+    text: "Acompanhe visualizações, cliques e CTR sem transformar o painel em uma planilha.",
   },
   {
     icon: Sparkles,
-    title: "Biofy AI no Master",
-    text: "Peça mudanças em linguagem natural e deixe a IA aplicar direto na página.",
+    title: "Biofy AI",
+    text: "No Master, descreva a mudança em linguagem natural e deixe a Biofy aplicar na página.",
   },
 ];
 
@@ -197,9 +196,10 @@ function HomePage() {
 
   return (
     <div className="min-h-dvh overflow-x-clip bg-background text-foreground">
-      <header className="fixed inset-x-0 top-0 z-50 border-b border-white/[0.06] bg-background/90 backdrop-blur-xl">
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-border/70 bg-background/94 backdrop-blur-lg">
         <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-8 xl:px-10">
           <Logo />
+
           <nav
             className="hidden items-center gap-1 text-sm text-muted-foreground md:flex"
             aria-label="Navegação principal"
@@ -213,7 +213,7 @@ function HomePage() {
               <a
                 key={href}
                 href={href}
-                className="rounded-lg px-3 py-2 transition-colors hover:bg-accent/60 hover:text-foreground"
+                className="rounded-lg px-3 py-2 transition-colors duration-150 hover:bg-accent/50 hover:text-foreground"
               >
                 {label}
               </a>
@@ -225,14 +225,14 @@ function HomePage() {
               <button
                 type="button"
                 onClick={() => setProfileOpen((open) => !open)}
-                className="group flex h-10 items-center gap-2 rounded-full border border-border bg-card/80 p-1.5 pr-3 shadow-sm transition-all duration-200 hover:border-primary/30 hover:bg-card active:scale-[0.99]"
+                className="group flex h-10 items-center gap-2 rounded-[10px] border border-border/85 bg-card px-1.5 pr-2.5 text-left transition-colors duration-150 hover:border-foreground/15 hover:bg-accent/35"
                 aria-haspopup="menu"
                 aria-expanded={profileOpen}
               >
                 {avatarUrl ? (
                   <img src={avatarUrl} alt="" className="h-7 w-7 rounded-full object-cover" />
                 ) : (
-                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/12 text-xs font-semibold text-primary">
                     {initial}
                   </span>
                 )}
@@ -240,25 +240,25 @@ function HomePage() {
                   {displayName}
                 </span>
                 <ChevronDown
-                  className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 ${profileOpen ? "rotate-180" : ""}`}
+                  className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-150 ${profileOpen ? "rotate-180" : ""}`}
                 />
               </button>
 
               {profileOpen ? (
                 <div
                   role="menu"
-                  className="absolute right-0 top-12 w-64 origin-top-right animate-pop rounded-2xl border border-border bg-popover/95 p-2 shadow-panel backdrop-blur-xl"
+                  className="absolute right-0 top-12 w-[min(16rem,calc(100vw-2rem))] origin-top-right animate-pop rounded-xl border border-border/90 bg-popover p-2 shadow-panel"
                 >
-                  <div className="border-b border-border px-3 py-3">
+                  <div className="border-b border-border/80 px-3 py-3">
                     <div className="flex items-center gap-3">
                       {avatarUrl ? (
                         <img
                           src={avatarUrl}
                           alt=""
-                          className="h-10 w-10 rounded-full object-cover"
+                          className="h-9 w-9 rounded-full object-cover"
                         />
                       ) : (
-                        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/15 font-semibold text-primary">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/12 font-semibold text-primary">
                           {initial}
                         </span>
                       )}
@@ -272,7 +272,7 @@ function HomePage() {
                   <Link
                     to="/dashboard"
                     onClick={() => setProfileOpen(false)}
-                    className="mt-2 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors hover:bg-accent"
+                    className="mt-1 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors hover:bg-accent/60"
                     role="menuitem"
                   >
                     <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
@@ -281,7 +281,7 @@ function HomePage() {
                   <Link
                     to="/dashboard/settings"
                     onClick={() => setProfileOpen(false)}
-                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors hover:bg-accent"
+                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors hover:bg-accent/60"
                     role="menuitem"
                   >
                     <Settings className="h-4 w-4 text-muted-foreground" />
@@ -290,7 +290,7 @@ function HomePage() {
                   <button
                     type="button"
                     onClick={() => void signOut()}
-                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-destructive transition-colors hover:bg-destructive/10"
+                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-destructive transition-colors hover:bg-destructive/10"
                     role="menuitem"
                   >
                     <LogOut className="h-4 w-4" />
@@ -300,7 +300,7 @@ function HomePage() {
               ) : null}
             </div>
           ) : (
-            <div className="flex items-center gap-1 sm:gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               <Button variant="ghost" size="sm" asChild>
                 <Link to="/login">Entrar</Link>
               </Button>
@@ -313,48 +313,58 @@ function HomePage() {
       </header>
 
       <main>
-        <section className="relative px-4 pb-24 pt-32 sm:px-6 sm:pt-40 lg:px-8 lg:pb-32">
-          <div className="pointer-events-none absolute inset-0 grid-backdrop opacity-35" />
-          <div className="pointer-events-none absolute left-1/2 top-16 h-[460px] w-[min(760px,90vw)] -translate-x-1/2 rounded-full bg-primary/12 blur-[130px]" />
-          <div className="relative mx-auto grid max-w-7xl gap-14 lg:grid-cols-[1.05fr_.95fr] lg:items-center">
-            <div className="max-w-3xl animate-rise">
-              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary">
-                <Sparkles className="h-3.5 w-3.5" />
-                Mais que links. É você.
-              </div>
-              <h1 className="text-[clamp(2.75rem,10vw,4.75rem)] font-bold leading-[1.02] tracking-[-0.035em]">
-                Sua bio. <span className="gradient-text">Do seu jeito.</span>
+        <section className="px-4 pb-20 pt-28 sm:px-6 sm:pb-24 sm:pt-36 lg:px-8 lg:pb-28">
+          <div className="mx-auto grid max-w-7xl gap-14 lg:grid-cols-[1.02fr_.98fr] lg:items-center">
+            <div className="max-w-3xl biofy-page">
+              <p className="biofy-section-label">Biofy para sua presença digital</p>
+              <h1 className="mt-4 max-w-3xl text-[clamp(2.8rem,8vw,5rem)] font-bold leading-[0.98] tracking-[-0.05em]">
+                Um link para mostrar o que realmente importa.
               </h1>
               <p className="mt-6 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg">
-                Uma página para reunir seus links, mostrar sua identidade e compartilhar tudo em um
-                só endereço.
+                Reúna links, identidade, contato e conteúdo em uma página fácil de editar e pronta
+                para compartilhar.
               </p>
-              <div className="mt-8 flex flex-wrap gap-3">
+
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
                 <Button size="lg" asChild>
                   <Link to={user ? "/dashboard/editor" : "/signup"}>
-                    {user ? "Editar minha Bio" : "Criar minha Bio"}
-                    <ArrowRight className="ml-2 h-4 w-4" />
+                    {user ? "Editar minha Bio" : "Criar Bio grátis"}
+                    <ArrowRight className="ml-1 h-4 w-4" />
                   </Link>
                 </Button>
                 <Button size="lg" variant="outline" asChild>
-                  <a href="#templates">Ver templates</a>
+                  <a href="#como-funciona">Ver como funciona</a>
                 </Button>
               </div>
+
               <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1.5">
                   <Check className="h-3.5 w-3.5 text-primary" />
-                  Comece grátis
+                  Comece no plano Free
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Check className="h-3.5 w-3.5 text-primary" />
                   Salvamento automático
                 </span>
+                <span className="flex items-center gap-1.5">
+                  <Check className="h-3.5 w-3.5 text-primary" />
+                  Página pronta para compartilhar
+                </span>
               </div>
             </div>
 
-            <div className="relative mx-auto w-full max-w-md animate-rise [animation-delay:100ms]">
-              <div className="absolute -inset-10 rounded-full bg-brand-2/12 blur-3xl" />
-              <PhoneFrame className="relative">
+            <div className="biofy-product-stage mx-auto w-full max-w-[560px] p-5 sm:p-7 lg:p-8">
+              <div className="mb-5 flex items-center justify-between gap-4 border-b border-border/70 pb-4">
+                <div>
+                  <p className="text-sm font-semibold">Prévia da página</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">bio-fy.vercel.app/marina</p>
+                </div>
+                <span className="biofy-status">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                  Online
+                </span>
+              </div>
+              <PhoneFrame glow={false} className="max-w-[332px]">
                 <BioPreview
                   displayName="Marina Costa"
                   username="marina"
@@ -371,28 +381,27 @@ function HomePage() {
 
         <section
           id="como-funciona"
-          className="border-y border-border bg-surface/35 px-4 py-20 sm:px-6 lg:px-8"
+          className="border-y border-border/70 bg-surface/22 px-4 py-20 sm:px-6 lg:px-8"
         >
           <ScrollReveal className="mx-auto max-w-7xl">
-            <div className="mx-auto max-w-2xl text-center">
-              <p className="text-sm font-medium text-primary">Como funciona</p>
-              <h2 className="mt-2 text-3xl font-bold sm:text-4xl">
-                Crie. Personalize. Compartilhe.
+            <div className="max-w-2xl">
+              <p className="biofy-section-label">Como funciona</p>
+              <h2 className="mt-3 text-3xl font-bold tracking-[-0.035em] sm:text-4xl">
+                Do zero ao link publicado em poucos passos.
               </h2>
             </div>
-            <div className="mt-10 grid gap-4 md:grid-cols-3">
+
+            <div className="mt-10 grid gap-8 md:grid-cols-3">
               {[
-                ["01", "Crie", "Escolha seu username e comece com um template."],
-                ["02", "Personalize", "Adicione links e ajuste o visual da página."],
-                ["03", "Compartilhe", "Use um único endereço e edite quando quiser."],
-              ].map(([number, title, text], index) => (
-                <ScrollReveal key={number} delay={index * 70}>
-                  <article className="biofy-card biofy-card-interactive group h-full p-6">
-                    <span className="text-xs font-semibold text-primary">{number}</span>
-                    <h3 className="mt-7 text-xl font-semibold">{title}</h3>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">{text}</p>
-                  </article>
-                </ScrollReveal>
+                ["01", "Crie", "Escolha seu username e comece com uma base pronta."],
+                ["02", "Personalize", "Organize links e ajuste o visual sem quebrar a consistência."],
+                ["03", "Compartilhe", "Publique um endereço único e continue editando quando quiser."],
+              ].map(([number, title, text]) => (
+                <article key={number} className="border-t border-border/80 pt-5">
+                  <span className="text-xs font-semibold text-muted-foreground">{number}</span>
+                  <h3 className="mt-6 text-xl font-semibold">{title}</h3>
+                  <p className="mt-2 max-w-sm text-sm leading-6 text-muted-foreground">{text}</p>
+                </article>
               ))}
             </div>
           </ScrollReveal>
@@ -400,94 +409,99 @@ function HomePage() {
 
         <section id="templates" className="px-4 py-24 sm:px-6 lg:px-8">
           <ScrollReveal className="mx-auto max-w-7xl">
-            <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
               <div className="max-w-2xl">
-                <p className="text-sm font-medium text-primary">Templates</p>
-                <h2 className="mt-2 text-3xl font-bold sm:text-4xl">Comece com uma base limpa.</h2>
+                <p className="biofy-section-label">Templates</p>
+                <h2 className="mt-3 text-3xl font-bold tracking-[-0.035em] sm:text-4xl">
+                  Uma base boa antes de qualquer efeito.
+                </h2>
                 <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                  Escolha um estilo e continue personalizando dentro do editor.
+                  Escolha um estilo inicial e refine dentro do editor com a sua identidade.
                 </p>
               </div>
               <Button variant="outline" asChild>
-                <Link to={user ? "/dashboard/appearance" : "/signup"}>Usar template</Link>
+                <Link to={user ? "/dashboard/appearance" : "/signup"}>Explorar templates</Link>
               </Button>
             </div>
 
             <div className="mt-10 grid gap-4 md:grid-cols-3">
-              {templates.map((template, index) => (
-                <ScrollReveal key={template.id} delay={index * 70}>
-                  <article className="group rounded-3xl border border-border bg-card p-3 shadow-soft transition-all duration-300 hover:-translate-y-1 hover:border-primary/30">
+              {templates.map((template) => (
+                <article key={template.id} className="biofy-card overflow-hidden p-3">
+                  <div
+                    className="relative h-52 overflow-hidden rounded-xl border border-border/70"
+                    style={{
+                      backgroundColor: template.theme.pageBgColor,
+                      borderColor: template.theme.panelBorderColor,
+                    }}
+                  >
                     <div
-                      className="relative h-52 overflow-hidden rounded-2xl border"
+                      className="absolute inset-x-[14%] bottom-5 top-5 rounded-xl border p-4"
                       style={{
-                        backgroundColor: template.theme.pageBgColor,
+                        background:
+                          template.theme.bgType === "gradient"
+                            ? `linear-gradient(${template.theme.bgAngle}deg, ${template.theme.bgFrom}, ${template.theme.bgTo})`
+                            : template.theme.bgColor,
                         borderColor: template.theme.panelBorderColor,
                       }}
                     >
                       <div
-                        className="absolute inset-x-[14%] bottom-5 top-5 rounded-2xl border p-4 transition-transform duration-500 group-hover:scale-[1.015]"
-                        style={{
-                          background:
-                            template.theme.bgType === "gradient"
-                              ? `linear-gradient(${template.theme.bgAngle}deg, ${template.theme.bgFrom}, ${template.theme.bgTo})`
-                              : template.theme.bgColor,
-                          borderColor: template.theme.panelBorderColor,
-                        }}
-                      >
-                        <div
-                          className="mx-auto h-9 w-9 rounded-full"
-                          style={{ backgroundColor: template.theme.textColor, opacity: 0.16 }}
-                        />
-                        <div
-                          className="mx-auto mt-3 h-2 w-20 rounded-full"
-                          style={{ backgroundColor: template.theme.textColor, opacity: 0.45 }}
-                        />
-                        <div
-                          className="mt-5 h-8 rounded-lg border"
-                          style={{ borderColor: template.theme.buttonColor, opacity: 0.7 }}
-                        />
-                        <div
-                          className="mt-2 h-8 rounded-lg border"
-                          style={{ borderColor: template.theme.buttonColor, opacity: 0.55 }}
-                        />
-                      </div>
+                        className="mx-auto h-9 w-9 rounded-full"
+                        style={{ backgroundColor: template.theme.textColor, opacity: 0.16 }}
+                      />
+                      <div
+                        className="mx-auto mt-3 h-2 w-20 rounded-full"
+                        style={{ backgroundColor: template.theme.textColor, opacity: 0.45 }}
+                      />
+                      <div
+                        className="mt-5 h-8 rounded-lg border"
+                        style={{ borderColor: template.theme.buttonColor, opacity: 0.7 }}
+                      />
+                      <div
+                        className="mt-2 h-8 rounded-lg border"
+                        style={{ borderColor: template.theme.buttonColor, opacity: 0.55 }}
+                      />
                     </div>
-                    <div className="px-2 pb-2 pt-4">
-                      <h3 className="text-sm font-semibold">{template.name}</h3>
-                      <p className="mt-1 text-xs text-muted-foreground">{template.description}</p>
-                    </div>
-                  </article>
-                </ScrollReveal>
+                  </div>
+                  <div className="px-1 pb-1 pt-4">
+                    <h3 className="text-sm font-semibold">{template.name}</h3>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                      {template.description}
+                    </p>
+                  </div>
+                </article>
               ))}
             </div>
           </ScrollReveal>
         </section>
 
-        <section id="recursos" className="bg-surface/30 px-4 py-24 sm:px-6 lg:px-8">
+        <section id="recursos" className="border-y border-border/70 bg-surface/18 px-4 py-24 sm:px-6 lg:px-8">
           <ScrollReveal className="mx-auto max-w-7xl">
-            <div className="max-w-2xl">
-              <p className="text-sm font-medium text-primary">Recursos</p>
-              <h2 className="mt-2 text-3xl font-bold sm:text-4xl">
-                Tudo gira em torno da sua página.
-              </h2>
-            </div>
-            <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              {resources.map((resource, index) => {
-                const Icon = resource.icon;
-                return (
-                  <ScrollReveal key={resource.title} delay={index * 55}>
-                    <article className="group h-full rounded-2xl border border-border bg-card p-6 shadow-soft transition-all duration-300 hover:-translate-y-1 hover:border-primary/25">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary transition-transform duration-300 group-hover:scale-105">
-                        <Icon className="h-5 w-5" />
+            <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
+              <div className="max-w-xl lg:sticky lg:top-28">
+                <p className="biofy-section-label">Recursos</p>
+                <h2 className="mt-3 text-3xl font-bold tracking-[-0.035em] sm:text-4xl">
+                  Menos painel. Mais resultado na sua página.
+                </h2>
+                <p className="mt-4 text-sm leading-6 text-muted-foreground">
+                  O editor, o visual e os dados ficam organizados para você encontrar rápido o que
+                  precisa mudar.
+                </p>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                {resources.map((resource) => {
+                  const Icon = resource.icon;
+                  return (
+                    <article key={resource.title} className="biofy-card p-5 sm:p-6">
+                      <div className="flex items-center gap-3">
+                        <Icon className="h-4 w-4 text-primary" />
+                        <h3 className="text-base font-semibold">{resource.title}</h3>
                       </div>
-                      <h3 className="mt-5 text-lg font-semibold">{resource.title}</h3>
-                      <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                        {resource.text}
-                      </p>
+                      <p className="mt-3 text-sm leading-6 text-muted-foreground">{resource.text}</p>
                     </article>
-                  </ScrollReveal>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           </ScrollReveal>
         </section>
@@ -495,55 +509,53 @@ function HomePage() {
         <section id="precos" className="px-4 py-24 sm:px-6 lg:px-8">
           <ScrollReveal className="mx-auto max-w-7xl">
             <div className="mx-auto max-w-2xl text-center">
-              <p className="text-sm font-medium text-primary">Planos</p>
-              <h2 className="mt-2 text-3xl font-bold sm:text-4xl">
-                Comece grátis. Evolua quando precisar.
+              <p className="biofy-section-label">Planos</p>
+              <h2 className="mt-3 text-3xl font-bold tracking-[-0.035em] sm:text-4xl">
+                Comece simples. Evolua quando fizer sentido.
               </h2>
+              <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                O plano Free resolve o começo. Pro e Master liberam mais personalização, dados e
+                automação.
+              </p>
             </div>
+
             <div className="mt-10 grid gap-4 lg:grid-cols-3">
               {plans.map((plan, index) => (
-                <ScrollReveal key={plan.name} delay={index * 70}>
-                  <article
-                    className={`relative h-full rounded-3xl border bg-card p-6 shadow-soft transition-all duration-300 hover:-translate-y-1 ${
-                      index === 1
-                        ? "border-primary/45 shadow-glow"
-                        : "border-border hover:border-primary/25"
-                    }`}
-                  >
-                    {index === 1 ? (
-                      <span className="absolute right-5 top-5 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold text-primary">
-                        Popular
-                      </span>
-                    ) : null}
-                    <h3 className="text-xl font-semibold">{plan.name}</h3>
+                <article
+                  key={plan.name}
+                  className={`biofy-card flex h-full flex-col p-6 ${index === 1 ? "border-primary/45" : ""}`}
+                >
+                  <div>
+                    <h3 className="text-lg font-semibold">{plan.name}</h3>
                     <p className="mt-1 text-sm text-muted-foreground">{plan.text}</p>
-                    <p className="mt-5 text-3xl font-bold">{plan.price}</p>
-                    <ul className="mt-6 space-y-3 text-sm">
-                      {plan.features.map((feature) => (
-                        <li key={feature} className="flex gap-2 text-muted-foreground">
-                          <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                          {feature}
-                        </li>
-                      ))}
-                    </ul>
+                    <p className="mt-5 text-3xl font-bold tracking-[-0.035em]">{plan.price}</p>
+                  </div>
 
-                    {index === 0 ? (
-                      <Button className="mt-7 w-full" asChild>
-                        <Link to={user ? "/dashboard" : "/signup"}>Começar grátis</Link>
-                      </Button>
-                    ) : user && plan.checkoutUrl ? (
-                      <Button className="mt-7 w-full" variant="outline" asChild>
-                        <a href={plan.checkoutUrl} target="_blank" rel="noreferrer noopener">
-                          Assinar {plan.name}
-                        </a>
-                      </Button>
-                    ) : (
-                      <Button className="mt-7 w-full" variant="outline" asChild>
-                        <Link to="/signup">Assinar {plan.name}</Link>
-                      </Button>
-                    )}
-                  </article>
-                </ScrollReveal>
+                  <ul className="mt-6 flex-1 space-y-3 border-t border-border/70 pt-5 text-sm">
+                    {plan.features.map((feature) => (
+                      <li key={feature} className="flex gap-2 text-muted-foreground">
+                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+
+                  {index === 0 ? (
+                    <Button className="mt-7 w-full" asChild>
+                      <Link to={user ? "/dashboard" : "/signup"}>Começar grátis</Link>
+                    </Button>
+                  ) : user && plan.checkoutUrl ? (
+                    <Button className="mt-7 w-full" variant="outline" asChild>
+                      <a href={plan.checkoutUrl} target="_blank" rel="noreferrer noopener">
+                        Assinar {plan.name}
+                      </a>
+                    </Button>
+                  ) : (
+                    <Button className="mt-7 w-full" variant="outline" asChild>
+                      <Link to="/signup">Assinar {plan.name}</Link>
+                    </Button>
+                  )}
+                </article>
               ))}
             </div>
           </ScrollReveal>
@@ -551,18 +563,18 @@ function HomePage() {
 
         <section className="px-4 pb-24 sm:px-6 lg:px-8">
           <ScrollReveal className="mx-auto max-w-5xl">
-            <div className="overflow-hidden rounded-[2rem] border border-primary/20 bg-gradient-to-br from-primary/15 via-card to-brand-2/10 p-8 text-center shadow-glow sm:p-12">
-              <h2 className="text-3xl font-bold sm:text-4xl">
-                Coloque sua bio para trabalhar por você.
+            <div className="biofy-card px-6 py-10 text-center sm:px-10 sm:py-14">
+              <p className="biofy-section-label">Pronto para publicar</p>
+              <h2 className="mx-auto mt-3 max-w-2xl text-3xl font-bold tracking-[-0.035em] sm:text-4xl">
+                Sua presença digital pode começar com um único endereço.
               </h2>
-              <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-muted-foreground">
-                Reúna sua presença digital em uma página simples de atualizar e fácil de
-                compartilhar.
+              <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-muted-foreground">
+                Crie a página, organize o que importa e compartilhe quando estiver pronta.
               </p>
               <Button size="lg" className="mt-7" asChild>
                 <Link to={user ? "/dashboard/editor" : "/signup"}>
-                  {user ? "Editar minha Bio" : "Criar minha Bio"}
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  {user ? "Editar minha Bio" : "Criar Bio grátis"}
+                  <ArrowRight className="ml-1 h-4 w-4" />
                 </Link>
               </Button>
             </div>
@@ -570,7 +582,7 @@ function HomePage() {
         </section>
       </main>
 
-      <footer className="border-t border-border px-4 py-8 sm:px-6 lg:px-8">
+      <footer className="border-t border-border/70 px-4 py-8 sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <Logo />
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
