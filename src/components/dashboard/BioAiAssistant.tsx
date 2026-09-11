@@ -10,6 +10,13 @@ type AiResult = {
   message: string;
 };
 
+type AiErrorPayload = Partial<AiResult> & {
+  error?: string;
+  code?: string;
+  model?: string;
+  traceId?: string;
+};
+
 type ChatMessage = {
   id: string;
   role: "user" | "assistant";
@@ -90,17 +97,16 @@ export function BioAiAssistant() {
         }),
       });
 
-      const payload = (await response.json().catch(() => null)) as
-        | (Partial<AiResult> & { error?: string })
-        | null;
+      const payload = (await response.json().catch(() => null)) as AiErrorPayload | null;
 
       if (!response.ok || !payload) {
+        const diagnostic = [payload?.code, payload?.model].filter(Boolean).join(" · ");
         setMessages((current) => [
           ...current,
           {
             id: `a-${Date.now()}`,
             role: "assistant",
-            text: payload?.error || "Não consegui concluir essa alteração agora. Tente novamente.",
+            text: `${payload?.error || "Não consegui concluir essa alteração agora. Tente novamente."}${diagnostic ? `\n\n${diagnostic}` : ""}`,
           },
         ]);
         return;
