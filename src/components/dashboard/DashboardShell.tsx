@@ -9,6 +9,7 @@ import {
   Paintbrush,
   Settings,
   Sparkles,
+  type LucideIcon,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Logo } from "@/components/brand/Logo";
@@ -16,15 +17,33 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchSubscription } from "@/lib/bio-data";
 import { useBio } from "./BioContext";
 
-const baseNavigation = [
+type DashboardRoute =
+  | "/dashboard"
+  | "/dashboard/editor"
+  | "/dashboard/ai"
+  | "/dashboard/appearance"
+  | "/dashboard/analytics"
+  | "/dashboard/subscription";
+
+type NavigationItem = {
+  to: DashboardRoute;
+  label: string;
+  icon: LucideIcon;
+};
+
+const baseNavigation: NavigationItem[] = [
   { to: "/dashboard", label: "Visão geral", icon: LayoutDashboard },
   { to: "/dashboard/editor", label: "Minha Bio", icon: Sparkles },
   { to: "/dashboard/appearance", label: "Aparência", icon: Paintbrush },
   { to: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/dashboard/subscription", label: "Assinatura", icon: CreditCard },
-] as const;
+];
 
-const aiNavigation = { to: "/dashboard/ai", label: "Biofy AI", icon: Sparkles } as const;
+const aiNavigation: NavigationItem = {
+  to: "/dashboard/ai",
+  label: "Biofy AI",
+  icon: Sparkles,
+};
 
 export function DashboardShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
@@ -37,10 +56,9 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   const displayName = bundle.profile.display_name || bundle.profile.username || "Minha conta";
   const initial = displayName.trim().charAt(0).toUpperCase() || "B";
 
-  const navigation = useMemo(() => {
-    const items = [...baseNavigation];
-    if (isMaster) items.splice(2, 0, aiNavigation);
-    return items;
+  const navigation = useMemo<NavigationItem[]>(() => {
+    if (!isMaster) return baseNavigation;
+    return [baseNavigation[0]!, baseNavigation[1]!, aiNavigation, ...baseNavigation.slice(2)];
   }, [isMaster]);
 
   useEffect(() => {
@@ -55,7 +73,8 @@ export function DashboardShell({ children }: { children: ReactNode }) {
         if (!mounted) return;
         const active = !subscription?.status || ["active", "trialing"].includes(subscription.status);
         const periodActive =
-          !subscription?.current_period_end || new Date(subscription.current_period_end).getTime() >= Date.now();
+          !subscription?.current_period_end ||
+          new Date(subscription.current_period_end).getTime() >= Date.now();
         setIsMaster(subscription?.plan === "business" && active && periodActive);
       })
       .catch(() => {
