@@ -1,0 +1,60 @@
+name: Finalize natural Biofy scrolling
+
+on:
+  push:
+    paths:
+      - .github/workflows/natural-scroll-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  refine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - name: Remove nested page scroll traps
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path('src/components/bio/BioPreview.tsx')
+          s = p.read_text()
+          s = s.replace(
+              'const panelMaxHeight = compact ? undefined : "min(920px, calc(100dvh - 24px))";',
+              'const panelMaxHeight = undefined;',
+          )
+          s = s.replace(
+              '"relative w-full transform-gpu overflow-x-hidden overflow-y-auto border shadow-[0_28px_80px_-40px_rgba(0,0,0,0.76)] transition-all duration-300 motion-safe:animate-rise",',
+              '"relative w-full transform-gpu overflow-x-clip overflow-y-visible border shadow-[0_28px_80px_-40px_rgba(0,0,0,0.76)] transition-all duration-300 motion-safe:animate-rise",',
+          )
+          s = s.replace('overscrollBehavior: "contain",', 'overscrollBehavior: "auto",')
+          p.write_text(s)
+
+          p = Path('src/components/bio/PhoneFrame.tsx')
+          s = p.read_text()
+          s = s.replace(
+              '<div className="h-full w-full overflow-hidden">{children}</div>',
+              '<div className="no-scrollbar h-full w-full overflow-y-auto overscroll-y-auto">{children}</div>',
+          )
+          p.write_text(s)
+          PY
+      - run: bunx prettier --write src
+      - run: |
+          bun run build
+          bunx tsc --noEmit
+          bun run lint
+      - name: Commit and clean helper
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/natural-scroll-once.yml
+          git add src
+          git commit -m "fix: make Biofy scrolling natural across surfaces"
+          git push origin HEAD:main
