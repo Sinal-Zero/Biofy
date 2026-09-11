@@ -28,7 +28,6 @@ const plans = [
       "Até 3 páginas",
       "Links ilimitados",
       "Personalização completa",
-      "Assistente de IA",
       "Analytics",
       "Sem branding",
     ],
@@ -38,7 +37,13 @@ const plans = [
     id: "business",
     price: "R$ 41,90/mês",
     checkoutUrl: "https://www.asaas.com/c/ynze63vc9bunge8g",
-    features: ["Até 5 páginas", "Tudo do Pro", "Analytics avançado", "Recursos profissionais"],
+    features: [
+      "Até 5 páginas",
+      "Tudo do Pro",
+      "Biofy AI",
+      "Analytics avançado",
+      "Recursos profissionais",
+    ],
   },
 ] as const;
 
