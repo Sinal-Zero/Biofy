@@ -1,4 +1,4 @@
-import { ArrowUp, Bot, Sparkles } from "lucide-react";
+import { ArrowUp, Bot } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { BioTheme } from "@/lib/bio-types";
@@ -287,73 +287,57 @@ export function BioAiAssistant() {
   }
 
   return (
-    <section className="biofy-card flex min-h-[600px] flex-col overflow-hidden sm:min-h-[640px] md:min-h-[680px] xl:min-h-[760px]">
-      <div className="flex items-center gap-3 border-b border-border/80 px-4 py-3.5 sm:px-5">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-primary/[0.08] text-primary">
-          <Bot className="h-4.5 w-4.5" />
-        </span>
-        <div className="min-w-0">
-          <div className="flex items-center gap-1.5">
+    <section className="biofy-card flex min-h-[620px] flex-col overflow-hidden sm:min-h-[680px] xl:min-h-[760px]">
+      <div className="flex items-center justify-between gap-3 border-b border-border/80 px-4 py-3.5 sm:px-5">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <Bot className="h-4 w-4 shrink-0 text-primary" />
+          <div className="min-w-0">
             <h2 className="truncate text-sm font-semibold text-foreground">Biofy AI</h2>
-            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            <p className="truncate text-[11px] text-muted-foreground">Edite sua página por comando.</p>
           </div>
-          <p className="truncate text-[11px] text-muted-foreground">Você pede. A Biofy aplica.</p>
         </div>
+        <span className="biofy-status">Master</span>
       </div>
 
-      <div aria-live="polite" className="flex flex-1 flex-col px-4 py-5 sm:px-5">
+      <div aria-live="polite" aria-busy={loading} className="flex flex-1 flex-col px-4 py-5 sm:px-5">
         {messages.length === 0 ? (
-          <div className="flex flex-1 items-center justify-center py-12">
-            <div className="max-w-[300px] text-center animate-rise">
-              <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/15 bg-primary/[0.06] text-primary">
-                <Sparkles className="h-4.5 w-4.5" />
-              </span>
-              <h3 className="mt-4 text-sm font-semibold">Edite sua Bio com linguagem natural</h3>
-              <p className="mt-2 text-xs leading-5 text-muted-foreground">
-                Escreva o que quer mudar. A Biofy aplica as alterações compatíveis diretamente na
-                página.
-              </p>
-            </div>
+          <div className="max-w-sm pt-2">
+            <p className="text-sm font-semibold">Diga o que você quer mudar.</p>
+            <p className="mt-2 text-xs leading-5 text-muted-foreground">
+              A Biofy pode ajustar texto, visual, ordem e blocos compatíveis diretamente na sua
+              página.
+            </p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-5">
             {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex animate-rise items-end gap-2 ${
-                  message.role === "user" ? "justify-end" : "justify-start"
-                }`}
-              >
-                {message.role === "assistant" ? (
-                  <span className="mb-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-primary/15 bg-primary/[0.07] text-primary">
-                    <Bot className="h-3.5 w-3.5" />
-                  </span>
-                ) : null}
-                <div
-                  className={`max-w-[86%] rounded-2xl px-4 py-3 text-sm leading-6 ${
-                    message.role === "user"
-                      ? "rounded-br-md bg-primary text-primary-foreground"
-                      : "rounded-bl-md border border-border/80 bg-background/65 text-foreground"
-                  }`}
-                >
-                  <p className="whitespace-pre-wrap">{message.text}</p>
-                  {message.tips && message.tips.length > 0 ? (
-                    <div className="mt-3 space-y-1.5 border-t border-border/70 pt-3 text-xs leading-5 text-muted-foreground">
-                      {message.tips.map((tip) => (
-                        <p key={tip}>• {tip}</p>
-                      ))}
+              <div key={message.id} className={message.role === "user" ? "flex justify-end" : ""}>
+                {message.role === "user" ? (
+                  <div className="max-w-[88%] rounded-xl bg-primary px-3.5 py-2.5 text-sm leading-6 text-primary-foreground">
+                    <p className="whitespace-pre-wrap">{message.text}</p>
+                  </div>
+                ) : (
+                  <div className="flex gap-2.5">
+                    <Bot className="mt-1 h-4 w-4 shrink-0 text-primary" />
+                    <div className="min-w-0 max-w-[92%] text-sm leading-6 text-foreground">
+                      <p className="whitespace-pre-wrap">{message.text}</p>
+                      {message.tips && message.tips.length > 0 ? (
+                        <div className="mt-3 space-y-1.5 border-t border-border/70 pt-3 text-xs leading-5 text-muted-foreground">
+                          {message.tips.map((tip) => (
+                            <p key={tip}>• {tip}</p>
+                          ))}
+                        </div>
+                      ) : null}
                     </div>
-                  ) : null}
-                </div>
+                  </div>
+                )}
               </div>
             ))}
 
             {loading ? (
-              <div className="flex animate-rise items-end justify-start gap-2">
-                <span className="mb-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-primary/15 bg-primary/[0.07] text-primary">
-                  <Bot className="h-3.5 w-3.5" />
-                </span>
-                <div className="flex items-center gap-2 rounded-2xl rounded-bl-md border border-border/80 bg-background/65 px-4 py-3 text-xs text-muted-foreground">
+              <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
+                <Bot className="h-4 w-4 text-primary" />
+                <div className="flex items-center gap-1.5">
                   <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
                   <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary [animation-delay:120ms]" />
                   <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary [animation-delay:240ms]" />
@@ -364,8 +348,8 @@ export function BioAiAssistant() {
         )}
       </div>
 
-      <div className="mt-auto border-t border-border/75 bg-background/20 p-3 sm:p-4">
-        <div className="flex items-center gap-2 rounded-xl border border-input/90 bg-background/80 p-1.5 shadow-sm transition-[border-color,box-shadow,background-color] duration-200 focus-within:border-primary/45 focus-within:bg-background focus-within:ring-2 focus-within:ring-primary/10">
+      <div className="mt-auto border-t border-border/75 p-3 sm:p-4">
+        <div className="flex items-center gap-2 rounded-[11px] border border-input/90 bg-background/55 p-1.5 transition-[border-color,background-color,box-shadow] duration-150 focus-within:border-primary/45 focus-within:bg-background focus-within:ring-2 focus-within:ring-primary/10">
           <input
             value={instruction}
             maxLength={1000}
@@ -377,14 +361,14 @@ export function BioAiAssistant() {
               }
             }}
             placeholder="Peça uma alteração..."
-            className="h-10 min-w-0 flex-1 bg-transparent px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground/65"
+            className="h-10 min-w-0 flex-1 bg-transparent px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground/55"
           />
           <button
             type="button"
             onClick={() => void generate()}
             disabled={loading || !instruction.trim()}
             aria-label="Enviar mensagem"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm transition-all duration-200 hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-35"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] border border-primary/80 bg-primary text-primary-foreground transition-[background-color,transform] duration-150 hover:bg-primary/94 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-35"
           >
             <ArrowUp className="h-4 w-4" />
           </button>
