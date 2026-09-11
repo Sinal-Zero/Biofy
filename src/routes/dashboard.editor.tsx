@@ -162,11 +162,11 @@ function BioEditor() {
   return (
     <div className="biofy-page space-y-6 sm:space-y-7">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-sm font-medium text-primary">Editor</p>
-          <h1 className="mt-1 text-3xl font-bold">Minha Bio</h1>
+        <div className="biofy-page-header">
+          <p className="biofy-page-kicker">Editor</p>
+          <h1 className="biofy-page-title">Minha Bio</h1>
         </div>
-        <div className="inline-flex w-fit items-center rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground">
+        <div className="biofy-status w-fit">
           {links.length} {links.length === 1 ? "link" : "links"}
         </div>
       </div>
@@ -206,7 +206,7 @@ function BioEditor() {
                   maxLength={240}
                   onChange={(event) => patchProfile({ bio: event.target.value })}
                   placeholder="Sua descrição"
-                  className="min-h-24 w-full resize-y rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none transition focus:border-primary/50 focus:ring-2 focus:ring-ring"
+                  className="min-h-24 w-full resize-y rounded-[10px] border border-input/90 bg-background/50 px-3 py-2 text-sm outline-none transition-[border-color,background-color,box-shadow] duration-150 focus:border-primary/45 focus:bg-background focus:ring-2 focus:ring-ring/12"
                 />
               </div>
             </div>
@@ -227,7 +227,7 @@ function BioEditor() {
                   />
                 </Button>
                 {addMenuOpen ? (
-                  <div className="absolute right-0 top-12 z-40 w-48 origin-top-right animate-in rounded-2xl border border-border bg-popover p-2 shadow-xl fade-in zoom-in-95">
+                  <div className="absolute right-0 top-12 z-40 w-48 origin-top-right animate-pop rounded-xl border border-border/90 bg-popover p-2 shadow-panel">
                     <button
                       type="button"
                       onClick={() => void addLink("url")}
@@ -281,7 +281,7 @@ function BioEditor() {
                   >
                     <div className="flex items-center gap-3">
                       <GripVertical className="h-5 w-5 shrink-0 cursor-grab text-muted-foreground active:cursor-grabbing" />
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent text-foreground">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border/70 bg-background/45 text-muted-foreground">
                         <Icon className="h-4 w-4" />
                       </span>
                       <div className="min-w-0 flex-1">
@@ -337,12 +337,12 @@ function BioEditor() {
                                 onClick={() =>
                                   setOpenDddId(openDddId === block.id ? null : block.id)
                                 }
-                                className="flex h-10 w-full items-center justify-center rounded-xl border border-input bg-card text-sm font-medium transition hover:border-primary/50"
+                                className="flex h-10 w-full items-center justify-center rounded-[10px] border border-input/90 bg-background/50 text-sm font-medium transition-colors duration-150 hover:border-foreground/18"
                               >
                                 +55 {ddd || "DDD"}
                               </button>
                               {openDddId === block.id ? (
-                                <div className="absolute left-0 top-12 z-30 w-[min(280px,calc(100vw-3.5rem))] rounded-2xl border border-border/90 bg-popover/95 p-3 shadow-panel backdrop-blur-xl">
+                                <div className="absolute left-0 top-12 z-30 w-[min(280px,calc(100vw-3.5rem))] rounded-xl border border-border/90 bg-popover p-3 shadow-panel">
                                   <div className="mb-2 flex items-center justify-between">
                                     <span className="text-xs font-semibold">DDD</span>
                                     <span className="text-[10px] font-medium text-primary">

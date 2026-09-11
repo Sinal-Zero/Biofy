@@ -79,7 +79,7 @@ function SettingsPage() {
           <div className="mt-5 space-y-2">
             <Label htmlFor="settings-username">Username</Label>
             <div className="flex flex-col gap-2 sm:flex-row">
-              <div className="flex min-w-0 flex-1 items-center overflow-hidden rounded-xl border border-input/90 bg-background/55 px-3 transition-[border-color,box-shadow,background-color] duration-200 focus-within:border-primary/45 focus-within:bg-background focus-within:ring-2 focus-within:ring-ring/15">
+              <div className="flex min-w-0 flex-1 items-center overflow-hidden rounded-[10px] border border-input/90 bg-background/50 px-3 transition-[border-color,box-shadow,background-color] duration-150 focus-within:border-primary/45 focus-within:bg-background focus-within:ring-2 focus-within:ring-ring/12">
                 <span className="shrink-0 whitespace-nowrap text-sm text-muted-foreground">
                   {getPublicBioDisplay()}
                 </span>

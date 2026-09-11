@@ -252,11 +252,7 @@ function HomePage() {
                   <div className="border-b border-border/80 px-3 py-3">
                     <div className="flex items-center gap-3">
                       {avatarUrl ? (
-                        <img
-                          src={avatarUrl}
-                          alt=""
-                          className="h-9 w-9 rounded-full object-cover"
-                        />
+                        <img src={avatarUrl} alt="" className="h-9 w-9 rounded-full object-cover" />
                       ) : (
                         <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/12 font-semibold text-primary">
                           {initial}
@@ -394,8 +390,16 @@ function HomePage() {
             <div className="mt-10 grid gap-8 md:grid-cols-3">
               {[
                 ["01", "Crie", "Escolha seu username e comece com uma base pronta."],
-                ["02", "Personalize", "Organize links e ajuste o visual sem quebrar a consistência."],
-                ["03", "Compartilhe", "Publique um endereço único e continue editando quando quiser."],
+                [
+                  "02",
+                  "Personalize",
+                  "Organize links e ajuste o visual sem quebrar a consistência.",
+                ],
+                [
+                  "03",
+                  "Compartilhe",
+                  "Publique um endereço único e continue editando quando quiser.",
+                ],
               ].map(([number, title, text]) => (
                 <article key={number} className="border-t border-border/80 pt-5">
                   <span className="text-xs font-semibold text-muted-foreground">{number}</span>
@@ -474,7 +478,10 @@ function HomePage() {
           </ScrollReveal>
         </section>
 
-        <section id="recursos" className="border-y border-border/70 bg-surface/18 px-4 py-24 sm:px-6 lg:px-8">
+        <section
+          id="recursos"
+          className="border-y border-border/70 bg-surface/18 px-4 py-24 sm:px-6 lg:px-8"
+        >
           <ScrollReveal className="mx-auto max-w-7xl">
             <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
               <div className="max-w-xl lg:sticky lg:top-28">
@@ -497,7 +504,9 @@ function HomePage() {
                         <Icon className="h-4 w-4 text-primary" />
                         <h3 className="text-base font-semibold">{resource.title}</h3>
                       </div>
-                      <p className="mt-3 text-sm leading-6 text-muted-foreground">{resource.text}</p>
+                      <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                        {resource.text}
+                      </p>
                     </article>
                   );
                 })}

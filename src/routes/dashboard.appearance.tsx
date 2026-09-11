@@ -145,10 +145,10 @@ function PreviewToggle({
           key={value}
           type="button"
           onClick={() => onChange(value)}
-          className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-all duration-200 active:scale-[0.99] ${
+          className={`flex items-center justify-center gap-2 rounded-[0.65rem] px-3 py-2 text-xs font-semibold transition-[background-color,color] duration-150 ${
             mode === value
-              ? "bg-card text-foreground shadow-sm"
-              : "text-muted-foreground hover:bg-card/50 hover:text-foreground"
+              ? "bg-card text-foreground"
+              : "text-muted-foreground hover:bg-card/45 hover:text-foreground"
           }`}
         >
           <Icon className="h-4 w-4" />
@@ -180,12 +180,10 @@ function AppearancePage() {
 
   return (
     <div className="biofy-page space-y-6 sm:space-y-7">
-      <header>
-        <p className="text-sm font-medium text-primary">Identidade visual</p>
-        <h1 className="mt-1 text-3xl font-bold">Aparência</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Cores, tipografia e proporção da sua página.
-        </p>
+      <header className="biofy-page-header">
+        <p className="biofy-page-kicker">Identidade visual</p>
+        <h1 className="biofy-page-title">Aparência</h1>
+        <p className="biofy-page-description">Cores, tipografia e proporção da sua página.</p>
       </header>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_500px]">
@@ -209,10 +207,10 @@ function AppearancePage() {
                       key={template.id}
                       type="button"
                       onClick={() => applyTemplate(template.id)}
-                      className={`group rounded-2xl border p-3 text-left transition-all duration-300 active:scale-[0.99] ${
+                      className={`group rounded-xl border p-3 text-left transition-[border-color,background-color] duration-150 ${
                         active
-                          ? "border-primary bg-primary/[0.04] ring-2 ring-primary/15"
-                          : "border-border hover:-translate-y-0.5 hover:border-primary/35"
+                          ? "border-primary/60 bg-primary/[0.035]"
+                          : "border-border hover:border-foreground/15"
                       }`}
                     >
                       <div
@@ -223,7 +221,7 @@ function AppearancePage() {
                         }}
                       >
                         <div
-                          className="absolute inset-x-4 bottom-2 top-2 rounded-lg border transition-transform duration-300 group-hover:scale-[1.02]"
+                          className="absolute inset-x-4 bottom-2 top-2 rounded-lg border"
                           style={{
                             backgroundColor: template.theme.bgColor,
                             borderColor: template.theme.panelBorderColor,
@@ -248,9 +246,7 @@ function AppearancePage() {
 
           <section className="biofy-card p-5 sm:p-6">
             <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/[0.08] text-primary">
-                <Palette className="h-4 w-4" />
-              </span>
+              <Palette className="h-4 w-4 shrink-0 text-primary" />
               <div>
                 <h2 className="text-lg font-semibold">Personalização</h2>
                 <p className="mt-1 text-xs text-muted-foreground">Ajustes visuais da sua Bio.</p>
@@ -342,10 +338,10 @@ function AppearancePage() {
                             key={key}
                             type="button"
                             onClick={() => patchTheme({ font: key })}
-                            className={`rounded-xl border px-3 py-3 text-left transition-all duration-200 active:scale-[0.99] ${
+                            className={`rounded-[10px] border px-3 py-3 text-left transition-[border-color,background-color] duration-150 ${
                               active
-                                ? "border-primary bg-primary/[0.06] ring-2 ring-primary/15"
-                                : "border-border bg-background/45 hover:-translate-y-0.5 hover:border-primary/35"
+                                ? "border-primary/60 bg-primary/[0.04]"
+                                : "border-border bg-background/45 hover:border-foreground/15"
                             }`}
                             aria-pressed={active}
                           >
@@ -380,9 +376,7 @@ function AppearancePage() {
             ) : (
               <div className="mt-5 rounded-2xl border border-dashed border-primary/25 bg-primary/[0.04] p-5">
                 <div className="flex items-start gap-3">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                    <Lock className="h-4 w-4" />
-                  </span>
+                  <Lock className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                   <div>
                     <p className="text-sm font-semibold">Personalização completa</p>
                     <p className="mt-1 text-xs leading-5 text-muted-foreground">
@@ -415,7 +409,7 @@ function AppearancePage() {
               <PreviewToggle mode={previewMode} onChange={setPreviewMode} />
             </div>
 
-            <div className="flex min-h-[620px] items-center justify-center bg-black/[0.08] p-3 sm:p-4">
+            <div className="flex min-h-[620px] items-center justify-center bg-background/30 p-3 sm:p-4">
               {previewMode === "mobile" ? (
                 <div className="mx-auto w-full max-w-[330px] animate-rise">
                   <PhoneFrame>

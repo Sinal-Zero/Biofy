@@ -293,13 +293,19 @@ export function BioAiAssistant() {
           <Bot className="h-4 w-4 shrink-0 text-primary" />
           <div className="min-w-0">
             <h2 className="truncate text-sm font-semibold text-foreground">Biofy AI</h2>
-            <p className="truncate text-[11px] text-muted-foreground">Edite sua página por comando.</p>
+            <p className="truncate text-[11px] text-muted-foreground">
+              Edite sua página por comando.
+            </p>
           </div>
         </div>
         <span className="biofy-status">Master</span>
       </div>
 
-      <div aria-live="polite" aria-busy={loading} className="flex flex-1 flex-col px-4 py-5 sm:px-5">
+      <div
+        aria-live="polite"
+        aria-busy={loading}
+        className="flex flex-1 flex-col px-4 py-5 sm:px-5"
+      >
         {messages.length === 0 ? (
           <div className="max-w-sm pt-2">
             <p className="text-sm font-semibold">Diga o que você quer mudar.</p>

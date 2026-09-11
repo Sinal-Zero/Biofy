@@ -85,9 +85,9 @@ export function BioPreview({
     const base: React.CSSProperties = {
       borderRadius: shapeRadius[shape] ?? "14px",
       padding: compact ? "10px 13px" : (sizePadding[theme.buttonSize] ?? sizePadding["md"]),
-      boxShadow: shadow ? `0 10px 26px -14px ${withAlpha(color, 0.9)}` : "none",
+      boxShadow: shadow ? `0 8px 20px -16px ${withAlpha(color, 0.75)}` : "none",
       transition:
-        "transform 180ms cubic-bezier(.22,1,.36,1), box-shadow 180ms ease, filter 180ms ease, background-color 180ms ease",
+        "transform 150ms ease, box-shadow 150ms ease, filter 150ms ease, background-color 150ms ease",
       border: "1px solid transparent",
       width: "100%",
       textAlign: "center",
@@ -114,7 +114,7 @@ export function BioPreview({
           background: withAlpha(color, 0.14),
           color: textColor,
           border: `1px solid ${withAlpha(color, 0.28)}`,
-          backdropFilter: "blur(12px)",
+          backdropFilter: "blur(8px)",
         };
       case "transparent":
         return { ...base, background: "transparent", color: textColor, boxShadow: "none" };
@@ -132,16 +132,16 @@ export function BioPreview({
   function animClass(block: BioBlock) {
     const cfg = block.config ?? {};
     const anim = !cfg.animation || cfg.animation === "inherit" ? theme.hoverAnim : cfg.animation;
-    if (anim === "lift") return "hover:-translate-y-1";
-    if (anim === "scale") return "hover:scale-[1.025]";
-    if (anim === "glow") return "hover:brightness-110 hover:saturate-125";
+    if (anim === "lift") return "hover:-translate-y-0.5";
+    if (anim === "scale") return "hover:scale-[1.01]";
+    if (anim === "glow") return "hover:brightness-105";
     return "";
   }
 
   return (
     <div
       className={cn(
-        "flex min-h-full w-full justify-center overflow-x-hidden transition-colors duration-300",
+        "flex min-h-full w-full justify-center overflow-x-hidden transition-colors duration-200",
         compact
           ? "items-start p-3 pt-8"
           : "min-h-dvh items-center px-4 py-5 sm:px-6 sm:py-7 lg:py-8",
@@ -151,8 +151,8 @@ export function BioPreview({
     >
       <div
         className={cn(
-          "relative w-full transform-gpu overflow-x-clip overflow-y-visible border shadow-[0_28px_80px_-40px_rgba(0,0,0,0.76)] transition-all duration-300 motion-safe:animate-rise",
-          compact ? "rounded-[1.35rem]" : "rounded-[1.85rem]",
+          "relative w-full transform-gpu overflow-x-clip overflow-y-visible border shadow-[0_20px_60px_-42px_rgba(0,0,0,0.72)] transition-[background-color,border-color,box-shadow] duration-200 motion-safe:animate-rise",
+          compact ? "rounded-[1.25rem]" : "rounded-[1.5rem]",
         )}
         style={{
           maxWidth: `${panelWidth}px`,
@@ -257,7 +257,7 @@ export function BioPreview({
                           onClick: () => onBlockClick?.(block),
                         }
                       : {})}
-                    className="flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/10 hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 active:scale-95"
+                    className="flex h-9 w-9 items-center justify-center rounded-full transition-[background-color,opacity,transform] duration-150 hover:bg-white/[0.07] hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 active:scale-[0.97]"
                     aria-label={block.title || getBlockDef(block.type).label}
                   >
                     <Icon size={(compact ? 16 : 20) * textScale} color={theme.textColor} />
@@ -329,7 +329,7 @@ export function BioPreview({
                     onClick={() => onBlockClick?.(block)}
                     style={buttonStyleFor(block)}
                     className={cn(
-                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/55 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent active:scale-[0.985]",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/55 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent active:scale-[0.99]",
                       animClass(block),
                     )}
                   >
@@ -349,7 +349,7 @@ export function BioPreview({
           {showBranding ? (
             <a
               href="/"
-              className="mt-8 inline-flex items-center gap-2 rounded-full px-2 py-1 opacity-65 transition-all duration-200 hover:bg-white/[0.06] hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+              className="mt-8 inline-flex items-center gap-2 rounded-full px-2 py-1 opacity-60 transition-opacity duration-150 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
               style={{
                 color: theme.mutedColor,
                 fontSize: `${(compact ? 9 : 11) * textScale}px`,

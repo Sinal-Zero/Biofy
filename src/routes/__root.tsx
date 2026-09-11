@@ -17,11 +17,9 @@ import { supabase } from "@/integrations/supabase/client";
 
 function NotFoundComponent() {
   return (
-    <div className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-background px-4 py-10">
-      <div className="pointer-events-none absolute inset-0 grid-backdrop opacity-20" />
-      <div className="pointer-events-none absolute left-1/2 top-[-240px] h-[520px] w-[min(620px,92vw)] -translate-x-1/2 rounded-full bg-primary/12 blur-[130px]" />
+    <div className="flex min-h-dvh items-center justify-center bg-background px-4 py-10">
       <div className="biofy-card relative w-full max-w-md p-7 text-center sm:p-9">
-        <h1 className="gradient-text text-7xl font-bold">404</h1>
+        <p className="biofy-section-label">Erro 404</p>
         <h2 className="mt-4 text-xl font-semibold text-foreground">Página não encontrada</h2>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
           Este endereço não existe ou a Bio ainda não foi publicada.
@@ -29,7 +27,7 @@ function NotFoundComponent() {
         <div className="mt-6">
           <Link
             to="/"
-            className="inline-flex h-10 items-center justify-center rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-soft transition-[transform,filter] duration-200 hover:brightness-105 active:scale-[0.985]"
+            className="inline-flex h-10 items-center justify-center rounded-[10px] border border-primary/80 bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors duration-150 hover:bg-primary/94"
           >
             Voltar ao início
           </Link>
@@ -62,7 +60,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
               router.invalidate();
               reset();
             }}
-            className="inline-flex h-10 items-center justify-center rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-soft transition-[transform,filter] duration-200 hover:brightness-105 active:scale-[0.985]"
+            className="inline-flex h-10 items-center justify-center rounded-[10px] border border-primary/80 bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors duration-150 hover:bg-primary/94"
           >
             Tentar de novo
           </button>

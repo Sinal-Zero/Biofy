@@ -121,8 +121,15 @@ body {
   border: 1px solid color-mix(in oklab, var(--color-border) 94%, transparent);
   border-radius: 1.1rem;
   background:
-    linear-gradient(color-mix(in oklab, var(--color-foreground) 3%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in oklab, var(--color-foreground) 3%, transparent) 1px, transparent 1px),
+    linear-gradient(
+      color-mix(in oklab, var(--color-foreground) 3%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      color-mix(in oklab, var(--color-foreground) 3%, transparent) 1px,
+      transparent 1px
+    ),
     color-mix(in oklab, var(--color-card) 96%, transparent);
   background-size: 32px 32px;
   box-shadow: 0 24px 70px -48px oklch(0 0 0 / 78%);
