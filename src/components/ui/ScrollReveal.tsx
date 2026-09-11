@@ -17,13 +17,14 @@ export function ScrollReveal({
     const node = ref.current;
     if (!node) return;
 
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reducedMotion) {
       setState("visible");
       return;
     }
 
     const rect = node.getBoundingClientRect();
-    if (rect.top <= window.innerHeight * 0.94) {
+    if (rect.top <= window.innerHeight * 0.92) {
       setState("visible");
       return;
     }
@@ -35,23 +36,22 @@ export function ScrollReveal({
         setState("visible");
         observer.disconnect();
       },
-      { threshold: 0.08, rootMargin: "0px 0px -8% 0px" },
+      { threshold: 0.1, rootMargin: "0px 0px -6% 0px" },
     );
 
     observer.observe(node);
     return () => observer.disconnect();
   }, []);
 
-  const safeDelay = Math.max(0, Math.min(delay, 400));
+  const safeDelay = Math.max(0, Math.min(delay, 280));
 
   return (
     <div
       ref={ref}
       className={cn(
-        "transform-gpu transition-[opacity,transform,filter] duration-600 ease-[cubic-bezier(.16,1,.3,1)]",
-        state === "hidden" &&
-          "translate-y-4 scale-[0.995] opacity-0 blur-[1px] will-change-transform",
-        state !== "hidden" && "translate-y-0 scale-100 opacity-100 blur-0",
+        "transform-gpu transition-[opacity,transform] duration-500 ease-[cubic-bezier(.16,1,.3,1)]",
+        state === "hidden" && "translate-y-3 opacity-0 will-change-transform",
+        state !== "hidden" && "translate-y-0 opacity-100",
         className,
       )}
       style={state === "visible" && safeDelay ? { transitionDelay: `${safeDelay}ms` } : undefined}
