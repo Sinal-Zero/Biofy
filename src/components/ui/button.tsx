@@ -4,30 +4,33 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-semibold transition-[transform,background-color,border-color,color,box-shadow,filter] duration-200 ease-[cubic-bezier(.2,.8,.2,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/55 focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.985] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-45 disabled:active:scale-100 motion-reduce:transform-none motion-reduce:transition-none [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-[10px] text-sm font-semibold transition-[transform,background-color,border-color,color,box-shadow,filter] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/45 focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.99] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-45 disabled:active:scale-100 motion-reduce:transform-none motion-reduce:transition-none [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground shadow-[0_10px_28px_-18px_color-mix(in_oklab,var(--primary)_72%,transparent)] hover:bg-primary/94 hover:shadow-[0_14px_34px_-20px_color-mix(in_oklab,var(--primary)_82%,transparent)]",
-        destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/92",
+          "border border-primary/80 bg-primary text-primary-foreground shadow-sm hover:bg-primary/94 hover:border-primary",
+        destructive:
+          "border border-destructive/80 bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/92",
         outline:
-          "border border-border/90 bg-background/35 text-foreground shadow-sm hover:border-primary/25 hover:bg-accent/65 hover:text-accent-foreground",
+          "border border-border/90 bg-background/30 text-foreground hover:border-foreground/16 hover:bg-accent/55 hover:text-accent-foreground",
         secondary:
-          "border border-border/70 bg-secondary/90 text-secondary-foreground shadow-sm hover:bg-secondary",
-        ghost: "text-muted-foreground hover:bg-accent/65 hover:text-foreground",
-        link: "text-primary underline-offset-4 hover:underline active:scale-100",
-        hero: "gradient-surface text-primary-foreground shadow-glow hover:brightness-105",
-        soft: "border border-border/80 bg-surface-2/80 text-foreground hover:border-primary/20 hover:bg-accent/70",
-        success: "bg-success text-success-foreground hover:brightness-105",
+          "border border-border/75 bg-secondary/85 text-secondary-foreground hover:bg-secondary",
+        ghost: "text-muted-foreground hover:bg-accent/55 hover:text-foreground",
+        link: "rounded-none text-primary underline-offset-4 hover:underline active:scale-100",
+        hero:
+          "border border-primary/80 bg-primary text-primary-foreground shadow-sm hover:bg-primary/94 hover:border-primary",
+        soft: "border border-border/80 bg-surface-2/65 text-foreground hover:bg-accent/60",
+        success:
+          "border border-success/80 bg-success text-success-foreground hover:brightness-[1.03]",
       },
       size: {
         default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-lg px-3 text-xs",
-        lg: "h-11 px-6 text-[0.95rem] sm:px-7",
-        xl: "h-12 px-7 text-base sm:px-8",
+        sm: "h-9 rounded-[9px] px-3 text-xs",
+        lg: "h-11 px-5 text-[0.94rem] sm:px-6",
+        xl: "h-12 px-6 text-base sm:px-7",
         icon: "h-10 w-10",
-        "icon-sm": "h-9 w-9 rounded-lg",
+        "icon-sm": "h-9 w-9 rounded-[9px]",
       },
     },
     defaultVariants: {
