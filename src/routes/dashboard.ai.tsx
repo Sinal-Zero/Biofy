@@ -140,8 +140,8 @@ function AiPage() {
                     avatarUrl={bundle.profile.avatar_url}
                     theme={theme}
                     blocks={bundle.blocks}
+                    compact
                     showBranding={false}
-                    className="h-full min-h-full"
                   />
                 </div>
               )}
