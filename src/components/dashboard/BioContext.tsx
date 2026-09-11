@@ -31,6 +31,12 @@ import { getBlockDef } from "@/lib/blocks";
 
 export type SaveState = "idle" | "saving" | "saved";
 type ProfilePatch = Partial<Pick<BioProfile, "username" | "display_name" | "avatar_url" | "bio">>;
+type NewBlockInput = {
+  title?: string | null;
+  url?: string | null;
+  config?: BlockConfig;
+  is_visible?: boolean;
+};
 
 interface BioContextValue {
   bundle: BioBundle;
@@ -39,7 +45,7 @@ interface BioContextValue {
   patchProfile: (patch: ProfilePatch) => void;
   patchTheme: (patch: Partial<BioTheme>) => void;
   applyTemplate: (templateId: string) => void;
-  addBlock: (type: string) => Promise<void>;
+  addBlock: (type: string, initial?: NewBlockInput) => Promise<string | null>;
   patchBlock: (
     id: string,
     patch: {
@@ -163,23 +169,41 @@ export function BioProvider({
   );
 
   const addBlock = useCallback(
-    async (type: string) => {
+    async (type: string, initial?: NewBlockInput) => {
       const def = getBlockDef(type);
       setSaveState("saving");
       try {
         const created = await apiCreateBlock({
           page_id: bundleRef.current.page.id,
           type,
-          title: def.social ? def.label : type === "text" ? "" : "Novo link",
-          url: null,
-          config: type === "text" ? { text: "Escreva algo sobre você" } : {},
+          title:
+            initial?.title !== undefined
+              ? initial.title
+              : def.social
+                ? def.label
+                : type === "text"
+                  ? ""
+                  : "Novo link",
+          url: initial?.url ?? null,
+          config: initial?.config ?? (type === "text" ? { text: "Escreva algo sobre você" } : {}),
           position: bundleRef.current.blocks.length,
         });
-        setBundle((prev) => ({ ...prev, blocks: [...prev.blocks, created] }));
+        const withVisibility =
+          initial?.is_visible === undefined
+            ? created
+            : { ...created, is_visible: initial.is_visible };
+
+        if (initial?.is_visible !== undefined && created.is_visible !== initial.is_visible) {
+          await apiUpdateBlock(created.id, { is_visible: initial.is_visible });
+        }
+
+        setBundle((prev) => ({ ...prev, blocks: [...prev.blocks, withVisibility] }));
         finishSave();
+        return created.id;
       } catch {
         setSaveState("idle");
         toast.error("Não foi possível adicionar o bloco.");
+        return null;
       }
     },
     [finishSave],
