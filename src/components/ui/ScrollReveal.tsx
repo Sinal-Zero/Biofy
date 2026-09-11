@@ -24,7 +24,7 @@ export function ScrollReveal({
     }
 
     const rect = node.getBoundingClientRect();
-    if (rect.top <= window.innerHeight * 0.92) {
+    if (rect.top <= window.innerHeight * 0.94) {
       setState("visible");
       return;
     }
@@ -36,21 +36,21 @@ export function ScrollReveal({
         setState("visible");
         observer.disconnect();
       },
-      { threshold: 0.1, rootMargin: "0px 0px -6% 0px" },
+      { threshold: 0.08, rootMargin: "0px 0px -4% 0px" },
     );
 
     observer.observe(node);
     return () => observer.disconnect();
   }, []);
 
-  const safeDelay = Math.max(0, Math.min(delay, 280));
+  const safeDelay = Math.max(0, Math.min(delay, 180));
 
   return (
     <div
       ref={ref}
       className={cn(
-        "transform-gpu transition-[opacity,transform] duration-500 ease-[cubic-bezier(.16,1,.3,1)]",
-        state === "hidden" && "translate-y-3 opacity-0 will-change-transform",
+        "transform-gpu transition-[opacity,transform] duration-[380ms] ease-[cubic-bezier(.16,1,.3,1)]",
+        state === "hidden" && "translate-y-2 opacity-0 will-change-transform",
         state !== "hidden" && "translate-y-0 opacity-100",
         className,
       )}
