@@ -55,7 +55,7 @@ function planLabel(plan: string) {
 
 function statusLabel(status: string | null | undefined) {
   if (!status || status === "active") return "Ativa";
-  if (status === "trialing") return "Período de teste";
+  if (status === "trialing") return "Teste";
   if (status === "past_due") return "Pagamento pendente";
   if (status === "canceled" || status === "cancelled") return "Cancelada";
   return status;
@@ -72,8 +72,7 @@ function SubscriptionPage() {
     async (manual = false) => {
       if (manual) setChecking(true);
       try {
-        const data = await fetchSubscription(bundle.page.user_id);
-        setSubscription(data);
+        setSubscription(await fetchSubscription(bundle.page.user_id));
       } finally {
         if (manual) setChecking(false);
         setLoading(false);
@@ -84,7 +83,7 @@ function SubscriptionPage() {
 
   useEffect(() => {
     let active = true;
-    fetchSubscription(bundle.page.user_id)
+    void fetchSubscription(bundle.page.user_id)
       .then((data) => {
         if (active) setSubscription(data);
       })
@@ -104,9 +103,11 @@ function SubscriptionPage() {
   }, [bundle.page.user_id, refreshSubscription]);
 
   const currentPlan = subscription?.plan ?? "free";
-  const hasPaidSubscription =
-    (currentPlan === "pro" || currentPlan === "business") &&
-    (!subscription?.status || ["active", "trialing"].includes(subscription.status));
+  const paidPlan = currentPlan === "pro" || currentPlan === "business";
+  const activeStatus = !subscription?.status || ["active", "trialing"].includes(subscription.status);
+  const periodActive =
+    !subscription?.current_period_end || new Date(subscription.current_period_end).getTime() >= Date.now();
+  const hasPaidSubscription = paidPlan && activeStatus && periodActive;
 
   function startCheckout(planName: string, checkoutUrl: string) {
     setCheckoutPlan(planName);
@@ -114,35 +115,29 @@ function SubscriptionPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
+    <div className="space-y-6 animate-rise">
+      <header>
         <p className="text-sm font-medium text-primary">Plano</p>
         <h1 className="mt-1 text-3xl font-bold">Assinatura</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-          Escolha seu plano e conclua o pagamento com segurança pelo Asaas.
-        </p>
-      </div>
+        <p className="mt-2 text-sm text-muted-foreground">Gerencie seu plano Biofy.</p>
+      </header>
 
-      <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
+      <section className="rounded-2xl border border-border bg-card p-5 shadow-soft sm:p-6">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
               <Crown className="h-5 w-5" />
             </span>
             <div>
-              <span className="text-xs text-muted-foreground">Seu plano</span>
+              <span className="text-xs text-muted-foreground">Plano atual</span>
               <strong className="block text-xl">{loading ? "—" : planLabel(currentPlan)}</strong>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4 text-sm sm:text-right">
+          <div className="grid grid-cols-2 gap-5 text-sm sm:text-right">
             <div>
               <span className="block text-xs text-muted-foreground">Status</span>
               <strong className="mt-1 block font-medium">
-                {loading
-                  ? "—"
-                  : currentPlan === "pro" || currentPlan === "business"
-                    ? statusLabel(subscription?.status)
-                    : "Gratuito"}
+                {loading ? "—" : paidPlan ? statusLabel(subscription?.status) : "Gratuito"}
               </strong>
             </div>
             <div>
@@ -163,17 +158,12 @@ function SubscriptionPage() {
             <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             <div className="min-w-0 flex-1">
               <p className="leading-5 text-muted-foreground">
-                No checkout, use{" "}
-                <strong className="font-semibold text-foreground">
-                  o mesmo e-mail da sua conta Biofy
-                </strong>
-                . Assim o pagamento é identificado e o plano é ativado automaticamente.
+                Use <strong className="font-semibold text-foreground">o mesmo e-mail da sua conta Biofy</strong> no checkout para ativação automática.
               </p>
               {checkoutPlan ? (
                 <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
                   <p className="flex-1 text-xs text-muted-foreground">
-                    Finalizou o pagamento do {checkoutPlan}? A Biofy também verifica novamente
-                    quando você volta para esta aba.
+                    Pagou o {checkoutPlan}? Ao voltar para esta aba, o plano é verificado novamente.
                   </p>
                   <Button
                     type="button"
@@ -204,17 +194,17 @@ function SubscriptionPage() {
           return (
             <article
               key={plan.id}
-              className={`rounded-2xl border bg-card p-5 transition duration-300 sm:p-6 ${
+              className={`relative rounded-2xl border bg-card p-5 shadow-soft transition-all duration-300 sm:p-6 ${
                 current
-                  ? "border-primary ring-2 ring-primary/20"
-                  : "border-border hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-soft"
+                  ? "border-primary ring-2 ring-primary/15"
+                  : "border-border hover:-translate-y-1 hover:border-primary/25"
               }`}
             >
               <div className="flex items-center justify-between gap-3">
                 <h2 className="text-xl font-semibold">{plan.name}</h2>
                 {current ? (
                   <span className="rounded-full bg-primary/15 px-2.5 py-1 text-[11px] font-medium text-primary">
-                    Plano atual
+                    Atual
                   </span>
                 ) : null}
               </div>
@@ -230,7 +220,7 @@ function SubscriptionPage() {
 
               {current ? (
                 <div className="mt-6 rounded-xl border border-primary/20 bg-primary/[0.05] px-3 py-2.5 text-center text-xs font-medium text-primary">
-                  Você já está neste plano
+                  Plano ativo
                 </div>
               ) : canCheckout && plan.checkoutUrl ? (
                 <Button
@@ -247,7 +237,7 @@ function SubscriptionPage() {
                 </Button>
               ) : (
                 <Button className="mt-6 w-full" variant="outline" disabled>
-                  Cancele o plano atual antes de trocar
+                  Plano atual precisa ser encerrado antes da troca
                 </Button>
               )}
             </article>
