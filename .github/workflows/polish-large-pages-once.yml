@@ -158,7 +158,7 @@ jobs:
               'className="biofy-card biofy-card-interactive group h-full p-6"',
           )
           PY
-      - run: bunx prettier --write src/components/dashboard/BioAiAssistant.tsx src/routes/dashboard.editor.tsx src/routes/dashboard.appearance.tsx src/routes/index.tsx
+      - run: bunx prettier --write src
       - run: |
           bun run build
           bunx tsc --noEmit
@@ -168,6 +168,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git rm .github/workflows/polish-large-pages-once.yml
-          git add src/components/dashboard/BioAiAssistant.tsx src/routes/dashboard.editor.tsx src/routes/dashboard.appearance.tsx src/routes/index.tsx
-          git commit -m "style: polish responsive Biofy surfaces"
+          git add src
+          git commit -m "style: finish Biofy interface polish"
           git push origin HEAD:main
