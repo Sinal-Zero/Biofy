@@ -26,8 +26,8 @@ import {
   type BioTheme,
   type BlockConfig,
 } from "@/lib/bio-types";
-import { getTemplate } from "@/lib/templates";
 import { getBlockDef } from "@/lib/blocks";
+import { getTemplate } from "@/lib/templates";
 
 export type SaveState = "idle" | "saving" | "saved";
 type ProfilePatch = Partial<Pick<BioProfile, "username" | "display_name" | "avatar_url" | "bio">>;
@@ -126,7 +126,13 @@ export function BioProvider({
     (patch: ProfilePatch) => {
       setBundle((prev) => ({ ...prev, profile: { ...prev.profile, ...patch } }));
       schedule("profile", async () => {
-        await updateProfile(userId, patch);
+        const current = bundleRef.current.profile;
+        await updateProfile(userId, {
+          username: current.username,
+          display_name: current.display_name,
+          avatar_url: current.avatar_url,
+          bio: current.bio,
+        });
       });
     },
     [schedule, userId],
