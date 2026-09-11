@@ -7,20 +7,21 @@ export type SubscriptionLike =
   | null
   | undefined;
 
+const ACTIVE_SUBSCRIPTION_STATUSES = new Set(["active", "trialing"]);
+
 export function isSubscriptionActive(subscription: SubscriptionLike) {
-  if (!subscription) return false;
-  const statusActive = !subscription.status || ["active", "trialing"].includes(subscription.status);
-  const periodActive =
-    !subscription.current_period_end ||
-    new Date(subscription.current_period_end).getTime() >= Date.now();
-  return statusActive && periodActive;
+  if (!subscription?.status || !ACTIVE_SUBSCRIPTION_STATUSES.has(subscription.status)) return false;
+  if (!subscription.current_period_end) return true;
+
+  const periodEnd = new Date(subscription.current_period_end).getTime();
+  return Number.isFinite(periodEnd) && periodEnd >= Date.now();
 }
 
 export function isPaidSubscription(subscription: SubscriptionLike) {
   return Boolean(
     subscription &&
-    (subscription.plan === "pro" || subscription.plan === "business") &&
-    isSubscriptionActive(subscription),
+      (subscription.plan === "pro" || subscription.plan === "business") &&
+      isSubscriptionActive(subscription),
   );
 }
 
