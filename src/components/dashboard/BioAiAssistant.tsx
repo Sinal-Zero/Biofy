@@ -45,6 +45,12 @@ type ChatMessage = {
   tips?: string[];
 };
 
+const quickPrompts = [
+  "Melhore minha página",
+  "Deixe o visual mais profissional",
+  "Organize meus links",
+];
+
 function nextFrame() {
   return new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 }
@@ -78,20 +84,29 @@ export function BioAiAssistant() {
     textarea.style.height = `${Math.min(Math.max(textarea.scrollHeight, 52), 150)}px`;
   }
 
+  function chooseQuickPrompt(prompt: string) {
+    setInstruction(prompt);
+    requestAnimationFrame(() => {
+      resizeComposer();
+      composerRef.current?.focus();
+    });
+  }
+
   async function applyResult(payload: AiResult) {
+    const profilePatch: { bio?: string; display_name?: string } = {};
     const currentBio = bundle.profile.bio ?? "";
-    if (payload.bio && payload.bio !== currentBio) {
-      patchProfile({ bio: payload.bio.slice(0, 240) });
+
+    if (typeof payload.bio === "string" && payload.bio !== currentBio) {
+      profilePatch.bio = payload.bio.slice(0, 240);
     }
 
     const displayName = payload.profile?.displayName?.trim();
     if (displayName && displayName !== (bundle.profile.display_name ?? "")) {
-      patchProfile({ display_name: displayName.slice(0, 100) });
+      profilePatch.display_name = displayName.slice(0, 100);
     }
 
-    if (payload.theme && Object.keys(payload.theme).length > 0) {
-      patchTheme(payload.theme);
-    }
+    if (Object.keys(profilePatch).length > 0) patchProfile(profilePatch);
+    if (payload.theme && Object.keys(payload.theme).length > 0) patchTheme(payload.theme);
 
     const blockPatches = new Map<string, AiBlockUpdate>();
     for (const update of payload.blocks ?? []) {
@@ -118,9 +133,7 @@ export function BioAiAssistant() {
 
     const removeSet = new Set(payload.removeBlockIds ?? []);
     const desiredOrder = (payload.order ?? []).filter((id) => !removeSet.has(id));
-    if (desiredOrder.length > 0) {
-      desiredOrder.forEach((id, index) => moveBlock(id, index));
-    }
+    desiredOrder.forEach((id, index) => moveBlock(id, index));
 
     for (const id of payload.duplicateBlockIds ?? []) {
       if (!bundle.blocks.some((block) => block.id === id)) continue;
@@ -129,11 +142,10 @@ export function BioAiAssistant() {
     }
 
     for (const block of payload.addBlocks ?? []) {
-      const initial = {
+      await addBlock(block.type, {
         ...(block.title !== undefined ? { title: block.title } : {}),
         ...(block.url !== undefined ? { url: block.url } : {}),
-      };
-      await addBlock(block.type, initial);
+      });
       await nextFrame();
     }
 
@@ -152,14 +164,12 @@ export function BioAiAssistant() {
       role: message.role,
       text: message.text,
     }));
+    const now = Date.now();
 
-    const userMessage: ChatMessage = {
-      id: `u-${Date.now()}`,
-      role: "user",
-      text: cleanInstruction,
-    };
-
-    setMessages((current) => [...current, userMessage]);
+    setMessages((current) => [
+      ...current,
+      { id: `u-${now}`, role: "user", text: cleanInstruction },
+    ]);
     setInstruction("");
     setLoading(true);
     requestAnimationFrame(() => {
@@ -204,7 +214,6 @@ export function BioAiAssistant() {
       });
 
       const payload = (await response.json().catch(() => null)) as AiErrorPayload | null;
-
       if (!response.ok || !payload) {
         const diagnostic = [payload?.code, payload?.model].filter(Boolean).join(" · ");
         setMessages((current) => [
@@ -238,7 +247,6 @@ export function BioAiAssistant() {
       };
 
       await applyResult(normalizedPayload);
-
       setMessages((current) => [
         ...current,
         {
@@ -254,7 +262,7 @@ export function BioAiAssistant() {
         {
           id: `a-${Date.now()}`,
           role: "assistant",
-          text: "Não consegui conectar ao Gemini agora. Tente novamente em alguns instantes.",
+          text: "Não consegui conectar à Biofy AI agora. Tente novamente em instantes.",
         },
       ]);
     } finally {
@@ -273,24 +281,37 @@ export function BioAiAssistant() {
             <h2 className="truncate text-sm font-semibold text-foreground">Biofy AI</h2>
             <Sparkles className="h-3.5 w-3.5 text-primary" />
           </div>
-          <p className="truncate text-[11px] text-muted-foreground">
-            Peça uma mudança. Eu aplico direto na sua página.
-          </p>
+          <p className="truncate text-[11px] text-muted-foreground">Você pede. A Biofy aplica.</p>
         </div>
       </div>
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-5 sm:px-5">
+      <div
+        ref={scrollRef}
+        aria-live="polite"
+        className="flex-1 overflow-y-auto overscroll-contain px-4 py-5 sm:px-5"
+      >
         {messages.length === 0 ? (
           <div className="flex h-full min-h-[480px] items-center justify-center">
-            <div className="max-w-[330px] text-center animate-rise">
+            <div className="max-w-[360px] text-center animate-rise">
               <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/20 bg-primary/[0.07] text-primary shadow-soft">
                 <Sparkles className="h-5 w-5" />
               </span>
-              <h3 className="mt-4 text-base font-semibold">O que você quer mudar?</h3>
+              <h3 className="mt-4 text-base font-semibold">O que vamos mudar?</h3>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Fale normalmente. Posso editar a bio, títulos, organização e aparência da sua página
-                e aplicar as mudanças para você.
+                Peça em linguagem normal. As alterações compatíveis são aplicadas direto na página.
               </p>
+              <div className="mt-5 flex flex-wrap justify-center gap-2">
+                {quickPrompts.map((prompt) => (
+                  <button
+                    key={prompt}
+                    type="button"
+                    onClick={() => chooseQuickPrompt(prompt)}
+                    className="rounded-full border border-border bg-background/65 px-3 py-1.5 text-xs text-muted-foreground transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:text-foreground active:scale-[0.98]"
+                  >
+                    {prompt}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         ) : (
@@ -327,7 +348,7 @@ export function BioAiAssistant() {
             ))}
 
             {loading ? (
-              <div className="flex animate-rise items-end gap-2 justify-start">
+              <div className="flex animate-rise items-end justify-start gap-2">
                 <span className="mb-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-primary/15 bg-primary/[0.07] text-primary">
                   <Bot className="h-3.5 w-3.5" />
                 </span>
@@ -343,7 +364,7 @@ export function BioAiAssistant() {
       </div>
 
       <div className="border-t border-border bg-background/40 p-3.5 backdrop-blur-xl sm:p-4">
-        <div className="relative rounded-[1.35rem] border border-input bg-background shadow-soft transition duration-200 focus-within:border-primary/50 focus-within:shadow-[0_0_0_3px_rgba(99,102,241,0.08)]">
+        <div className="relative rounded-[1.35rem] border border-input bg-background shadow-soft transition-all duration-200 focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-ring/15">
           <textarea
             ref={composerRef}
             value={instruction}
@@ -359,19 +380,22 @@ export function BioAiAssistant() {
                 void generate();
               }
             }}
-            placeholder="Ex.: deixe minha bio mais profissional e os botões arredondados"
-            className="h-[52px] max-h-[150px] min-h-[52px] w-full resize-none overflow-y-auto bg-transparent py-3 pl-4 pr-14 text-sm leading-7 outline-none placeholder:text-muted-foreground"
+            placeholder="Ex.: deixe minha página mais profissional"
+            className="h-[52px] max-h-[150px] min-h-[52px] w-full resize-none overflow-y-auto bg-transparent py-3 pl-4 pr-14 text-sm leading-7 outline-none placeholder:text-muted-foreground/70"
           />
           <button
             type="button"
             onClick={() => void generate()}
             disabled={loading || !instruction.trim()}
             aria-label="Enviar mensagem"
-            className="absolute bottom-2 right-2 flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm transition duration-200 hover:scale-[1.04] hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:scale-100"
+            className="absolute bottom-2 right-2 flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:translate-y-0"
           >
             <ArrowUp className="h-4 w-4" />
           </button>
         </div>
+        <p className="mt-2 px-1 text-center text-[10px] text-muted-foreground/70">
+          Enter envia · Shift + Enter quebra a linha
+        </p>
       </div>
     </section>
   );
