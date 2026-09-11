@@ -66,11 +66,7 @@ export function BioPreview({
   const mainBlocks = blocks.filter((block) => block.is_visible && !isSocial(block.type));
 
   const avatarRadius =
-    theme.avatarShape === "circle"
-      ? "999px"
-      : theme.avatarShape === "rounded"
-        ? "18px"
-        : "4px";
+    theme.avatarShape === "circle" ? "999px" : theme.avatarShape === "rounded" ? "18px" : "4px";
 
   const initials = (displayName || username || "B").trim().charAt(0).toUpperCase();
   const panelWidth = Math.min(Math.max(Number(theme.width) || 480, 320), 720);
