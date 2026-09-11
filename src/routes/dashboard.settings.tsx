@@ -8,18 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { checkUsername, updatePage, updateProfile } from "@/lib/bio-data";
+import { getPublicBioDisplay, normalizeUsername } from "@/lib/public-url";
 
 export const Route = createFileRoute("/dashboard/settings")({
   component: SettingsPage,
 });
-
-function normalizeUsername(value: string) {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9._-]/g, "")
-    .slice(0, 30);
-}
 
 function SettingsPage() {
   const navigate = useNavigate();
@@ -29,7 +22,7 @@ function SettingsPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? ""));
+    void supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? ""));
   }, []);
 
   async function saveUsername() {
@@ -55,9 +48,9 @@ function SettingsPage() {
       });
       await refresh();
       setUsername(normalized);
-      toast.success("Alterações salvas.");
+      toast.success("Endereço atualizado.");
     } catch {
-      toast.error("Não foi possível salvar as alterações.");
+      toast.error("Não foi possível salvar agora.");
     } finally {
       setSaving(false);
     }
@@ -65,65 +58,62 @@ function SettingsPage() {
 
   async function signOut() {
     await supabase.auth.signOut();
-    navigate({ to: "/" });
+    await navigate({ to: "/" });
   }
 
   return (
-    <div className="max-w-3xl space-y-6">
-      <div>
+    <div className="mx-auto max-w-4xl space-y-6 animate-rise">
+      <header>
         <p className="text-sm font-medium text-primary">Conta</p>
         <h1 className="mt-1 text-3xl font-bold">Configurações</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Gerencie seu endereço público e sua sessão.
-        </p>
-      </div>
+        <p className="mt-2 text-sm text-muted-foreground">Endereço público e acesso à conta.</p>
+      </header>
 
-      <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
-        <h2 className="text-lg font-semibold">Endereço da Bio</h2>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Ao mudar o username, o endereço público anterior deixa de apontar para sua página.
-        </p>
-        <div className="mt-5 space-y-2">
-          <Label htmlFor="settings-username">Username</Label>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <div className="flex min-w-0 flex-1 items-center overflow-x-auto rounded-xl border border-input bg-background px-3">
-              <span className="shrink-0 whitespace-nowrap text-sm text-muted-foreground">
-                bio-fy.vercel.app/
-              </span>
-              <Input
-                id="settings-username"
-                value={username}
-                onChange={(event) => setUsername(normalizeUsername(event.target.value))}
-                className="min-w-24 flex-1 border-0 bg-transparent px-1 shadow-none focus-visible:ring-0"
-              />
+      <div className="grid gap-5 lg:grid-cols-[1.35fr_.65fr]">
+        <section className="rounded-2xl border border-border bg-card p-5 shadow-soft sm:p-6">
+          <h2 className="text-lg font-semibold">Endereço da Bio</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Ao trocar o username, o endereço anterior deixa de funcionar.
+          </p>
+
+          <div className="mt-5 space-y-2">
+            <Label htmlFor="settings-username">Username</Label>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <div className="flex min-w-0 flex-1 items-center overflow-hidden rounded-xl border border-input bg-background px-3 transition focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-ring/25">
+                <span className="shrink-0 whitespace-nowrap text-sm text-muted-foreground">
+                  {getPublicBioDisplay()}
+                </span>
+                <Input
+                  id="settings-username"
+                  value={username}
+                  onChange={(event) => setUsername(normalizeUsername(event.target.value))}
+                  className="min-w-24 flex-1 border-0 bg-transparent px-1 shadow-none focus-visible:ring-0"
+                  maxLength={30}
+                  autoComplete="off"
+                />
+              </div>
+              <Button onClick={saveUsername} disabled={saving}>
+                <Save className="mr-2 h-4 w-4" />
+                {saving ? "Salvando..." : "Salvar"}
+              </Button>
             </div>
-            <Button onClick={saveUsername} disabled={saving}>
-              <Save className="mr-2 h-4 w-4" />
-              {saving ? "Salvando..." : "Salvar"}
+          </div>
+        </section>
+
+        <section className="rounded-2xl border border-border bg-card p-5 shadow-soft sm:p-6">
+          <h2 className="text-lg font-semibold">Sua conta</h2>
+          <div className="mt-5 space-y-4">
+            <div className="space-y-2">
+              <Label>E-mail</Label>
+              <Input value={email} readOnly className="text-muted-foreground" />
+            </div>
+            <Button variant="outline" className="w-full" onClick={signOut}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Sair da conta
             </Button>
           </div>
-        </div>
-      </section>
-
-      <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
-        <h2 className="text-lg font-semibold">Conta</h2>
-        <div className="mt-5 space-y-2">
-          <Label>E-mail</Label>
-          <Input value={email} readOnly className="text-muted-foreground" />
-          <p className="text-xs text-muted-foreground">
-            O e-mail é gerenciado pelo sistema de autenticação.
-          </p>
-        </div>
-      </section>
-
-      <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
-        <h2 className="text-lg font-semibold">Sessão</h2>
-        <p className="mt-1 text-sm text-muted-foreground">Encerre sua sessão neste dispositivo.</p>
-        <Button variant="outline" className="mt-4" onClick={signOut}>
-          <LogOut className="mr-2 h-4 w-4" />
-          Sair da conta
-        </Button>
-      </section>
+        </section>
+      </div>
     </div>
   );
 }
