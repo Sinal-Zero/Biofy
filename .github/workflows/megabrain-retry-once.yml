@@ -1,0 +1,218 @@
+name: Biofy optimization retry
+
+on:
+  push:
+    paths:
+      - .github/workflows/megabrain-retry-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  optimize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+
+      - name: Apply reviewed patches
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          def edit(path, fn):
+              p = Path(path)
+              old = p.read_text()
+              new = fn(old)
+              if new == old:
+                  print(f"unchanged: {path}")
+              else:
+                  p.write_text(new)
+                  print(f"updated: {path}")
+
+          def ai_patch(t):
+              t = re.sub(
+                  r'const GEMINI_TIMEOUT_MS = 25000;\nconst INTERACTIONS_MODELS = \[.*?\] as const;\n',
+                  '''const GEMINI_TIMEOUT_MS = 16000;\nconst DEFAULT_GEMINI_MODEL = "gemini-3.8-flash";\nconst MODEL_CACHE_TTL_MS = 30 * 60 * 1000;\nconst MAX_AI_BODY_BYTES = 96_000;\nconst AI_RATE_WINDOW_MS = 60_000;\nconst AI_RATE_LIMIT = 20;\n\nlet cachedGenerateContentModel: { model: string; expiresAt: number } | null = null;\nlet skipPrimaryInteractionUntil = 0;\nconst aiRateBuckets = new Map<string, { count: number; resetAt: number }>();\n''',
+                  t,
+                  count=1,
+                  flags=re.S,
+              )
+              marker = '''function isRecord(value: unknown): value is Record<string, unknown> {\n  return typeof value === "object" && value !== null && !Array.isArray(value);\n}\n'''
+              if 'function allowAiRequest(' not in t and marker in t:
+                  t = t.replace(marker, marker + '''\nfunction allowAiRequest(userId: string) {\n  const now = Date.now();\n  const current = aiRateBuckets.get(userId);\n  if (!current || current.resetAt <= now) {\n    aiRateBuckets.set(userId, { count: 1, resetAt: now + AI_RATE_WINDOW_MS });\n    return true;\n  }\n  if (current.count >= AI_RATE_LIMIT) return false;\n  current.count += 1;\n  return true;\n}\n''', 1)
+
+              t = t.replace(
+                  'https://generativelanguage.googleapis.com/v1/interactions',
+                  'https://generativelanguage.googleapis.com/v1beta/interactions',
+                  1,
+              )
+              t = t.replace(
+                  'body: JSON.stringify({ model, input: prompt, store: false }),',
+                  'body: JSON.stringify({ model, input: prompt, store: false, generation_config: { thinking_level: "low" } }),',
+                  1,
+              )
+              if 'cachedGenerateContentModel && cachedGenerateContentModel.expiresAt' not in t:
+                  t = t.replace(
+                      'async function discoverGenerateContentModel(geminiKey: string) {\n  try {',
+                      'async function discoverGenerateContentModel(geminiKey: string) {\n  if (cachedGenerateContentModel && cachedGenerateContentModel.expiresAt > Date.now()) {\n    return { model: cachedGenerateContentModel.model, failure: null };\n  }\n\n  try {',
+                      1,
+                  )
+                  t = t.replace(
+                      '    return { model: preferred ?? fallback ?? null, failure: null };',
+                      '    const model = preferred ?? fallback ?? null;\n    if (model) cachedGenerateContentModel = { model, expiresAt: Date.now() + MODEL_CACHE_TTL_MS };\n    return { model, failure: null };',
+                      1,
+                  )
+
+              new_call = '''async function callGemini(geminiKey: string, prompt: string) {\n  const primaryModel = process.env["GEMINI_MODEL"]?.trim() || DEFAULT_GEMINI_MODEL;\n  let lastFailure: GeminiAttempt = {\n    detail: "interaction_unavailable_cached",\n    status: 404,\n    timedOut: false,\n    model: primaryModel,\n    api: "interactions",\n  };\n\n  if (Date.now() >= skipPrimaryInteractionUntil) {\n    const attempt = await requestInteraction(geminiKey, primaryModel, prompt);\n    if (attempt.response?.ok) {\n      return {\n        success: { response: attempt.response, model: primaryModel, api: "interactions" as const } satisfies GeminiSuccess,\n        failure: null,\n      };\n    }\n\n    lastFailure = attempt;\n    if ([401, 403, 429].includes(attempt.status) || attempt.timedOut) {\n      return { success: null, failure: attempt };\n    }\n    if (attempt.status === 400 || attempt.status === 404) {\n      skipPrimaryInteractionUntil = Date.now() + MODEL_CACHE_TTL_MS;\n    } else if (attempt.status > 0) {\n      return { success: null, failure: attempt };\n    }\n  }\n\n  const discovery = await discoverGenerateContentModel(geminiKey);\n  if (discovery.model) {\n    const fallbackAttempt = await requestGenerateContent(geminiKey, discovery.model, prompt);\n    if (fallbackAttempt.response?.ok) {\n      return {\n        success: { response: fallbackAttempt.response, model: discovery.model, api: "generateContent" as const } satisfies GeminiSuccess,\n        failure: null,\n      };\n    }\n    lastFailure = fallbackAttempt;\n  } else if (discovery.failure) {\n    lastFailure = discovery.failure;\n  }\n\n  return { success: null, failure: lastFailure };\n}\n\n'''
+              t = re.sub(
+                  r'async function callGemini\(geminiKey: string, prompt: string\) \{.*?\n\}\n\n(?=function extractInteractionText)',
+                  new_call,
+                  t,
+                  count=1,
+                  flags=re.S,
+              )
+
+              if 'const contentType = request.headers.get("content-type")' not in t:
+                  t = t.replace(
+                      '        const authorization = request.headers.get("authorization");',
+                      '''        const contentType = request.headers.get("content-type") ?? "";\n        if (!contentType.toLowerCase().includes("application/json")) {\n          return Response.json({ error: "Formato de pedido inválido." }, { status: 415 });\n        }\n        const contentLength = Number(request.headers.get("content-length") ?? 0);\n        if (Number.isFinite(contentLength) && contentLength > MAX_AI_BODY_BYTES) {\n          return Response.json({ error: "Pedido grande demais." }, { status: 413 });\n        }\n\n        const authorization = request.headers.get("authorization");''',
+                      1,
+                  )
+              if 'if (!allowAiRequest(user.id))' not in t:
+                  t = t.replace(
+                      '        const body = (await request.json().catch(() => null)) as {',
+                      '''        if (!allowAiRequest(user.id)) {\n          return Response.json(\n            { error: "Muitas solicitações em pouco tempo. Aguarde alguns segundos." },\n            { status: 429, headers: { "Retry-After": "60", "Cache-Control": "no-store" } },\n          );\n        }\n\n        const body = (await request.json().catch(() => null)) as {''',
+                      1,
+                  )
+              t = t.replace('.slice(-6)', '.slice(-4)')
+              t = t.replace('text: String(item.text ?? "").slice(0, 500),', 'text: String(item.text ?? "").slice(0, 400),')
+              return t
+
+          edit('src/routes/api.ai.bio.ts', ai_patch)
+
+          def data_patch(t):
+              t = t.replace('.select("*")\n    .eq("user_id", userId)', '.select("plan,status,current_period_end,cancel_at_period_end")\n    .eq("user_id", userId)', 1)
+              if 'function safeReferrerOrigin()' not in t:
+                  t = t.replace(
+                      '\nexport async function recordAnalytics(',
+                      '''\nfunction safeReferrerOrigin() {\n  if (typeof document === "undefined" || !document.referrer) return null;\n  try {\n    return new URL(document.referrer).origin.slice(0, 300);\n  } catch {\n    return null;\n  }\n}\n\nexport async function recordAnalytics(''',
+                      1,
+                  )
+              t = t.replace(
+                  'referrer: typeof document !== "undefined" ? document.referrer.slice(0, 1000) || null : null,',
+                  'referrer: safeReferrerOrigin(),',
+                  1,
+              )
+              return t
+          edit('src/lib/bio-data.ts', data_patch)
+
+          def master_shell(t):
+              if 'isMasterSubscription' not in t:
+                  t = t.replace('import { fetchSubscription } from "@/lib/bio-data";', 'import { fetchSubscription } from "@/lib/bio-data";\nimport { isMasterSubscription } from "@/lib/subscription";', 1)
+              t = re.sub(
+                  r'        const active =\n.*?        setIsMaster\(subscription\?\.plan === "business" && active && periodActive\);',
+                  '        setIsMaster(isMasterSubscription(subscription));',
+                  t,
+                  count=1,
+                  flags=re.S,
+              )
+              return t
+          edit('src/components/dashboard/DashboardShell.tsx', master_shell)
+
+          def master_ai(t):
+              if 'isMasterSubscription' not in t:
+                  t = t.replace('import { getPublicBioDisplay } from "@/lib/public-url";', 'import { getPublicBioDisplay } from "@/lib/public-url";\nimport { isMasterSubscription } from "@/lib/subscription";', 1)
+              t = re.sub(
+                  r'        const active =\n.*?        setIsMaster\(subscription\?\.plan === "business" && active && periodActive\);',
+                  '        setIsMaster(isMasterSubscription(subscription));',
+                  t,
+                  count=1,
+                  flags=re.S,
+              )
+              return t
+          edit('src/routes/dashboard.ai.tsx', master_ai)
+
+          def subscription_page(t):
+              if 'isPaidSubscription' not in t:
+                  t = t.replace('import { fetchSubscription } from "@/lib/bio-data";', 'import { fetchSubscription } from "@/lib/bio-data";\nimport { isPaidSubscription } from "@/lib/subscription";', 1)
+              t = re.sub(
+                  r'  const paidPlan = currentPlan === "pro" \|\| currentPlan === "business";\n  const activeStatus =.*?\n  const hasPaidSubscription = paidPlan && activeStatus && periodActive;',
+                  '  const paidPlan = currentPlan === "pro" || currentPlan === "business";\n  const hasPaidSubscription = isPaidSubscription(subscription);',
+                  t,
+                  count=1,
+                  flags=re.S,
+              )
+              return t
+          edit('src/routes/dashboard.subscription.tsx', subscription_page)
+
+          def assistant_patch(t):
+              t = re.sub(r'\n  function chooseQuickPrompt\(prompt: string\) \{.*?\n  \}\n', '\n', t, count=1, flags=re.S)
+              t = t.replace('async function generate() {\n    const cleanInstruction = instruction.trim();', 'async function generate(overrideInstruction?: string) {\n    const cleanInstruction = (overrideInstruction ?? instruction).trim();', 1)
+              t = t.replace('messages.slice(-6)', 'messages.slice(-4)')
+              if 'signal: AbortSignal.timeout(22_000)' not in t:
+                  t = t.replace('      body: JSON.stringify({', '      signal: AbortSignal.timeout(22_000),\n      body: JSON.stringify({', 1)
+              t = t.replace('onClick={() => chooseQuickPrompt(prompt)}', 'onClick={() => void generate(prompt)}')
+              t = t.replace('flex items-center gap-1.5 rounded-2xl rounded-bl-md border border-border bg-background/75 px-4 py-3 shadow-sm', 'flex items-center gap-2 rounded-2xl rounded-bl-md border border-border bg-background/75 px-4 py-3 text-xs text-muted-foreground shadow-sm')
+              loading_end = '<span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary [animation-delay:240ms]" />\n              </div>'
+              t = t.replace(loading_end, '<span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary [animation-delay:240ms]" />\n                <span className="ml-1">Aplicando</span>\n              </div>', 1)
+              return t
+          edit('src/components/dashboard/BioAiAssistant.tsx', assistant_patch)
+
+          def styles_patch(t):
+              t = t.replace('transform: translateY(-8px);', 'transform: translateY(-5px);', 1)
+              t = t.replace('transform: translateY(12px);', 'transform: translateY(9px) scale(0.995);', 1)
+              t = t.replace('filter: blur(2px);', 'filter: blur(1px);', 1)
+              t = t.replace('transform: scale(0.94);', 'transform: translateY(3px) scale(0.975);', 1)
+              t = t.replace('animation: biofy-rise 0.5s', 'animation: biofy-rise 0.45s', 1)
+              t = t.replace('animation: biofy-pop 0.3s', 'animation: biofy-pop 0.22s', 1)
+              if 'overscroll-behavior-x: none;' not in t:
+                  t = t.replace('    overflow-x: hidden;\n    background-color:', '    overflow-x: hidden;\n    overscroll-behavior-x: none;\n    background-color:', 1)
+              if ':where(button, [role="button"])' not in t:
+                  t = t.replace('  :where(a, button) {\n    touch-action: manipulation;\n  }', '  :where(a, button) {\n    touch-action: manipulation;\n  }\n\n  :where(button, [role="button"]) {\n    user-select: none;\n  }', 1)
+              return t
+          edit('src/styles.css', styles_patch)
+
+          def preview_patch(t):
+              t = t.replace('"relative w-full overflow-x-hidden overflow-y-auto border shadow-[0_28px_80px_-40px_rgba(0,0,0,0.76)] transition-all duration-300"', '"relative w-full transform-gpu overflow-x-hidden overflow-y-auto border shadow-[0_28px_80px_-40px_rgba(0,0,0,0.76)] transition-all duration-300 motion-safe:animate-rise"', 1)
+              return t
+          edit('src/components/bio/BioPreview.tsx', preview_patch)
+          PY
+
+      - name: Format touched files
+        run: |
+          bunx prettier --write \
+            src/routes/api.ai.bio.ts \
+            src/lib/bio-data.ts \
+            src/lib/biofy-ai-prompt.ts \
+            src/lib/subscription.ts \
+            src/components/dashboard/DashboardShell.tsx \
+            src/routes/dashboard.ai.tsx \
+            src/routes/dashboard.subscription.tsx \
+            src/components/dashboard/BioAiAssistant.tsx \
+            src/components/ui/ScrollReveal.tsx \
+            src/routes/api.webhooks.asaas.ts \
+            src/server.ts \
+            src/styles.css \
+            src/components/bio/BioPreview.tsx
+
+      - name: Validate production build
+        run: |
+          bun run build
+          bunx tsc --noEmit
+          bun run lint
+
+      - name: Commit optimized source
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src
+          git commit -m "perf: harden and accelerate Biofy experience"
+          git push origin HEAD:main
