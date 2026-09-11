@@ -127,7 +127,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
             <img
               src={bundle.profile.avatar_url}
               alt=""
-              className="h-8 w-8 shrink-0 rounded-full object-cover ring-1 ring-border"
+              className="h-8 w-8 shrink-0 rounded-full object-cover ring-1 ring-border/80"
             />
           ) : (
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary ring-1 ring-primary/15">
@@ -152,9 +152,9 @@ export function DashboardShell({ children }: { children: ReactNode }) {
         {profileOpen ? (
           <div
             role="menu"
-            className="absolute right-0 top-[calc(100%+8px)] z-50 w-64 origin-top-right animate-pop rounded-2xl border border-border/90 bg-popover/95 p-2 shadow-panel backdrop-blur-xl"
+            className="absolute right-0 top-[calc(100%+8px)] z-50 w-[min(16rem,calc(100vw-2rem))] origin-top-right animate-pop rounded-2xl border border-border/90 bg-popover/95 p-2 shadow-panel backdrop-blur-xl"
           >
-            <div className="border-b border-border px-3 py-2.5">
+            <div className="border-b border-border/80 px-3 py-2.5">
               <p className="truncate text-sm font-semibold text-foreground">{displayName}</p>
               {email ? (
                 <p className="mt-0.5 truncate text-xs text-muted-foreground">{email}</p>
@@ -165,7 +165,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
               to="/dashboard/settings"
               onClick={() => setProfileOpen(false)}
               role="menuitem"
-              className="mt-1 flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              className="mt-1 flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-accent/70 hover:text-foreground"
             >
               <Settings className="h-4 w-4" />
               Configurações
@@ -175,7 +175,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
               type="button"
               onClick={() => void signOut()}
               role="menuitem"
-              className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-accent/70 hover:text-foreground"
             >
               <LogOut className="h-4 w-4" />
               Sair
@@ -188,8 +188,8 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-dvh bg-background text-foreground">
-      <header className="sticky top-0 z-40 border-b border-border/80 bg-background/88 backdrop-blur-xl lg:hidden">
-        <div className="flex h-16 items-center justify-between gap-3 px-4">
+      <header className="sticky top-0 z-40 border-b border-border/75 bg-background/90 backdrop-blur-xl lg:hidden">
+        <div className="flex h-16 items-center justify-between gap-3 px-4 sm:px-5">
           <Logo />
           <div className="flex items-center gap-2">
             {saveLabel ? (
@@ -200,28 +200,37 @@ export function DashboardShell({ children }: { children: ReactNode }) {
             {renderProfileMenu(mobileMenuRef)}
           </div>
         </div>
-        <nav
-          className="no-scrollbar flex gap-1 overflow-x-auto px-3 pb-3"
-          aria-label="Navegação do painel"
-        >
-          {navigation.map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              activeOptions={{ exact: item.to === "/dashboard" }}
-              className="whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-xs font-medium text-muted-foreground transition-all duration-200 hover:bg-accent/70 hover:text-foreground [&.active]:border-primary/15 [&.active]:bg-primary/10 [&.active]:text-foreground"
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+        <div className="biofy-fade-edge px-1">
+          <nav
+            className="biofy-scroll-x flex gap-1 px-3 pb-3"
+            aria-label="Navegação do painel"
+          >
+            {navigation.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  activeOptions={{ exact: item.to === "/dashboard" }}
+                  className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-xs font-medium text-muted-foreground transition-[background-color,border-color,color] duration-200 hover:bg-accent/60 hover:text-foreground [&.active]:border-primary/15 [&.active]:bg-primary/10 [&.active]:text-foreground"
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
       </header>
 
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r border-sidebar-border bg-sidebar/95 backdrop-blur-xl lg:flex lg:flex-col">
-        <div className="flex h-20 items-center px-6">
+        <div className="flex h-20 items-center border-b border-sidebar-border/70 px-6">
           <Logo />
         </div>
-        <nav className="flex-1 space-y-1 px-3 py-4" aria-label="Navegação principal">
+        <nav
+          className="min-h-0 flex-1 space-y-1 overflow-y-auto px-3 py-4"
+          aria-label="Navegação principal"
+        >
           {navigation.map((item) => {
             const Icon = item.icon;
             return (
@@ -255,12 +264,12 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       </aside>
 
       <main className="lg:pl-64">
-        <div className="mx-auto max-w-[1440px] px-4 py-7 sm:px-6 lg:px-8 lg:py-9 xl:px-10">
-          <div className="mb-7 hidden min-h-10 items-center justify-between gap-4 lg:flex">
+        <div className="mx-auto max-w-[1460px] px-4 py-6 sm:px-6 sm:py-7 lg:px-8 lg:py-9 xl:px-10">
+          <div className="mb-6 hidden min-h-10 items-center justify-between gap-4 lg:flex">
             <span className="min-w-20 text-xs text-muted-foreground">{saveLabel}</span>
             {renderProfileMenu(desktopMenuRef)}
           </div>
-          {children}
+          <div className="min-w-0">{children}</div>
         </div>
       </main>
     </div>
