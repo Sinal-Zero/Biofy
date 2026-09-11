@@ -15,6 +15,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } 
 import { Logo } from "@/components/brand/Logo";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchSubscription } from "@/lib/bio-data";
+import { isMasterSubscription } from "@/lib/subscription";
 import { useBio } from "./BioContext";
 
 type DashboardRoute =
@@ -71,13 +72,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 
     void fetchSubscription(bundle.page.user_id)
       .then((subscription) => {
-        if (!mounted) return;
-        const active =
-          !subscription?.status || ["active", "trialing"].includes(subscription.status);
-        const periodActive =
-          !subscription?.current_period_end ||
-          new Date(subscription.current_period_end).getTime() >= Date.now();
-        setIsMaster(subscription?.plan === "business" && active && periodActive);
+        if (mounted) setIsMaster(isMasterSubscription(subscription));
       })
       .catch(() => {
         if (mounted) setIsMaster(false);
