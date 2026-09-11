@@ -119,7 +119,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
         <button
           type="button"
           onClick={() => setProfileOpen((open) => !open)}
-          className="group flex max-w-[220px] items-center gap-2 rounded-xl border border-border bg-card/85 px-2 py-1.5 text-left shadow-sm transition-all duration-200 hover:border-primary/30 hover:bg-card active:scale-[0.99]"
+          className="group flex max-w-[220px] items-center gap-2 rounded-xl border border-border/80 bg-card/80 px-2 py-1.5 text-left shadow-sm transition-[border-color,background-color,transform] duration-200 hover:border-primary/25 hover:bg-card active:scale-[0.99]"
           aria-haspopup="menu"
           aria-expanded={profileOpen}
         >
@@ -152,7 +152,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
         {profileOpen ? (
           <div
             role="menu"
-            className="absolute right-0 top-[calc(100%+8px)] z-50 w-64 origin-top-right animate-pop rounded-2xl border border-border bg-popover/95 p-2 shadow-panel backdrop-blur-xl"
+            className="absolute right-0 top-[calc(100%+8px)] z-50 w-64 origin-top-right animate-pop rounded-2xl border border-border/90 bg-popover/95 p-2 shadow-panel backdrop-blur-xl"
           >
             <div className="border-b border-border px-3 py-2.5">
               <p className="truncate text-sm font-semibold text-foreground">{displayName}</p>
@@ -188,12 +188,12 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-dvh bg-background text-foreground">
-      <header className="sticky top-0 z-40 border-b border-border bg-background/88 backdrop-blur-xl lg:hidden">
+      <header className="sticky top-0 z-40 border-b border-border/80 bg-background/88 backdrop-blur-xl lg:hidden">
         <div className="flex h-16 items-center justify-between gap-3 px-4">
           <Logo />
           <div className="flex items-center gap-2">
             {saveLabel ? (
-              <span className="hidden rounded-full bg-primary/[0.08] px-2 py-1 text-[11px] text-muted-foreground xs:block">
+              <span className="hidden rounded-full border border-border/70 bg-card/70 px-2.5 py-1 text-[11px] text-muted-foreground xs:block">
                 {saveLabel}
               </span>
             ) : null}
@@ -209,7 +209,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
               key={item.to}
               to={item.to}
               activeOptions={{ exact: item.to === "/dashboard" }}
-              className="whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-xs font-medium text-muted-foreground transition-all duration-200 hover:bg-accent hover:text-foreground [&.active]:border-primary/15 [&.active]:bg-primary/10 [&.active]:text-foreground"
+              className="whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-xs font-medium text-muted-foreground transition-all duration-200 hover:bg-accent/70 hover:text-foreground [&.active]:border-primary/15 [&.active]:bg-primary/10 [&.active]:text-foreground"
             >
               {item.label}
             </Link>
@@ -229,10 +229,10 @@ export function DashboardShell({ children }: { children: ReactNode }) {
                 key={item.to}
                 to={item.to}
                 activeOptions={{ exact: item.to === "/dashboard" }}
-                className="group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground [&.active]:bg-sidebar-accent [&.active]:text-sidebar-accent-foreground"
+                className="group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-[background-color,color,transform] duration-200 hover:bg-sidebar-accent/65 hover:text-sidebar-accent-foreground [&.active]:bg-sidebar-accent [&.active]:text-sidebar-accent-foreground"
               >
                 <span className="absolute inset-y-2 left-0 w-0.5 scale-y-0 rounded-full bg-primary transition-transform duration-200 group-[.active]:scale-y-100" />
-                <Icon className="h-4 w-4 transition-transform duration-200 group-hover:scale-105" />
+                <Icon className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
                 {item.label}
               </Link>
             );
@@ -255,8 +255,8 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       </aside>
 
       <main className="lg:pl-64">
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-          <div className="mb-6 hidden min-h-10 items-center justify-between gap-4 lg:flex">
+        <div className="mx-auto max-w-[1440px] px-4 py-7 sm:px-6 lg:px-8 lg:py-9 xl:px-10">
+          <div className="mb-7 hidden min-h-10 items-center justify-between gap-4 lg:flex">
             <span className="min-w-20 text-xs text-muted-foreground">{saveLabel}</span>
             {renderProfileMenu(desktopMenuRef)}
           </div>
