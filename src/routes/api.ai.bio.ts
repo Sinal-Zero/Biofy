@@ -215,7 +215,14 @@ async function requestInteraction(
     });
 
     if (response.ok) {
-      return { response, detail: "", status: response.status, timedOut: false, model, api: "interactions" };
+      return {
+        response,
+        detail: "",
+        status: response.status,
+        timedOut: false,
+        model,
+        api: "interactions",
+      };
     }
 
     return {
@@ -371,7 +378,11 @@ async function callGemini(geminiKey: string, prompt: string) {
     const attempt = await requestInteraction(geminiKey, model, prompt);
     if (attempt.response?.ok) {
       return {
-        success: { response: attempt.response, model, api: "interactions" as const } satisfies GeminiSuccess,
+        success: {
+          response: attempt.response,
+          model,
+          api: "interactions" as const,
+        } satisfies GeminiSuccess,
         failure: null,
       };
     }
@@ -424,7 +435,11 @@ function extractInteractionText(payload: unknown) {
 function extractGenerateContentText(payload: unknown) {
   if (!isRecord(payload) || !Array.isArray(payload["candidates"])) return "";
   const candidate = payload["candidates"].find(isRecord);
-  if (!candidate || !isRecord(candidate["content"]) || !Array.isArray(candidate["content"]["parts"])) {
+  if (
+    !candidate ||
+    !isRecord(candidate["content"]) ||
+    !Array.isArray(candidate["content"]["parts"])
+  ) {
     return "";
   }
   return candidate["content"]["parts"]
@@ -458,7 +473,11 @@ function sanitizeThemePatch(value: unknown): Partial<BioTheme> {
   const result: Record<string, unknown> = {};
 
   for (const [key, raw] of Object.entries(value)) {
-    if (COLOR_FIELDS.has(key) && typeof raw === "string" && /^#[0-9a-fA-F]{6}(?:[0-9a-fA-F]{2})?$/.test(raw)) {
+    if (
+      COLOR_FIELDS.has(key) &&
+      typeof raw === "string" &&
+      /^#[0-9a-fA-F]{6}(?:[0-9a-fA-F]{2})?$/.test(raw)
+    ) {
       result[key] = raw;
       continue;
     }
@@ -482,7 +501,11 @@ function sanitizeThemePatch(value: unknown): Partial<BioTheme> {
 
 function uniqueExistingIds(value: unknown, existingIds: Set<string>, max = 30) {
   if (!Array.isArray(value)) return [];
-  return [...new Set(value.filter((item): item is string => typeof item === "string" && existingIds.has(item)))].slice(0, max);
+  return [
+    ...new Set(
+      value.filter((item): item is string => typeof item === "string" && existingIds.has(item)),
+    ),
+  ].slice(0, max);
 }
 
 function canUseRequestedUrl(url: string, instruction: string) {
@@ -557,7 +580,10 @@ function sanitizeAgentResponse(
   const addBlocks = Array.isArray(parsed["addBlocks"])
     ? parsed["addBlocks"]
         .filter(isRecord)
-        .filter((item) => typeof item["type"] === "string" && ALLOWED_BLOCK_TYPES.has(item["type"] as string))
+        .filter(
+          (item) =>
+            typeof item["type"] === "string" && ALLOWED_BLOCK_TYPES.has(item["type"] as string),
+        )
         .slice(0, 5)
         .map((item) => {
           const block: { type: string; title?: string | null; url?: string | null } = {
@@ -795,7 +821,12 @@ export const Route = createFileRoute("/api/ai/bio")({
             const retryPrompt = `${prompt}\n\nCORREÇÃO OBRIGATÓRIA: o pedido atual exige edição. Não dê apenas conselhos. Retorne pelo menos uma mudança estruturada real que cumpra o pedido, quando tecnicamente possível.`;
             const retryRun = await runAgent(geminiKey, retryPrompt);
             if (retryRun.result.success && retryRun.parsed) {
-              const retried = sanitizeAgentResponse(retryRun.parsed, currentBio, links, instruction);
+              const retried = sanitizeAgentResponse(
+                retryRun.parsed,
+                currentBio,
+                links,
+                instruction,
+              );
               if (hasMutation(retried, currentBio)) response = retried;
             }
           } catch {

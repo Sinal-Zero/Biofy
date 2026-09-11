@@ -219,14 +219,16 @@ export function BioAiAssistant() {
       }
 
       const normalizedPayload: AiResult = {
-        bio: typeof payload.bio === "string" ? payload.bio : bundle.profile.bio ?? "",
+        bio: typeof payload.bio === "string" ? payload.bio : (bundle.profile.bio ?? ""),
         linkTitles: Array.isArray(payload.linkTitles) ? payload.linkTitles : [],
         ...(payload.profile ? { profile: payload.profile } : {}),
         ...(payload.theme ? { theme: payload.theme } : {}),
         blocks: Array.isArray(payload.blocks) ? payload.blocks : [],
         order: Array.isArray(payload.order) ? payload.order : [],
         removeBlockIds: Array.isArray(payload.removeBlockIds) ? payload.removeBlockIds : [],
-        duplicateBlockIds: Array.isArray(payload.duplicateBlockIds) ? payload.duplicateBlockIds : [],
+        duplicateBlockIds: Array.isArray(payload.duplicateBlockIds)
+          ? payload.duplicateBlockIds
+          : [],
         addBlocks: Array.isArray(payload.addBlocks) ? payload.addBlocks : [],
         tips: Array.isArray(payload.tips) ? payload.tips : [],
         message:
