@@ -52,10 +52,10 @@ function AiPage() {
     return (
       <div className="biofy-page mx-auto max-w-xl py-8 sm:py-12">
         <div className="biofy-card p-7 text-center sm:p-8">
-          <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/10 bg-primary/[0.07] text-primary">
-            <LockKeyhole className="h-5 w-5" />
-          </span>
-          <h1 className="mt-5 text-2xl font-bold">Biofy AI é exclusiva do Master</h1>
+          <LockKeyhole className="mx-auto h-5 w-5 text-primary" />
+          <h1 className="mt-5 text-2xl font-bold tracking-[-0.03em]">
+            Biofy AI é exclusiva do Master
+          </h1>
           <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-muted-foreground">
             O Master libera edição da sua página por comandos em linguagem natural.
           </p>
@@ -68,29 +68,29 @@ function AiPage() {
   }
 
   return (
-    <div className="biofy-page space-y-5 sm:space-y-6">
+    <div className="biofy-page space-y-6">
       <header className="biofy-page-header">
         <p className="biofy-page-kicker">Assistente</p>
         <h1 className="biofy-page-title">Biofy AI</h1>
-        <p className="biofy-page-description">Peça uma mudança e acompanhe o resultado ao lado.</p>
+        <p className="biofy-page-description">
+          Descreva a mudança. A Biofy aplica e você confere o resultado ao lado.
+        </p>
       </header>
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(340px,0.62fr)_minmax(560px,1.38fr)] xl:items-stretch">
+      <div className="grid gap-5 xl:grid-cols-[minmax(360px,.68fr)_minmax(560px,1.32fr)] xl:items-stretch">
         <BioAiAssistant />
 
         <aside className="min-w-0">
           <div className="biofy-card h-full overflow-hidden xl:min-h-[760px]">
-            <div className="border-b border-border/80 bg-background/25 p-3.5 sm:p-4">
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-foreground">Preview</p>
-                  <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
-                    {getPublicBioDisplay(bundle.profile.username || "sua-bio")}
-                  </p>
-                </div>
+            <div className="flex flex-col gap-3 border-b border-border/80 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground">Resultado</p>
+                <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                  {getPublicBioDisplay(bundle.profile.username || "sua-bio")}
+                </p>
               </div>
 
-              <div className="biofy-segmented mt-3">
+              <div className="biofy-segmented w-full sm:w-[230px]">
                 {(
                   [
                     ["mobile", Smartphone, "Celular"],
@@ -101,10 +101,10 @@ function AiPage() {
                     key={mode}
                     type="button"
                     onClick={() => setPreviewMode(mode)}
-                    className={`flex items-center justify-center gap-2 rounded-[0.7rem] px-3 py-2 text-xs font-semibold transition-[background-color,color,box-shadow] duration-200 ${
+                    className={`flex items-center justify-center gap-2 rounded-[0.65rem] px-3 py-2 text-xs font-semibold transition-[background-color,color] duration-150 ${
                       previewMode === mode
-                        ? "bg-card text-foreground shadow-sm"
-                        : "text-muted-foreground hover:bg-card/50 hover:text-foreground"
+                        ? "bg-card text-foreground"
+                        : "text-muted-foreground hover:bg-card/45 hover:text-foreground"
                     }`}
                   >
                     <Icon className="h-4 w-4" />
@@ -114,7 +114,7 @@ function AiPage() {
               </div>
             </div>
 
-            <div className="flex min-h-[610px] items-center justify-center bg-black/[0.08] p-3 sm:min-h-[680px] sm:p-4 xl:min-h-[690px]">
+            <div className="flex min-h-[610px] items-center justify-center bg-background/30 p-3 sm:min-h-[680px] sm:p-5 xl:min-h-[690px]">
               {previewMode === "mobile" ? (
                 <div className="mx-auto w-full max-w-[330px]">
                   <PhoneFrame glow={false}>
@@ -132,7 +132,7 @@ function AiPage() {
                   </PhoneFrame>
                 </div>
               ) : (
-                <div className="flex min-h-[610px] w-full items-center justify-center overflow-hidden rounded-2xl border border-border/65 bg-background/25 sm:min-h-[650px] xl:min-h-[660px]">
+                <div className="flex min-h-[610px] w-full items-center justify-center sm:min-h-[650px] xl:min-h-[660px]">
                   <BioPreview
                     displayName={bundle.profile.display_name}
                     username={bundle.profile.username}
