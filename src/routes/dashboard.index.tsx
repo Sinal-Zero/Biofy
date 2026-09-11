@@ -59,25 +59,25 @@ function DashboardOverview() {
   ];
 
   return (
-    <div className="biofy-page space-y-6 sm:space-y-7">
+    <div className="biofy-page space-y-7">
       <header className="biofy-page-header">
         <p className="biofy-page-kicker">Visão geral</p>
         <h1 className="biofy-page-title">Sua Bio</h1>
         <p className="biofy-page-description">
-          Desempenho e atalhos principais dos últimos 30 dias.
+          O que está publicado, os principais números e os atalhos que você usa no dia a dia.
         </p>
       </header>
 
       <section className="biofy-card p-5 sm:p-6">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               <span
-                className={`h-2.5 w-2.5 rounded-full shadow-[0_0_18px_currentColor] ${username ? "bg-emerald-400 text-emerald-400" : "bg-amber-400 text-amber-400"}`}
+                className={`h-2 w-2 rounded-full ${username ? "bg-emerald-400" : "bg-amber-400"}`}
                 aria-hidden="true"
               />
               <span className="text-sm font-semibold">
-                {username ? "Bio online" : "Defina seu username"}
+                {username ? "Página publicada" : "Defina seu username"}
               </span>
             </div>
             <p className="mt-2 max-w-xl truncate text-sm text-muted-foreground">
@@ -87,13 +87,13 @@ function DashboardOverview() {
 
           <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
             <Button variant="outline" onClick={copyLink} disabled={!username}>
-              <Copy className="mr-2 h-4 w-4" />
+              <Copy className="mr-1 h-4 w-4" />
               Copiar
             </Button>
             {username ? (
               <Button variant="outline" asChild>
                 <Link to="/$username" params={{ username }} target="_blank">
-                  <ExternalLink className="mr-2 h-4 w-4" />
+                  <ExternalLink className="mr-1 h-4 w-4" />
                   Abrir
                 </Link>
               </Button>
@@ -109,14 +109,12 @@ function DashboardOverview() {
         {cards.map((card) => {
           const Icon = card.icon;
           return (
-            <article key={card.label} className="biofy-card biofy-card-interactive p-5">
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-sm text-muted-foreground">{card.label}</span>
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-primary/10 bg-primary/[0.07] text-primary">
-                  <Icon className="h-4 w-4" />
-                </span>
+            <article key={card.label} className="biofy-card p-5">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Icon className="h-4 w-4" />
+                <span className="text-sm">{card.label}</span>
               </div>
-              <strong className="mt-5 block text-3xl font-semibold tracking-tight">
+              <strong className="mt-5 block text-3xl font-semibold tracking-[-0.035em]">
                 {card.value}
               </strong>
             </article>
