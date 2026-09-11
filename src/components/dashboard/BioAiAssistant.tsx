@@ -1,11 +1,32 @@
 import { ArrowUp, Bot, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { BioTheme } from "@/lib/bio-types";
 import { useBio } from "./BioContext";
+
+type AiBlockUpdate = {
+  id: string;
+  title?: string;
+  url?: string | null;
+  isVisible?: boolean;
+};
+
+type AiNewBlock = {
+  type: string;
+  title?: string | null;
+  url?: string | null;
+};
 
 type AiResult = {
   bio: string;
   linkTitles: Array<{ id: string; title: string }>;
+  profile?: { displayName?: string };
+  theme?: Partial<BioTheme>;
+  blocks?: AiBlockUpdate[];
+  order?: string[];
+  removeBlockIds?: string[];
+  duplicateBlockIds?: string[];
+  addBlocks?: AiNewBlock[];
   tips: string[];
   message: string;
 };
@@ -24,8 +45,22 @@ type ChatMessage = {
   tips?: string[];
 };
 
+function nextFrame() {
+  return new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+}
+
 export function BioAiAssistant() {
-  const { bundle, patchProfile, patchBlock } = useBio();
+  const {
+    bundle,
+    theme,
+    patchProfile,
+    patchTheme,
+    patchBlock,
+    addBlock,
+    duplicateBlock,
+    removeBlock,
+    moveBlock,
+  } = useBio();
   const [instruction, setInstruction] = useState("");
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -41,6 +76,71 @@ export function BioAiAssistant() {
     if (!textarea) return;
     textarea.style.height = "0px";
     textarea.style.height = `${Math.min(Math.max(textarea.scrollHeight, 52), 150)}px`;
+  }
+
+  async function applyResult(payload: AiResult) {
+    const currentBio = bundle.profile.bio ?? "";
+    if (payload.bio && payload.bio !== currentBio) {
+      patchProfile({ bio: payload.bio.slice(0, 240) });
+    }
+
+    const displayName = payload.profile?.displayName?.trim();
+    if (displayName && displayName !== (bundle.profile.display_name ?? "")) {
+      patchProfile({ display_name: displayName.slice(0, 100) });
+    }
+
+    if (payload.theme && Object.keys(payload.theme).length > 0) {
+      patchTheme(payload.theme);
+    }
+
+    const blockPatches = new Map<string, AiBlockUpdate>();
+    for (const update of payload.blocks ?? []) {
+      if (update?.id) blockPatches.set(update.id, update);
+    }
+    for (const update of payload.linkTitles ?? []) {
+      if (!update?.id || !update.title) continue;
+      blockPatches.set(update.id, {
+        ...blockPatches.get(update.id),
+        id: update.id,
+        title: update.title,
+      });
+    }
+
+    for (const update of blockPatches.values()) {
+      const current = bundle.blocks.find((block) => block.id === update.id);
+      if (!current) continue;
+      patchBlock(update.id, {
+        ...(typeof update.title === "string" ? { title: update.title.slice(0, 120) } : {}),
+        ...(update.url !== undefined ? { url: update.url } : {}),
+        ...(typeof update.isVisible === "boolean" ? { is_visible: update.isVisible } : {}),
+      });
+    }
+
+    const removeSet = new Set(payload.removeBlockIds ?? []);
+    const desiredOrder = (payload.order ?? []).filter((id) => !removeSet.has(id));
+    if (desiredOrder.length > 0) {
+      desiredOrder.forEach((id, index) => moveBlock(id, index));
+    }
+
+    for (const id of payload.duplicateBlockIds ?? []) {
+      if (!bundle.blocks.some((block) => block.id === id)) continue;
+      await duplicateBlock(id);
+      await nextFrame();
+    }
+
+    for (const block of payload.addBlocks ?? []) {
+      await addBlock(block.type, {
+        title: block.title ?? undefined,
+        url: block.url ?? undefined,
+      });
+      await nextFrame();
+    }
+
+    for (const id of payload.removeBlockIds ?? []) {
+      if (!bundle.blocks.some((block) => block.id === id)) continue;
+      await removeBlock(id);
+      await nextFrame();
+    }
   }
 
   async function generate() {
@@ -91,9 +191,14 @@ export function BioAiAssistant() {
           history,
           displayName: bundle.profile.display_name,
           bio: bundle.profile.bio,
-          links: bundle.blocks
-            .filter((block) => block.type !== "text" && block.type !== "image")
-            .map((block) => ({ id: block.id, title: block.title, type: block.type })),
+          theme,
+          links: bundle.blocks.map((block) => ({
+            id: block.id,
+            title: block.title,
+            type: block.type,
+            isVisible: block.is_visible,
+            position: block.position,
+          })),
         }),
       });
 
@@ -112,32 +217,32 @@ export function BioAiAssistant() {
         return;
       }
 
-      const bio = typeof payload.bio === "string" ? payload.bio : "";
-      const linkTitles = Array.isArray(payload.linkTitles) ? payload.linkTitles : [];
-      const tips = Array.isArray(payload.tips) ? payload.tips : [];
-      const message =
-        typeof payload.message === "string" && payload.message.trim()
-          ? payload.message.trim()
-          : "Pronto. Atualizei sua Bio com base no que você pediu.";
+      const normalizedPayload: AiResult = {
+        bio: typeof payload.bio === "string" ? payload.bio : bundle.profile.bio ?? "",
+        linkTitles: Array.isArray(payload.linkTitles) ? payload.linkTitles : [],
+        profile: payload.profile,
+        theme: payload.theme,
+        blocks: Array.isArray(payload.blocks) ? payload.blocks : [],
+        order: Array.isArray(payload.order) ? payload.order : [],
+        removeBlockIds: Array.isArray(payload.removeBlockIds) ? payload.removeBlockIds : [],
+        duplicateBlockIds: Array.isArray(payload.duplicateBlockIds) ? payload.duplicateBlockIds : [],
+        addBlocks: Array.isArray(payload.addBlocks) ? payload.addBlocks : [],
+        tips: Array.isArray(payload.tips) ? payload.tips : [],
+        message:
+          typeof payload.message === "string" && payload.message.trim()
+            ? payload.message.trim()
+            : "Pronto. Apliquei a alteração na sua página.",
+      };
 
-      if (bio && bio !== (bundle.profile.bio ?? "")) {
-        patchProfile({ bio: bio.slice(0, 240) });
-      }
-
-      for (const suggestion of linkTitles) {
-        const current = bundle.blocks.find((block) => block.id === suggestion.id);
-        if (current && suggestion.title && current.title !== suggestion.title) {
-          patchBlock(suggestion.id, { title: suggestion.title.slice(0, 120) });
-        }
-      }
+      await applyResult(normalizedPayload);
 
       setMessages((current) => [
         ...current,
         {
           id: `a-${Date.now()}`,
           role: "assistant",
-          text: message,
-          tips,
+          text: normalizedPayload.message,
+          tips: normalizedPayload.tips,
         },
       ]);
     } catch {
@@ -166,7 +271,7 @@ export function BioAiAssistant() {
             <Sparkles className="h-3.5 w-3.5 text-primary" />
           </div>
           <p className="truncate text-[11px] text-muted-foreground">
-            Converse normalmente. Eu edito a página e o preview acompanha.
+            Peça uma mudança. Eu aplico direto na sua página.
           </p>
         </div>
       </div>
@@ -174,14 +279,14 @@ export function BioAiAssistant() {
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-5 sm:px-5">
         {messages.length === 0 ? (
           <div className="flex h-full min-h-[480px] items-center justify-center">
-            <div className="max-w-[310px] text-center animate-rise">
+            <div className="max-w-[330px] text-center animate-rise">
               <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/20 bg-primary/[0.07] text-primary shadow-soft">
                 <Sparkles className="h-5 w-5" />
               </span>
               <h3 className="mt-4 text-base font-semibold">O que você quer mudar?</h3>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Pode escrever como se estivesse falando com uma pessoa. Por exemplo: “deixe minha
-                bio mais profissional e encurte os títulos”.
+                Fale normalmente. Posso editar a bio, títulos, organização e aparência da sua página
+                e aplicar as mudanças para você.
               </p>
             </div>
           </div>
@@ -251,7 +356,7 @@ export function BioAiAssistant() {
                 void generate();
               }
             }}
-            placeholder="Peça uma alteração..."
+            placeholder="Ex.: deixe minha bio mais profissional e os botões arredondados"
             className="h-[52px] max-h-[150px] min-h-[52px] w-full resize-none overflow-y-auto bg-transparent py-3 pl-4 pr-14 text-sm leading-7 outline-none placeholder:text-muted-foreground"
           />
           <button
