@@ -1,13 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 const ASAAS_API_BASE = "https://api.asaas.com/v3";
+const MAX_WEBHOOK_BYTES = 256_000;
 const PAID_EVENTS = new Set(["PAYMENT_CONFIRMED", "PAYMENT_RECEIVED"]);
 const BLOCKED_EVENTS = new Set([
   "PAYMENT_OVERDUE",
   "PAYMENT_REFUNDED",
   "PAYMENT_CHARGEBACK_REQUESTED",
 ]);
-const CANCELED_SUBSCRIPTION_EVENTS = new Set(["SUBSCRIPTION_INACTIVATED", "SUBSCRIPTION_DELETED"]);
+const CANCELED_SUBSCRIPTION_EVENTS = new Set([
+  "SUBSCRIPTION_INACTIVATED",
+  "SUBSCRIPTION_DELETED",
+]);
 
 type AsaasPayment = {
   id?: string;
@@ -45,12 +49,19 @@ type AsaasPaymentLink = {
   value?: number;
 };
 
-function serviceHeaders(serviceRole: string) {
-  return {
-    apikey: serviceRole,
-    Authorization: `Bearer ${serviceRole}`,
+function serviceHeaders(serviceKey: string): Record<string, string> {
+  const headers: Record<string, string> = {
+    apikey: serviceKey,
     "Content-Type": "application/json",
   };
+
+  // New sb_secret_* keys are opaque API keys, not JWTs. Sending them as a
+  // Bearer token makes Supabase attempt JWT parsing and reject the request.
+  if (!serviceKey.startsWith("sb_secret_")) {
+    headers["Authorization"] = `Bearer ${serviceKey}`;
+  }
+
+  return headers;
 }
 
 function asaasHeaders(apiKey: string) {
@@ -87,17 +98,16 @@ function expiredNow() {
 async function asaasGet<T>(path: string, apiKey: string): Promise<T> {
   const response = await fetch(`${ASAAS_API_BASE}${path}`, {
     headers: asaasHeaders(apiKey),
+    signal: AbortSignal.timeout(12_000),
   });
-  if (!response.ok) {
-    throw new Error(`ASAAS_${response.status}`);
-  }
+  if (!response.ok) throw new Error(`ASAAS_${response.status}`);
   return (await response.json()) as T;
 }
 
-async function alreadyProcessed(eventId: string, supabaseUrl: string, serviceRole: string) {
+async function alreadyProcessed(eventId: string, supabaseUrl: string, serviceKey: string) {
   const response = await fetch(
     `${supabaseUrl}/rest/v1/asaas_webhook_events?id=eq.${encodeURIComponent(eventId)}&select=id&limit=1`,
-    { headers: serviceHeaders(serviceRole) },
+    { headers: serviceHeaders(serviceKey), signal: AbortSignal.timeout(10_000) },
   );
   if (!response.ok) throw new Error("SUPABASE_EVENT_LOOKUP_FAILED");
   const rows = (await response.json()) as Array<{ id: string }>;
@@ -108,23 +118,25 @@ async function markProcessed(
   eventId: string,
   event: string,
   supabaseUrl: string,
-  serviceRole: string,
+  serviceKey: string,
 ) {
   const response = await fetch(`${supabaseUrl}/rest/v1/asaas_webhook_events?on_conflict=id`, {
     method: "POST",
     headers: {
-      ...serviceHeaders(serviceRole),
+      ...serviceHeaders(serviceKey),
       Prefer: "resolution=ignore-duplicates,return=minimal",
     },
+    signal: AbortSignal.timeout(10_000),
     body: JSON.stringify({ id: eventId, event }),
   });
   if (!response.ok) throw new Error("SUPABASE_EVENT_WRITE_FAILED");
 }
 
-async function findBiofyUserByEmail(email: string, supabaseUrl: string, serviceRole: string) {
+async function findBiofyUserByEmail(email: string, supabaseUrl: string, serviceKey: string) {
   const response = await fetch(`${supabaseUrl}/rest/v1/rpc/find_user_id_by_email`, {
     method: "POST",
-    headers: serviceHeaders(serviceRole),
+    headers: serviceHeaders(serviceKey),
+    signal: AbortSignal.timeout(10_000),
     body: JSON.stringify({ target_email: email }),
   });
   if (!response.ok) throw new Error("SUPABASE_USER_LOOKUP_FAILED");
@@ -144,7 +156,7 @@ async function syncSubscription(
     eventId: string;
   },
   supabaseUrl: string,
-  serviceRole: string,
+  serviceKey: string,
 ) {
   const payload: Record<string, unknown> = {
     user_id: input.userId,
@@ -163,50 +175,88 @@ async function syncSubscription(
   const response = await fetch(`${supabaseUrl}/rest/v1/subscriptions?on_conflict=user_id`, {
     method: "POST",
     headers: {
-      ...serviceHeaders(serviceRole),
+      ...serviceHeaders(serviceKey),
       Prefer: "resolution=merge-duplicates,return=minimal",
     },
+    signal: AbortSignal.timeout(10_000),
     body: JSON.stringify(payload),
   });
 
   if (!response.ok) throw new Error("SUPABASE_SUBSCRIPTION_WRITE_FAILED");
 }
 
+function parseWebhookBody(raw: string): AsaasWebhook | null {
+  if (!raw || raw.length > MAX_WEBHOOK_BYTES) return null;
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? (parsed as AsaasWebhook)
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 export const Route = createFileRoute("/api/webhooks/asaas")({
   server: {
     handlers: {
-      GET: async () => Response.json({ ok: true, service: "Biofy Asaas webhook" }),
+      GET: async () =>
+        Response.json(
+          { ok: true, service: "Biofy Asaas webhook" },
+          { headers: { "Cache-Control": "no-store" } },
+        ),
       POST: async ({ request }) => {
-        const webhookToken = process.env["ASAAS_WEBHOOK_TOKEN"];
-        const asaasApiKey = process.env["ASAAS_API_KEY"];
-        const supabaseUrl = process.env["SUPABASE_URL"] || process.env["VITE_SUPABASE_URL"];
-        const serviceRole = process.env["SUPABASE_SERVICE_ROLE_KEY"];
+        const webhookToken = process.env["ASAAS_WEBHOOK_TOKEN"]?.trim();
+        const asaasApiKey = process.env["ASAAS_API_KEY"]?.trim();
+        const supabaseUrl = (process.env["SUPABASE_URL"] || process.env["VITE_SUPABASE_URL"])?.trim();
+        const serviceKey = process.env["SUPABASE_SERVICE_ROLE_KEY"]?.trim();
 
-        if (!webhookToken || !asaasApiKey || !supabaseUrl || !serviceRole) {
-          return Response.json({ error: "Billing webhook is not configured." }, { status: 503 });
+        if (!webhookToken || !asaasApiKey || !supabaseUrl || !serviceKey) {
+          return Response.json(
+            { error: "Billing webhook is not configured." },
+            { status: 503, headers: { "Cache-Control": "no-store" } },
+          );
         }
 
         const receivedToken = request.headers.get("asaas-access-token");
         if (!receivedToken || receivedToken !== webhookToken) {
-          return Response.json({ error: "Unauthorized webhook." }, { status: 401 });
+          return Response.json(
+            { error: "Unauthorized webhook." },
+            { status: 401, headers: { "Cache-Control": "no-store" } },
+          );
         }
 
-        const body = (await request.json().catch(() => null)) as AsaasWebhook | null;
-        const eventId = body?.id?.trim();
-        const event = body?.event?.trim();
+        const contentLength = Number(request.headers.get("content-length") ?? 0);
+        if (Number.isFinite(contentLength) && contentLength > MAX_WEBHOOK_BYTES) {
+          return Response.json(
+            { error: "Webhook payload too large." },
+            { status: 413, headers: { "Cache-Control": "no-store" } },
+          );
+        }
+
+        const rawBody = await request.text();
+        const body = parseWebhookBody(rawBody);
+        const eventId = body?.id?.trim().slice(0, 160);
+        const event = body?.event?.trim().slice(0, 120);
         if (!body || !eventId || !event) {
-          return Response.json({ error: "Invalid webhook payload." }, { status: 400 });
+          return Response.json(
+            { error: "Invalid webhook payload." },
+            { status: 400, headers: { "Cache-Control": "no-store" } },
+          );
         }
 
         try {
-          if (await alreadyProcessed(eventId, supabaseUrl, serviceRole)) {
-            return Response.json({ ok: true, duplicate: true });
+          if (await alreadyProcessed(eventId, supabaseUrl, serviceKey)) {
+            return Response.json(
+              { ok: true, duplicate: true },
+              { headers: { "Cache-Control": "no-store" } },
+            );
           }
 
           if (body.payment && (PAID_EVENTS.has(event) || BLOCKED_EVENTS.has(event))) {
             const payment = body.payment;
             if (!payment.customer) {
-              await markProcessed(eventId, event, supabaseUrl, serviceRole);
+              await markProcessed(eventId, event, supabaseUrl, serviceKey);
               return Response.json({ ok: true, ignored: "missing_customer" });
             }
 
@@ -216,13 +266,13 @@ export const Route = createFileRoute("/api/webhooks/asaas")({
             );
             const email = customer.email?.trim().toLowerCase();
             if (!email) {
-              await markProcessed(eventId, event, supabaseUrl, serviceRole);
+              await markProcessed(eventId, event, supabaseUrl, serviceKey);
               return Response.json({ ok: true, ignored: "customer_without_email" });
             }
 
-            const userId = await findBiofyUserByEmail(email, supabaseUrl, serviceRole);
+            const userId = await findBiofyUserByEmail(email, supabaseUrl, serviceKey);
             if (!userId) {
-              await markProcessed(eventId, event, supabaseUrl, serviceRole);
+              await markProcessed(eventId, event, supabaseUrl, serviceKey);
               return Response.json({ ok: true, ignored: "biofy_user_not_found" });
             }
 
@@ -237,7 +287,7 @@ export const Route = createFileRoute("/api/webhooks/asaas")({
 
             if (PAID_EVENTS.has(event)) {
               if (!plan) {
-                await markProcessed(eventId, event, supabaseUrl, serviceRole);
+                await markProcessed(eventId, event, supabaseUrl, serviceKey);
                 return Response.json({ ok: true, ignored: "unknown_biofy_plan" });
               }
 
@@ -253,7 +303,7 @@ export const Route = createFileRoute("/api/webhooks/asaas")({
                   eventId,
                 },
                 supabaseUrl,
-                serviceRole,
+                serviceKey,
               );
             } else {
               const canceled =
@@ -270,18 +320,18 @@ export const Route = createFileRoute("/api/webhooks/asaas")({
                   eventId,
                 },
                 supabaseUrl,
-                serviceRole,
+                serviceKey,
               );
             }
 
-            await markProcessed(eventId, event, supabaseUrl, serviceRole);
-            return Response.json({ ok: true });
+            await markProcessed(eventId, event, supabaseUrl, serviceKey);
+            return Response.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
           }
 
           if (body.subscription && CANCELED_SUBSCRIPTION_EVENTS.has(event)) {
             const subscription = body.subscription;
             if (!subscription.customer) {
-              await markProcessed(eventId, event, supabaseUrl, serviceRole);
+              await markProcessed(eventId, event, supabaseUrl, serviceKey);
               return Response.json({ ok: true, ignored: "missing_customer" });
             }
 
@@ -291,13 +341,13 @@ export const Route = createFileRoute("/api/webhooks/asaas")({
             );
             const email = customer.email?.trim().toLowerCase();
             if (!email) {
-              await markProcessed(eventId, event, supabaseUrl, serviceRole);
+              await markProcessed(eventId, event, supabaseUrl, serviceKey);
               return Response.json({ ok: true, ignored: "customer_without_email" });
             }
 
-            const userId = await findBiofyUserByEmail(email, supabaseUrl, serviceRole);
+            const userId = await findBiofyUserByEmail(email, supabaseUrl, serviceKey);
             if (!userId) {
-              await markProcessed(eventId, event, supabaseUrl, serviceRole);
+              await markProcessed(eventId, event, supabaseUrl, serviceKey);
               return Response.json({ ok: true, ignored: "biofy_user_not_found" });
             }
 
@@ -311,17 +361,29 @@ export const Route = createFileRoute("/api/webhooks/asaas")({
                 eventId,
               },
               supabaseUrl,
-              serviceRole,
+              serviceKey,
             );
-            await markProcessed(eventId, event, supabaseUrl, serviceRole);
-            return Response.json({ ok: true });
+            await markProcessed(eventId, event, supabaseUrl, serviceKey);
+            return Response.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
           }
 
-          await markProcessed(eventId, event, supabaseUrl, serviceRole);
-          return Response.json({ ok: true, ignored: "event_not_used" });
+          await markProcessed(eventId, event, supabaseUrl, serviceKey);
+          return Response.json(
+            { ok: true, ignored: "event_not_used" },
+            { headers: { "Cache-Control": "no-store" } },
+          );
         } catch (error) {
-          const code = error instanceof Error ? error.message : "UNKNOWN_ERROR";
-          return Response.json({ error: code }, { status: 500 });
+          const traceId = crypto.randomUUID();
+          console.error("[Biofy billing] webhook processing failed", {
+            traceId,
+            eventId,
+            event,
+            code: error instanceof Error ? error.message : "UNKNOWN_ERROR",
+          });
+          return Response.json(
+            { error: "Billing webhook failed.", traceId },
+            { status: 500, headers: { "Cache-Control": "no-store" } },
+          );
         }
       },
     },
