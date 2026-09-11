@@ -69,7 +69,9 @@ export function BioPreview({
     theme.avatarShape === "circle" ? "999px" : theme.avatarShape === "rounded" ? "18px" : "4px";
 
   const initials = (displayName || username || "B").trim().charAt(0).toUpperCase();
-  const panelWidth = Math.min(Math.max(Number(theme.width) || 480, 320), 720);
+  const panelWidth = Math.min(Math.max(Number(theme.width) || 480, 320), 620);
+  const panelMinHeight = compact ? "520px" : "min(720px, calc(100dvh - 48px))";
+  const panelMaxHeight = compact ? undefined : "min(860px, calc(100dvh - 32px))";
 
   function buttonStyleFor(block: BioBlock) {
     const cfg = block.config ?? {};
@@ -147,11 +149,13 @@ export function BioPreview({
     >
       <div
         className={cn(
-          "w-full overflow-hidden border shadow-[0_24px_70px_-36px_rgba(0,0,0,0.72)] transition-all duration-300",
+          "w-full overflow-x-hidden overflow-y-auto border shadow-[0_24px_70px_-36px_rgba(0,0,0,0.72)] transition-all duration-300",
           compact ? "rounded-[1.35rem]" : "rounded-[1.85rem]",
         )}
         style={{
           maxWidth: `${panelWidth}px`,
+          minHeight: panelMinHeight,
+          maxHeight: panelMaxHeight,
           background: panelBackground,
           backgroundSize: "cover",
           backgroundPosition: "center",
@@ -159,11 +163,12 @@ export function BioPreview({
           borderWidth: `${theme.panelBorderWidth}px`,
           borderStyle: "solid",
           color: theme.textColor,
+          overscrollBehavior: "contain",
         }}
       >
         <div
           className={cn(
-            "mx-auto flex w-full flex-col px-5",
+            "mx-auto flex min-h-[inherit] w-full flex-col px-5",
             compact ? "py-7" : "px-6 py-10 sm:px-8 sm:py-12",
             theme.align === "left" ? "items-start text-left" : "items-center text-center",
           )}
@@ -339,7 +344,7 @@ export function BioPreview({
           {showBranding ? (
             <a
               href="/"
-              className="mt-9 inline-flex items-center gap-2 opacity-70 transition-all hover:opacity-100"
+              className="mt-auto inline-flex items-center gap-2 pt-9 opacity-70 transition-all hover:opacity-100"
               style={{
                 color: theme.mutedColor,
                 fontSize: `${(compact ? 9 : 11) * textScale}px`,
