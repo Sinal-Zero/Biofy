@@ -146,12 +146,12 @@ async function findBiofyUserByEmail(
 async function syncSubscription(
   input: {
     userId: string;
-    plan?: "pro" | "business";
+    plan?: "pro" | "business" | undefined;
     status: "active" | "past_due" | "canceled";
-    currentPeriodEnd?: string;
-    customerId?: string;
-    subscriptionId?: string;
-    paymentLinkId?: string;
+    currentPeriodEnd?: string | undefined;
+    customerId?: string | undefined;
+    subscriptionId?: string | undefined;
+    paymentLinkId?: string | undefined;
     eventId: string;
   },
   supabaseUrl: string,
@@ -267,7 +267,8 @@ export const Route = createFileRoute("/api/webhooks/asaas")({
                 serviceRole,
               );
             } else {
-              const canceled = event === "PAYMENT_REFUNDED" || event === "PAYMENT_CHARGEBACK_REQUESTED";
+              const canceled =
+                event === "PAYMENT_REFUNDED" || event === "PAYMENT_CHARGEBACK_REQUESTED";
               await syncSubscription(
                 {
                   userId,
