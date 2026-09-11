@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { buildBiofyAiPrompt } from "@/lib/biofy-ai-prompt";
+import type { BioTheme } from "@/lib/bio-types";
 
 const GEMINI_TIMEOUT_MS = 25000;
 const INTERACTIONS_MODELS = [
@@ -23,6 +24,69 @@ const LEGACY_MODEL_PRIORITY = [
   "gemini-2.5-flash-lite",
 ] as const;
 
+const ALLOWED_BLOCK_TYPES = new Set([
+  "link",
+  "instagram",
+  "tiktok",
+  "youtube",
+  "whatsapp",
+  "spotify",
+  "telegram",
+  "discord",
+  "linkedin",
+  "x",
+  "email",
+  "website",
+]);
+
+const COLOR_FIELDS = new Set([
+  "pageBgColor",
+  "panelBorderColor",
+  "bgColor",
+  "bgFrom",
+  "bgTo",
+  "textColor",
+  "mutedColor",
+  "buttonColor",
+  "buttonTextColor",
+]);
+
+const BOOLEAN_FIELDS = new Set(["buttonShadow", "avatarBorder"]);
+
+const NUMBER_LIMITS: Record<string, [number, number]> = {
+  panelBorderWidth: [0, 8],
+  bgAngle: [0, 360],
+  textScale: [0.8, 1.35],
+  buttonBorderWidth: [0, 8],
+  gap: [0, 40],
+  width: [300, 760],
+  avatarSize: [40, 180],
+};
+
+const ENUM_FIELDS: Record<string, readonly string[]> = {
+  bgType: ["solid", "gradient", "image"],
+  font: [
+    "sans",
+    "display",
+    "serif",
+    "mono",
+    "condensed",
+    "system",
+    "inter",
+    "georgia",
+    "optima",
+    "trebuchet",
+    "garamond",
+    "consolas",
+  ],
+  buttonStyle: ["solid", "outline", "glass", "transparent", "gradient"],
+  buttonShape: ["square", "rounded", "pill"],
+  buttonSize: ["sm", "md", "lg"],
+  align: ["left", "center"],
+  avatarShape: ["circle", "rounded", "square"],
+  hoverAnim: ["none", "lift", "scale", "glow"],
+};
+
 type GeminiAttempt = {
   response?: Response;
   detail: string;
@@ -37,6 +101,32 @@ type GeminiSuccess = {
   model: string;
   api: "interactions" | "generateContent";
 };
+
+type CurrentBlock = {
+  id: string;
+  title: string;
+  type: string;
+  isVisible: boolean;
+  position: number;
+};
+
+type SanitizedAgentResponse = {
+  message: string;
+  bio: string;
+  linkTitles: Array<{ id: string; title: string }>;
+  profile: { displayName?: string };
+  theme: Partial<BioTheme>;
+  blocks: Array<{ id: string; title?: string; url?: string | null; isVisible?: boolean }>;
+  order: string[];
+  removeBlockIds: string[];
+  duplicateBlockIds: string[];
+  addBlocks: Array<{ type: string; title?: string | null; url?: string | null }>;
+  tips: string[];
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
 
 function cleanGeminiDetail(detail: string) {
   return detail
@@ -56,7 +146,7 @@ async function readGeminiError(response: Response) {
     const parsed = JSON.parse(raw) as { error?: { message?: string; status?: string } };
     detail = [parsed.error?.status, parsed.error?.message].filter(Boolean).join(": ") || raw;
   } catch {
-    // Preserve Google's plain-text response, after redaction below.
+    // Keep Google's plain-text response after redaction.
   }
 
   return cleanGeminiDetail(detail);
@@ -65,9 +155,7 @@ async function readGeminiError(response: Response) {
 function mapGeminiError(attempt: GeminiAttempt) {
   const normalized = attempt.detail.toLowerCase();
 
-  if (attempt.timedOut) {
-    return "O Gemini demorou demais para responder. Tente novamente.";
-  }
+  if (attempt.timedOut) return "O Gemini demorou demais para responder. Tente novamente.";
 
   if (
     attempt.status === 429 ||
@@ -96,7 +184,7 @@ function mapGeminiError(attempt: GeminiAttempt) {
   }
 
   if (attempt.status === 404) {
-    return "O projeto Gemini não expôs nenhum modelo compatível para a Biofy AI. A integração já tentou os modelos estáveis atuais e a descoberta automática de modelos.";
+    return "O projeto Gemini não expôs nenhum modelo compatível para a Biofy AI.";
   }
 
   if (attempt.status >= 500 || attempt.status === 0) {
@@ -104,7 +192,7 @@ function mapGeminiError(attempt: GeminiAttempt) {
   }
 
   if (attempt.status === 400) {
-    return "O Google recusou a requisição da Biofy AI. A integração está usando a API Interactions atual; revise o projeto da chave no Google AI Studio.";
+    return "O Google recusou a requisição da Biofy AI. Revise o projeto da chave no Google AI Studio.";
   }
 
   return `O Gemini recusou a chamada (HTTP ${attempt.status || "desconhecido"}).`;
@@ -123,22 +211,11 @@ async function requestInteraction(
         "x-goog-api-key": geminiKey,
       },
       signal: AbortSignal.timeout(GEMINI_TIMEOUT_MS),
-      body: JSON.stringify({
-        model,
-        input: prompt,
-        store: false,
-      }),
+      body: JSON.stringify({ model, input: prompt, store: false }),
     });
 
     if (response.ok) {
-      return {
-        response,
-        detail: "",
-        status: response.status,
-        timedOut: false,
-        model,
-        api: "interactions",
-      };
+      return { response, detail: "", status: response.status, timedOut: false, model, api: "interactions" };
     }
 
     return {
@@ -152,7 +229,6 @@ async function requestInteraction(
   } catch (error) {
     const timedOut =
       error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
-
     return {
       detail: cleanGeminiDetail(error instanceof Error ? error.message : "network_error"),
       status: 0,
@@ -218,7 +294,6 @@ async function discoverGenerateContentModel(geminiKey: string) {
   } catch (error) {
     const timedOut =
       error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
-
     return {
       model: null,
       failure: {
@@ -247,9 +322,7 @@ async function requestGenerateContent(
           "x-goog-api-key": geminiKey,
         },
         signal: AbortSignal.timeout(GEMINI_TIMEOUT_MS),
-        body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
-        }),
+        body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }] }] }),
       },
     );
 
@@ -275,7 +348,6 @@ async function requestGenerateContent(
   } catch (error) {
     const timedOut =
       error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
-
     return {
       detail: cleanGeminiDetail(error instanceof Error ? error.message : "network_error"),
       status: 0,
@@ -299,17 +371,12 @@ async function callGemini(geminiKey: string, prompt: string) {
     const attempt = await requestInteraction(geminiKey, model, prompt);
     if (attempt.response?.ok) {
       return {
-        success: {
-          response: attempt.response,
-          model,
-          api: "interactions" as const,
-        } satisfies GeminiSuccess,
+        success: { response: attempt.response, model, api: "interactions" as const } satisfies GeminiSuccess,
         failure: null,
       };
     }
 
     lastFailure = attempt;
-
     if ([400, 401, 403, 429].includes(attempt.status) || attempt.timedOut) {
       return { success: null, failure: attempt };
     }
@@ -337,45 +404,39 @@ async function callGemini(geminiKey: string, prompt: string) {
 }
 
 function extractInteractionText(payload: unknown) {
-  if (!payload || typeof payload !== "object") return "";
-
-  const interaction = payload as {
-    output_text?: unknown;
-    steps?: Array<{
-      type?: string;
-      content?: Array<{ type?: string; text?: string }>;
-    }>;
-  };
-
-  if (typeof interaction.output_text === "string" && interaction.output_text.trim()) {
-    return interaction.output_text.trim();
+  if (!isRecord(payload)) return "";
+  if (typeof payload["output_text"] === "string" && payload["output_text"].trim()) {
+    return payload["output_text"].trim();
   }
 
-  return (interaction.steps ?? [])
-    .filter((step) => step.type === "model_output")
-    .flatMap((step) => step.content ?? [])
-    .filter((content) => content.type === "text" && typeof content.text === "string")
-    .map((content) => content.text ?? "")
+  const steps = Array.isArray(payload["steps"]) ? payload["steps"] : [];
+  return steps
+    .filter(isRecord)
+    .filter((step) => step["type"] === "model_output")
+    .flatMap((step) => (Array.isArray(step["content"]) ? step["content"] : []))
+    .filter(isRecord)
+    .filter((content) => content["type"] === "text" && typeof content["text"] === "string")
+    .map((content) => String(content["text"] ?? ""))
     .join("")
     .trim();
 }
 
 function extractGenerateContentText(payload: unknown) {
-  if (!payload || typeof payload !== "object") return "";
-
-  const result = payload as {
-    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-  };
-
-  return (result.candidates?.[0]?.content?.parts ?? [])
-    .map((part) => part.text ?? "")
+  if (!isRecord(payload) || !Array.isArray(payload["candidates"])) return "";
+  const candidate = payload["candidates"].find(isRecord);
+  if (!candidate || !isRecord(candidate["content"]) || !Array.isArray(candidate["content"]["parts"])) {
+    return "";
+  }
+  return candidate["content"]["parts"]
+    .filter(isRecord)
+    .map((part) => (typeof part["text"] === "string" ? part["text"] : ""))
     .join("")
     .trim();
 }
 
 function parseJsonText(text: string) {
-  const trimmed = text.trim();
-  const unfenced = trimmed
+  const unfenced = text
+    .trim()
     .replace(/^```(?:json)?\s*/i, "")
     .replace(/\s*```$/i, "")
     .trim();
@@ -390,6 +451,189 @@ function parseJsonText(text: string) {
     }
     throw new Error("INVALID_JSON");
   }
+}
+
+function sanitizeThemePatch(value: unknown): Partial<BioTheme> {
+  if (!isRecord(value)) return {};
+  const result: Record<string, unknown> = {};
+
+  for (const [key, raw] of Object.entries(value)) {
+    if (COLOR_FIELDS.has(key) && typeof raw === "string" && /^#[0-9a-fA-F]{6}(?:[0-9a-fA-F]{2})?$/.test(raw)) {
+      result[key] = raw;
+      continue;
+    }
+    if (BOOLEAN_FIELDS.has(key) && typeof raw === "boolean") {
+      result[key] = raw;
+      continue;
+    }
+    const limits = NUMBER_LIMITS[key];
+    if (limits && typeof raw === "number" && Number.isFinite(raw)) {
+      result[key] = Math.max(limits[0], Math.min(limits[1], raw));
+      continue;
+    }
+    const allowed = ENUM_FIELDS[key];
+    if (allowed && typeof raw === "string" && allowed.includes(raw)) {
+      result[key] = raw;
+    }
+  }
+
+  return result as Partial<BioTheme>;
+}
+
+function uniqueExistingIds(value: unknown, existingIds: Set<string>, max = 30) {
+  if (!Array.isArray(value)) return [];
+  return [...new Set(value.filter((item): item is string => typeof item === "string" && existingIds.has(item)))].slice(0, max);
+}
+
+function canUseRequestedUrl(url: string, instruction: string) {
+  return url.length <= 2048 && instruction.includes(url);
+}
+
+function sanitizeAgentResponse(
+  parsed: Record<string, unknown>,
+  currentBio: string,
+  currentBlocks: CurrentBlock[],
+  instruction: string,
+): SanitizedAgentResponse {
+  const existingIds = new Set(currentBlocks.map((block) => block.id));
+  const profileRaw = isRecord(parsed["profile"]) ? parsed["profile"] : {};
+  const displayName =
+    typeof profileRaw["displayName"] === "string" && profileRaw["displayName"].trim()
+      ? profileRaw["displayName"].trim().slice(0, 100)
+      : undefined;
+
+  const profileBio = typeof profileRaw["bio"] === "string" ? profileRaw["bio"] : undefined;
+  const bioSource = typeof parsed["bio"] === "string" ? parsed["bio"] : profileBio;
+  const bio = typeof bioSource === "string" ? bioSource.slice(0, 240) : currentBio;
+
+  const linkTitles = Array.isArray(parsed["linkTitles"])
+    ? parsed["linkTitles"]
+        .filter(isRecord)
+        .filter(
+          (item) =>
+            typeof item["id"] === "string" &&
+            existingIds.has(item["id"] as string) &&
+            typeof item["title"] === "string" &&
+            Boolean((item["title"] as string).trim()),
+        )
+        .slice(0, 30)
+        .map((item) => ({
+          id: String(item["id"]),
+          title: String(item["title"]).trim().slice(0, 120),
+        }))
+    : [];
+
+  const blocks = Array.isArray(parsed["blocks"])
+    ? parsed["blocks"]
+        .filter(isRecord)
+        .filter((item) => typeof item["id"] === "string" && existingIds.has(item["id"] as string))
+        .slice(0, 30)
+        .map((item) => {
+          const update: { id: string; title?: string; url?: string | null; isVisible?: boolean } = {
+            id: String(item["id"]),
+          };
+          if (typeof item["title"] === "string" && item["title"].trim()) {
+            update.title = item["title"].trim().slice(0, 120);
+          }
+          if (typeof item["isVisible"] === "boolean") update.isVisible = item["isVisible"];
+          if (item["url"] === null) update.url = null;
+          if (
+            typeof item["url"] === "string" &&
+            item["url"].trim() &&
+            canUseRequestedUrl(item["url"].trim(), instruction)
+          ) {
+            update.url = item["url"].trim();
+          }
+          return update;
+        })
+        .filter((item) => Object.keys(item).length > 1)
+    : [];
+
+  const orderRaw = uniqueExistingIds(parsed["order"], existingIds);
+  const order = orderRaw.length === currentBlocks.length ? orderRaw : [];
+  const removeBlockIds = uniqueExistingIds(parsed["removeBlockIds"], existingIds, 10);
+  const duplicateBlockIds = uniqueExistingIds(parsed["duplicateBlockIds"], existingIds, 10);
+
+  const addBlocks = Array.isArray(parsed["addBlocks"])
+    ? parsed["addBlocks"]
+        .filter(isRecord)
+        .filter((item) => typeof item["type"] === "string" && ALLOWED_BLOCK_TYPES.has(item["type"] as string))
+        .slice(0, 5)
+        .map((item) => {
+          const block: { type: string; title?: string | null; url?: string | null } = {
+            type: String(item["type"]),
+          };
+          if (item["title"] === null) block.title = null;
+          if (typeof item["title"] === "string") block.title = item["title"].trim().slice(0, 120);
+          if (item["url"] === null) block.url = null;
+          if (
+            typeof item["url"] === "string" &&
+            item["url"].trim() &&
+            canUseRequestedUrl(item["url"].trim(), instruction)
+          ) {
+            block.url = item["url"].trim();
+          }
+          return block;
+        })
+    : [];
+
+  const tips = Array.isArray(parsed["tips"])
+    ? parsed["tips"]
+        .filter((tip): tip is string => typeof tip === "string" && Boolean(tip.trim()))
+        .slice(0, 3)
+        .map((tip) => tip.trim().slice(0, 220))
+    : [];
+
+  return {
+    message:
+      typeof parsed["message"] === "string" && parsed["message"].trim()
+        ? parsed["message"].trim().slice(0, 500)
+        : "Pronto. Apliquei a alteração na sua página.",
+    bio,
+    linkTitles,
+    profile: displayName ? { displayName } : {},
+    theme: sanitizeThemePatch(parsed["theme"]),
+    blocks,
+    order,
+    removeBlockIds,
+    duplicateBlockIds,
+    addBlocks,
+    tips,
+  };
+}
+
+function hasMutation(response: SanitizedAgentResponse, currentBio: string) {
+  return (
+    response.bio !== currentBio ||
+    response.linkTitles.length > 0 ||
+    Object.keys(response.profile).length > 0 ||
+    Object.keys(response.theme).length > 0 ||
+    response.blocks.length > 0 ||
+    response.order.length > 0 ||
+    response.removeBlockIds.length > 0 ||
+    response.duplicateBlockIds.length > 0 ||
+    response.addBlocks.length > 0
+  );
+}
+
+function looksLikeEditRequest(instruction: string) {
+  return /\b(melhore|melhorar|troque|trocar|mude|mudar|deixe|deixar|organize|organizar|arrume|arrumar|adicione|adicionar|remova|remover|oculte|ocultar|mostre|mostrar|reordene|reordenar|faça|fazer|edite|editar|coloque|colocar|aumente|aumentar|diminua|diminuir)\b/i.test(
+    instruction,
+  );
+}
+
+async function runAgent(geminiKey: string, prompt: string) {
+  const result = await callGemini(geminiKey, prompt);
+  if (!result.success) return { result, parsed: null as Record<string, unknown> | null };
+
+  const payload = (await result.success.response.json()) as unknown;
+  const text =
+    result.success.api === "interactions"
+      ? extractInteractionText(payload)
+      : extractGenerateContentText(payload);
+
+  if (!text) return { result, parsed: null as Record<string, unknown> | null };
+  return { result, parsed: parseJsonText(text) };
 }
 
 export const Route = createFileRoute("/api/ai/bio")({
@@ -418,9 +662,7 @@ export const Route = createFileRoute("/api/ai/bio")({
         }
 
         const user = (await userResponse.json()) as { id?: string };
-        if (!user.id) {
-          return Response.json({ error: "Usuário inválido." }, { status: 401 });
-        }
+        if (!user.id) return Response.json({ error: "Usuário inválido." }, { status: 401 });
 
         const subscriptionResponse = await fetch(
           `${supabaseUrl}/rest/v1/subscriptions?user_id=eq.${encodeURIComponent(user.id)}&select=plan,status,current_period_end&limit=1`,
@@ -455,27 +697,37 @@ export const Route = createFileRoute("/api/ai/bio")({
           instruction?: string;
           displayName?: string | null;
           bio?: string | null;
-          links?: Array<{ id?: string; title?: string | null; type?: string }>;
+          theme?: Record<string, unknown>;
+          links?: Array<{
+            id?: string;
+            title?: string | null;
+            type?: string;
+            isVisible?: boolean;
+            position?: number;
+          }>;
           history?: Array<{ role?: string; text?: string }>;
         } | null;
 
-        if (!body) {
-          return Response.json({ error: "Pedido inválido." }, { status: 400 });
-        }
+        if (!body) return Response.json({ error: "Pedido inválido." }, { status: 400 });
 
         const instruction = (body.instruction ?? "").trim().slice(0, 1000);
         if (!instruction) {
           return Response.json(
-            { error: "Explique o que você quer melhorar na sua Bio." },
+            { error: "Explique o que você quer mudar ou pergunte algo sobre a Biofy." },
             { status: 400 },
           );
         }
 
-        const links = Array.isArray(body.links)
-          ? body.links.slice(0, 30).map((link) => ({
+        const links: CurrentBlock[] = Array.isArray(body.links)
+          ? body.links.slice(0, 30).map((link, index) => ({
               id: String(link.id ?? "").slice(0, 100),
               title: String(link.title ?? "").slice(0, 120),
               type: String(link.type ?? "link").slice(0, 40),
+              isVisible: link.isVisible !== false,
+              position:
+                typeof link.position === "number" && Number.isFinite(link.position)
+                  ? link.position
+                  : index,
             }))
           : [];
 
@@ -490,18 +742,28 @@ export const Route = createFileRoute("/api/ai/bio")({
           : [];
 
         const currentBio = String(body.bio ?? "").slice(0, 240);
+        const currentTheme = sanitizeThemePatch(body.theme) as BioTheme;
         const prompt = buildBiofyAiPrompt({
           instruction,
           displayName: String(body.displayName ?? "").slice(0, 100),
           bio: currentBio,
+          theme: currentTheme,
           links,
           history,
         });
 
-        const result = await callGemini(geminiKey, prompt);
+        let firstRun;
+        try {
+          firstRun = await runAgent(geminiKey, prompt);
+        } catch {
+          return Response.json(
+            { error: "O Gemini respondeu em um formato inesperado. Tente novamente." },
+            { status: 502 },
+          );
+        }
 
-        if (!result.success) {
-          const failure = result.failure;
+        if (!firstRun.result.success) {
+          const failure = firstRun.result.failure;
           const traceId = crypto.randomUUID();
           console.error("[Biofy AI] Gemini request failed", {
             traceId,
@@ -511,7 +773,6 @@ export const Route = createFileRoute("/api/ai/bio")({
             timedOut: failure.timedOut,
             detail: failure.detail,
           });
-
           return Response.json(
             {
               error: mapGeminiError(failure),
@@ -523,52 +784,26 @@ export const Route = createFileRoute("/api/ai/bio")({
           );
         }
 
-        const payload = (await result.success.response.json()) as unknown;
-        const text =
-          result.success.api === "interactions"
-            ? extractInteractionText(payload)
-            : extractGenerateContentText(payload);
-
-        if (!text) {
+        if (!firstRun.parsed) {
           return Response.json({ error: "O Gemini retornou uma resposta vazia." }, { status: 502 });
         }
 
-        try {
-          const parsed = parseJsonText(text);
-          const response = {
-            message:
-              typeof parsed["message"] === "string" && parsed["message"].trim()
-                ? parsed["message"].trim().slice(0, 500)
-                : "Pronto. Ajustei sua Bio.",
-            bio: typeof parsed["bio"] === "string" ? parsed["bio"].slice(0, 240) : currentBio,
-            linkTitles: Array.isArray(parsed["linkTitles"])
-              ? parsed["linkTitles"]
-                  .filter(
-                    (item): item is { id: string; title: string } =>
-                      typeof item === "object" &&
-                      item !== null &&
-                      typeof (item as { id?: unknown }).id === "string" &&
-                      typeof (item as { title?: unknown }).title === "string",
-                  )
-                  .filter((item) => links.some((link) => link.id === item.id))
-                  .slice(0, 30)
-                  .map((item) => ({ id: item.id, title: item.title.slice(0, 120) }))
-              : [],
-            tips: Array.isArray(parsed["tips"])
-              ? parsed["tips"]
-                  .filter((tip): tip is string => typeof tip === "string")
-                  .slice(0, 3)
-                  .map((tip) => tip.slice(0, 220))
-              : [],
-          };
+        let response = sanitizeAgentResponse(firstRun.parsed, currentBio, links, instruction);
 
-          return Response.json(response, { headers: { "Cache-Control": "no-store" } });
-        } catch {
-          return Response.json(
-            { error: "O Gemini respondeu em um formato inesperado. Tente novamente." },
-            { status: 502 },
-          );
+        if (looksLikeEditRequest(instruction) && !hasMutation(response, currentBio)) {
+          try {
+            const retryPrompt = `${prompt}\n\nCORREÇÃO OBRIGATÓRIA: o pedido atual exige edição. Não dê apenas conselhos. Retorne pelo menos uma mudança estruturada real que cumpra o pedido, quando tecnicamente possível.`;
+            const retryRun = await runAgent(geminiKey, retryPrompt);
+            if (retryRun.result.success && retryRun.parsed) {
+              const retried = sanitizeAgentResponse(retryRun.parsed, currentBio, links, instruction);
+              if (hasMutation(retried, currentBio)) response = retried;
+            }
+          } catch {
+            // Keep the first valid response if the corrective pass fails.
+          }
         }
+
+        return Response.json(response, { headers: { "Cache-Control": "no-store" } });
       },
     },
   },
