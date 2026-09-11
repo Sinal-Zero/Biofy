@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 import { BioPreview } from "@/components/bio/BioPreview";
 import { publicSupabase } from "@/integrations/supabase/client";
 import { fetchPublicBio, recordAnalytics } from "@/lib/bio-data";
+import { getPublicBioUrl } from "@/lib/public-url";
 
 export const Route = createFileRoute("/$username")({
   loader: async ({ params }) => {
@@ -22,7 +23,7 @@ export const Route = createFileRoute("/$username")({
   head: ({ loaderData, params }) => {
     const name = loaderData?.profile.display_name || `@${params.username}`;
     const description = loaderData?.profile.bio || `Veja os links de ${name} no Biofy.`;
-    const url = `https://bio-fy.vercel.app/${params.username}`;
+    const url = getPublicBioUrl(params.username);
 
     return {
       meta: [
@@ -51,6 +52,7 @@ function PublicBioPage() {
     const key = `biofy:view:${bundle.page.id}`;
     const lastTracked = Number(sessionStorage.getItem(key) ?? 0);
     if (tracked.current || (lastTracked && Date.now() - lastTracked < 30 * 60 * 1000)) return;
+
     tracked.current = true;
     sessionStorage.setItem(key, String(Date.now()));
     recordAnalytics(bundle.page.id, "view").catch(() => undefined);
