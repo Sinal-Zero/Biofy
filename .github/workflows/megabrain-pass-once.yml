@@ -34,11 +34,9 @@ jobs:
               p = Path(path)
               text = p.read_text()
               if old not in text:
-                  raise SystemExit(f"Expected block not found in {path}: {old[:100]!r}")
+                  raise SystemExit(f"Expected block not found in {path}: {old[:110]!r}")
               p.write_text(text.replace(old, new, 1))
 
-          # Gemini: one fast GA model first, current v1beta Interactions endpoint,
-          # low thinking for UI editing, fallback discovery only when needed.
           replace_once(
               "src/routes/api.ai.bio.ts",
               '''const GEMINI_TIMEOUT_MS = 25000;
@@ -126,14 +124,11 @@ jobs:
 
             try {''',
           )
-
           replace_once(
               "src/routes/api.ai.bio.ts",
               '''    return { model: preferred ?? fallback ?? null, failure: null };''',
               '''    const model = preferred ?? fallback ?? null;
-              if (model) {
-                cachedGenerateContentModel = { model, expiresAt: Date.now() + MODEL_CACHE_TTL_MS };
-              }
+              if (model) cachedGenerateContentModel = { model, expiresAt: Date.now() + MODEL_CACHE_TTL_MS };
               return { model, failure: null };''',
           )
 
@@ -249,7 +244,6 @@ jobs:
                 if (!contentType.toLowerCase().includes("application/json")) {
                   return Response.json({ error: "Formato de pedido inválido." }, { status: 415 });
                 }
-
                 const contentLength = Number(request.headers.get("content-length") ?? 0);
                 if (Number.isFinite(contentLength) && contentLength > MAX_AI_BODY_BYTES) {
                   return Response.json({ error: "Pedido grande demais." }, { status: 413 });
@@ -257,50 +251,6 @@ jobs:
 
                 const authorization = request.headers.get("authorization");''',
           )
-
-          old_auth = '''        const authHeaders = { apikey: supabaseKey, Authorization: `Bearer ${accessToken}` };
-                const userResponse = await fetch(`${supabaseUrl}/auth/v1/user`, { headers: authHeaders });
-                if (!userResponse.ok) {
-                  return Response.json({ error: "Sessão inválida ou expirada." }, { status: 401 });
-                }
-
-                const user = (await userResponse.json()) as { id?: string };
-                if (!user.id) return Response.json({ error: "Usuário inválido." }, { status: 401 });
-
-                const subscriptionResponse = await fetch(
-                  `${supabaseUrl}/rest/v1/subscriptions?user_id=eq.${encodeURIComponent(user.id)}&select=plan,status,current_period_end&limit=1`,
-                  { headers: authHeaders },
-                );
-                if (!subscriptionResponse.ok) {
-                  return Response.json({ error: "Não foi possível validar seu plano." }, { status: 403 });
-                }
-
-                const subscriptions = (await subscriptionResponse.json()) as Array<{'''
-          new_auth = '''        const authHeaders = { apikey: supabaseKey, Authorization: `Bearer ${accessToken}` };
-                const [userResponse, subscriptionResponse] = await Promise.all([
-                  fetch(`${supabaseUrl}/auth/v1/user`, {
-                    headers: authHeaders,
-                    signal: AbortSignal.timeout(10_000),
-                  }),
-                  fetch(
-                    `${supabaseUrl}/rest/v1/subscriptions?select=plan,status,current_period_end&limit=1`,
-                    { headers: authHeaders, signal: AbortSignal.timeout(10_000) },
-                  ),
-                ]);
-
-                if (!userResponse.ok) {
-                  return Response.json({ error: "Sessão inválida ou expirada." }, { status: 401 });
-                }
-                if (!subscriptionResponse.ok) {
-                  return Response.json({ error: "Não foi possível validar seu plano." }, { status: 403 });
-                }
-
-                const user = (await userResponse.json()) as { id?: string };
-                if (!user.id) return Response.json({ error: "Usuário inválido." }, { status: 401 });
-
-                const subscriptions = (await subscriptionResponse.json()) as Array<{'''
-          replace_once("src/routes/api.ai.bio.ts", old_auth, new_auth)
-
           replace_once(
               "src/routes/api.ai.bio.ts",
               '''        if (!isMaster || !activeStatus || !periodActive) {
@@ -317,7 +267,6 @@ jobs:
                     { status: 403 },
                   );
                 }
-
                 if (!allowAiRequest(user.id)) {
                   return Response.json(
                     { error: "Muitas solicitações em pouco tempo. Aguarde alguns segundos." },
@@ -327,12 +276,13 @@ jobs:
 
                 const body =''',
           )
-
           replace_once("src/routes/api.ai.bio.ts", ".slice(-6)\n", ".slice(-4)\n")
-          replace_once("src/routes/api.ai.bio.ts", 'text: String(item.text ?? "").slice(0, 500),', 'text: String(item.text ?? "").slice(0, 400),')
+          replace_once(
+              "src/routes/api.ai.bio.ts",
+              'text: String(item.text ?? "").slice(0, 500),',
+              'text: String(item.text ?? "").slice(0, 400),',
+          )
 
-          # Data minimization: never expose billing provider IDs to the browser and
-          # avoid storing full referrer paths/query strings in analytics.
           replace_once(
               "src/lib/bio-data.ts",
               '''export async function fetchSubscription(userId: string) {
@@ -373,7 +323,6 @@ jobs:
               '''    referrer: safeReferrerOrigin(),''',
           )
 
-          # Keep Master gating identical everywhere.
           replace_once(
               "src/components/dashboard/DashboardShell.tsx",
               '''import { fetchSubscription } from "@/lib/bio-data";
@@ -431,7 +380,6 @@ jobs:
             const hasPaidSubscription = isPaidSubscription(subscription);''',
           )
 
-          # AI composer: quick actions execute immediately and client abandons stalled requests.
           replace_once(
               "src/components/dashboard/BioAiAssistant.tsx",
               '''  function chooseQuickPrompt(prompt: string) {
@@ -474,65 +422,22 @@ jobs:
           )
           replace_once(
               "src/components/dashboard/BioAiAssistant.tsx",
-              '''                <div className="flex items-center gap-1.5 rounded-2xl rounded-bl-md border border-border bg-background/75 px-4 py-3 shadow-sm">
-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary [animation-delay:120ms]" />
-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary [animation-delay:240ms]" />
+              '''                <div className="flex items-center gap-1.5 rounded-2xl rounded-bl-md border border-border bg-background/75 px-4 py-3 shadow-sm">''',
+              '''                <div className="flex items-center gap-2 rounded-2xl rounded-bl-md border border-border bg-background/75 px-4 py-3 text-xs text-muted-foreground shadow-sm">''',
+          )
+          replace_once(
+              "src/components/dashboard/BioAiAssistant.tsx",
+              '''                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary [animation-delay:240ms]" />
                 </div>''',
-              '''                <div className="flex items-center gap-2 rounded-2xl rounded-bl-md border border-border bg-background/75 px-4 py-3 text-xs text-muted-foreground shadow-sm">
-                  <span className="flex items-center gap-1.5" aria-hidden="true">
-                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
-                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary [animation-delay:120ms]" />
-                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary [animation-delay:240ms]" />
-                  </span>
-                  Aplicando
+              '''                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary [animation-delay:240ms]" />
+                  <span className="ml-1">Aplicando</span>
                 </div>''',
           )
 
-          # Motion polish: shorter travel/blur and calmer menu/page transitions.
           replace_once("src/styles.css", "transform: translateY(-8px);", "transform: translateY(-5px);")
-          replace_once(
-              "src/styles.css",
-              '''  from {
-              opacity: 0;
-              transform: translateY(12px);
-              filter: blur(2px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-              filter: blur(0);
-            }''',
-              '''  from {
-              opacity: 0;
-              transform: translateY(9px) scale(0.995);
-              filter: blur(1px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0) scale(1);
-              filter: blur(0);
-            }''',
-          )
-          replace_once(
-              "src/styles.css",
-              '''  0% {
-              opacity: 0;
-              transform: scale(0.94);
-            }
-            100% {
-              opacity: 1;
-              transform: scale(1);
-            }''',
-              '''  0% {
-              opacity: 0;
-              transform: translateY(3px) scale(0.975);
-            }
-            100% {
-              opacity: 1;
-              transform: translateY(0) scale(1);
-            }''',
-          )
+          replace_once("src/styles.css", "transform: translateY(12px);", "transform: translateY(9px) scale(0.995);")
+          replace_once("src/styles.css", "filter: blur(2px);", "filter: blur(1px);")
+          replace_once("src/styles.css", "transform: scale(0.94);", "transform: translateY(3px) scale(0.975);")
           replace_once("src/styles.css", "animation: biofy-rise 0.5s", "animation: biofy-rise 0.45s")
           replace_once("src/styles.css", "animation: biofy-pop 0.3s", "animation: biofy-pop 0.22s")
           replace_once(
@@ -557,7 +462,6 @@ jobs:
               }''',
           )
 
-          # Public Bio gets one restrained entrance animation; content remains top-aligned.
           replace_once(
               "src/components/bio/BioPreview.tsx",
               '''          "relative w-full overflow-x-hidden overflow-y-auto border shadow-[0_28px_80px_-40px_rgba(0,0,0,0.76)] transition-all duration-300",''',
@@ -565,15 +469,20 @@ jobs:
           )
           PY
 
-      - name: Format changed files
+      - name: Format touched files
         run: |
           bunx prettier --write \
             src/routes/api.ai.bio.ts \
             src/lib/bio-data.ts \
+            src/lib/biofy-ai-prompt.ts \
+            src/lib/subscription.ts \
             src/components/dashboard/DashboardShell.tsx \
             src/routes/dashboard.ai.tsx \
             src/routes/dashboard.subscription.tsx \
             src/components/dashboard/BioAiAssistant.tsx \
+            src/components/ui/ScrollReveal.tsx \
+            src/routes/api.webhooks.asaas.ts \
+            src/server.ts \
             src/styles.css \
             src/components/bio/BioPreview.tsx
 
