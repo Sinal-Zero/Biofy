@@ -10,29 +10,38 @@ import {
   Settings,
   Sparkles,
 } from "lucide-react";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Logo } from "@/components/brand/Logo";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchSubscription } from "@/lib/bio-data";
 import { useBio } from "./BioContext";
 
-const navigation = [
+const baseNavigation = [
   { to: "/dashboard", label: "Visão geral", icon: LayoutDashboard },
   { to: "/dashboard/editor", label: "Minha Bio", icon: Sparkles },
-  { to: "/dashboard/ai", label: "Biofy AI", icon: Sparkles },
   { to: "/dashboard/appearance", label: "Aparência", icon: Paintbrush },
   { to: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/dashboard/subscription", label: "Assinatura", icon: CreditCard },
 ] as const;
+
+const aiNavigation = { to: "/dashboard/ai", label: "Biofy AI", icon: Sparkles } as const;
 
 export function DashboardShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const { bundle, saveState } = useBio();
   const [profileOpen, setProfileOpen] = useState(false);
   const [email, setEmail] = useState<string | null>(null);
+  const [isMaster, setIsMaster] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const publicUrl = bundle.profile.username ? `/${bundle.profile.username}` : null;
   const displayName = bundle.profile.display_name || bundle.profile.username || "Minha conta";
   const initial = displayName.trim().charAt(0).toUpperCase() || "B";
+
+  const navigation = useMemo(() => {
+    const items = [...baseNavigation];
+    if (isMaster) items.splice(2, 0, aiNavigation);
+    return items;
+  }, [isMaster]);
 
   useEffect(() => {
     let mounted = true;
@@ -41,10 +50,22 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       if (mounted) setEmail(data.user?.email ?? null);
     });
 
+    void fetchSubscription(bundle.page.user_id)
+      .then((subscription) => {
+        if (!mounted) return;
+        const active = !subscription?.status || ["active", "trialing"].includes(subscription.status);
+        const periodActive =
+          !subscription?.current_period_end || new Date(subscription.current_period_end).getTime() >= Date.now();
+        setIsMaster(subscription?.plan === "business" && active && periodActive);
+      })
+      .catch(() => {
+        if (mounted) setIsMaster(false);
+      });
+
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [bundle.page.user_id]);
 
   useEffect(() => {
     if (!profileOpen) return;
