@@ -1,16 +1,41 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { buildBiofyAiPrompt } from "@/lib/biofy-ai-prompt";
 
 const GEMINI_TIMEOUT_MS = 25000;
-const GEMINI_MODELS = ["gemini-3.8-flash", "gemini-2.5-flash", "gemini-2.5-flash-lite"] as const;
+const INTERACTIONS_MODELS = [
+  "gemini-3.8-flash",
+  "gemini-3.7-flash",
+  "gemini-3.6-flash",
+  "gemini-3.5-flash",
+  "gemini-3.5-flash-lite",
+  "gemini-3.1-flash-lite",
+] as const;
 
-type GeminiModel = (typeof GEMINI_MODELS)[number];
+const LEGACY_MODEL_PRIORITY = [
+  "gemini-3.8-flash",
+  "gemini-3.7-flash",
+  "gemini-3.6-flash",
+  "gemini-3.5-flash",
+  "gemini-flash-latest",
+  "gemini-3.5-flash-lite",
+  "gemini-3.1-flash-lite",
+  "gemini-2.5-flash",
+  "gemini-2.5-flash-lite",
+] as const;
 
 type GeminiAttempt = {
   response?: Response;
   detail: string;
   status: number;
   timedOut: boolean;
-  model: GeminiModel;
+  model: string;
+  api: "interactions" | "generateContent" | "models.list";
+};
+
+type GeminiSuccess = {
+  response: Response;
+  model: string;
+  api: "interactions" | "generateContent";
 };
 
 function cleanGeminiDetail(detail: string) {
@@ -20,7 +45,21 @@ function cleanGeminiDetail(detail: string) {
     .replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, "[redacted-email]")
     .replace(/\s+/g, " ")
     .trim()
-    .slice(0, 320);
+    .slice(0, 360);
+}
+
+async function readGeminiError(response: Response) {
+  const raw = await response.text();
+  let detail = raw;
+
+  try {
+    const parsed = JSON.parse(raw) as { error?: { message?: string; status?: string } };
+    detail = [parsed.error?.status, parsed.error?.message].filter(Boolean).join(": ") || raw;
+  } catch {
+    // Preserve Google's plain-text response, after redaction below.
+  }
+
+  return cleanGeminiDetail(detail);
 }
 
 function mapGeminiError(attempt: GeminiAttempt) {
@@ -49,19 +88,15 @@ function mapGeminiError(attempt: GeminiAttempt) {
     normalized.includes("standard key") ||
     normalized.includes("unrestricted key")
   ) {
-    return "A Gemini API recusou a autenticação. No Google AI Studio, confirme que a GEMINI_API_KEY é uma chave do tipo Auth criada para a Gemini API e substitua a chave antiga na Vercel.";
+    return "A Gemini API recusou a autenticação. Confirme no Google AI Studio se a GEMINI_API_KEY é uma chave Auth válida para a Gemini API.";
   }
 
   if (normalized.includes("location") && normalized.includes("not supported")) {
     return "O Google informou que a localização do projeto não é compatível com a Gemini API.";
   }
 
-  if (
-    attempt.status === 404 ||
-    (normalized.includes("model") &&
-      (normalized.includes("not found") || normalized.includes("not supported")))
-  ) {
-    return "Nenhum dos modelos Gemini configurados ficou disponível para este projeto.";
+  if (attempt.status === 404) {
+    return "O projeto Gemini não expôs nenhum modelo compatível para a Biofy AI. A integração já tentou os modelos estáveis atuais e a descoberta automática de modelos.";
   }
 
   if (attempt.status >= 500 || attempt.status === 0) {
@@ -69,57 +104,50 @@ function mapGeminiError(attempt: GeminiAttempt) {
   }
 
   if (attempt.status === 400) {
-    return "O Google recusou a chamada com HTTP 400. A Biofy já está usando o payload mínimo oficial; confira no Google AI Studio se a chave é do tipo Auth e pertence a um projeto com a Gemini API disponível.";
+    return "O Google recusou a requisição da Biofy AI. A integração está usando a API Interactions atual; revise o projeto da chave no Google AI Studio.";
   }
 
-  return `O Gemini recusou a chamada (HTTP ${attempt.status || "desconhecido"}). Revise a chave Auth e o projeto da Gemini API.`;
+  return `O Gemini recusou a chamada (HTTP ${attempt.status || "desconhecido"}).`;
 }
 
-async function requestGemini(
+async function requestInteraction(
   geminiKey: string,
-  model: GeminiModel,
+  model: string,
   prompt: string,
 ): Promise<GeminiAttempt> {
   try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": geminiKey,
-        },
-        signal: AbortSignal.timeout(GEMINI_TIMEOUT_MS),
-        body: JSON.stringify({
-          contents: [
-            {
-              role: "user",
-              parts: [{ text: prompt }],
-            },
-          ],
-        }),
+    const response = await fetch("https://generativelanguage.googleapis.com/v1/interactions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": geminiKey,
       },
-    );
+      signal: AbortSignal.timeout(GEMINI_TIMEOUT_MS),
+      body: JSON.stringify({
+        model,
+        input: prompt,
+        store: false,
+      }),
+    });
 
     if (response.ok) {
-      return { response, detail: "", status: response.status, timedOut: false, model };
-    }
-
-    const raw = await response.text();
-    let detail = raw;
-    try {
-      const parsed = JSON.parse(raw) as { error?: { message?: string; status?: string } };
-      detail = [parsed.error?.status, parsed.error?.message].filter(Boolean).join(": ") || raw;
-    } catch {
-      // Keep Google's plain-text response for safe server-side diagnostics.
+      return {
+        response,
+        detail: "",
+        status: response.status,
+        timedOut: false,
+        model,
+        api: "interactions",
+      };
     }
 
     return {
       response,
-      detail: cleanGeminiDetail(detail),
+      detail: await readGeminiError(response),
       status: response.status,
       timedOut: false,
       model,
+      api: "interactions",
     };
   } catch (error) {
     const timedOut =
@@ -130,8 +158,219 @@ async function requestGemini(
       status: 0,
       timedOut,
       model,
+      api: "interactions",
     };
   }
+}
+
+async function discoverGenerateContentModel(geminiKey: string) {
+  try {
+    const response = await fetch(
+      "https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000",
+      {
+        headers: { "x-goog-api-key": geminiKey },
+        signal: AbortSignal.timeout(GEMINI_TIMEOUT_MS),
+      },
+    );
+
+    if (!response.ok) {
+      return {
+        model: null,
+        failure: {
+          response,
+          detail: await readGeminiError(response),
+          status: response.status,
+          timedOut: false,
+          model: "models.list",
+          api: "models.list" as const,
+        },
+      };
+    }
+
+    const payload = (await response.json()) as {
+      models?: Array<{
+        name?: string;
+        baseModelId?: string;
+        supportedGenerationMethods?: string[];
+      }>;
+    };
+
+    const available = (payload.models ?? [])
+      .filter((model) =>
+        (model.supportedGenerationMethods ?? []).some(
+          (method) => method.toLowerCase() === "generatecontent",
+        ),
+      )
+      .map((model) => (model.baseModelId || model.name?.replace(/^models\//, "") || "").trim())
+      .filter(Boolean);
+
+    const preferred = LEGACY_MODEL_PRIORITY.find((model) => available.includes(model));
+    const fallback = available.find(
+      (model) =>
+        model.startsWith("gemini-") &&
+        !model.includes("image") &&
+        !model.includes("live") &&
+        !model.includes("embedding") &&
+        !model.includes("tts"),
+    );
+
+    return { model: preferred ?? fallback ?? null, failure: null };
+  } catch (error) {
+    const timedOut =
+      error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
+
+    return {
+      model: null,
+      failure: {
+        detail: cleanGeminiDetail(error instanceof Error ? error.message : "network_error"),
+        status: 0,
+        timedOut,
+        model: "models.list",
+        api: "models.list" as const,
+      },
+    };
+  }
+}
+
+async function requestGenerateContent(
+  geminiKey: string,
+  model: string,
+  prompt: string,
+): Promise<GeminiAttempt> {
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": geminiKey,
+        },
+        signal: AbortSignal.timeout(GEMINI_TIMEOUT_MS),
+        body: JSON.stringify({
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+        }),
+      },
+    );
+
+    if (response.ok) {
+      return {
+        response,
+        detail: "",
+        status: response.status,
+        timedOut: false,
+        model,
+        api: "generateContent",
+      };
+    }
+
+    return {
+      response,
+      detail: await readGeminiError(response),
+      status: response.status,
+      timedOut: false,
+      model,
+      api: "generateContent",
+    };
+  } catch (error) {
+    const timedOut =
+      error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
+
+    return {
+      detail: cleanGeminiDetail(error instanceof Error ? error.message : "network_error"),
+      status: 0,
+      timedOut,
+      model,
+      api: "generateContent",
+    };
+  }
+}
+
+async function callGemini(geminiKey: string, prompt: string) {
+  let lastFailure: GeminiAttempt = {
+    detail: "",
+    status: 0,
+    timedOut: false,
+    model: INTERACTIONS_MODELS[0],
+    api: "interactions",
+  };
+
+  for (const model of INTERACTIONS_MODELS) {
+    const attempt = await requestInteraction(geminiKey, model, prompt);
+    if (attempt.response?.ok) {
+      return {
+        success: {
+          response: attempt.response,
+          model,
+          api: "interactions" as const,
+        } satisfies GeminiSuccess,
+        failure: null,
+      };
+    }
+
+    lastFailure = attempt;
+
+    if ([400, 401, 403, 429].includes(attempt.status) || attempt.timedOut) {
+      return { success: null, failure: attempt };
+    }
+  }
+
+  const discovery = await discoverGenerateContentModel(geminiKey);
+  if (discovery.model) {
+    const legacyAttempt = await requestGenerateContent(geminiKey, discovery.model, prompt);
+    if (legacyAttempt.response?.ok) {
+      return {
+        success: {
+          response: legacyAttempt.response,
+          model: discovery.model,
+          api: "generateContent" as const,
+        } satisfies GeminiSuccess,
+        failure: null,
+      };
+    }
+    lastFailure = legacyAttempt;
+  } else if (discovery.failure) {
+    lastFailure = discovery.failure;
+  }
+
+  return { success: null, failure: lastFailure };
+}
+
+function extractInteractionText(payload: unknown) {
+  if (!payload || typeof payload !== "object") return "";
+
+  const interaction = payload as {
+    output_text?: unknown;
+    steps?: Array<{
+      type?: string;
+      content?: Array<{ type?: string; text?: string }>;
+    }>;
+  };
+
+  if (typeof interaction.output_text === "string" && interaction.output_text.trim()) {
+    return interaction.output_text.trim();
+  }
+
+  return (interaction.steps ?? [])
+    .filter((step) => step.type === "model_output")
+    .flatMap((step) => step.content ?? [])
+    .filter((content) => content.type === "text" && typeof content.text === "string")
+    .map((content) => content.text ?? "")
+    .join("")
+    .trim();
+}
+
+function extractGenerateContentText(payload: unknown) {
+  if (!payload || typeof payload !== "object") return "";
+
+  const result = payload as {
+    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+  };
+
+  return (result.candidates?.[0]?.content?.parts ?? [])
+    .map((part) => part.text ?? "")
+    .join("")
+    .trim();
 }
 
 function parseJsonText(text: string) {
@@ -244,75 +483,51 @@ export const Route = createFileRoute("/api/ai/bio")({
           ? body.history
               .slice(-6)
               .map((item) => ({
-                role: item.role === "assistant" ? "assistant" : "user",
+                role: item.role === "assistant" ? ("assistant" as const) : ("user" as const),
                 text: String(item.text ?? "").slice(0, 500),
               }))
               .filter((item) => item.text.trim())
           : [];
 
-        const prompt = [
-          "Você é a Biofy AI, assistente de edição de páginas de bio.",
-          "Responda em português do Brasil, de forma curta, natural e útil.",
-          "Edite somente o que foi pedido. Não invente fatos, números, clientes ou credenciais. Nunca altere URLs.",
-          `Nome atual: ${String(body.displayName ?? "").slice(0, 100)}`,
-          `Bio atual: ${String(body.bio ?? "").slice(0, 240)}`,
-          `Links atuais: ${JSON.stringify(links)}`,
-          history.length ? `Conversa recente: ${JSON.stringify(history)}` : "",
-          `Pedido: ${instruction}`,
-          'Retorne somente um objeto JSON válido, sem markdown, no formato {"message":"resposta curta","bio":"bio com até 240 caracteres","linkTitles":[{"id":"id existente","title":"novo título"}],"tips":["dica curta"]}. Se não mudar a bio, repita a bio atual. Só use IDs existentes.',
-        ]
-          .filter(Boolean)
-          .join("\n");
+        const currentBio = String(body.bio ?? "").slice(0, 240);
+        const prompt = buildBiofyAiPrompt({
+          instruction,
+          displayName: String(body.displayName ?? "").slice(0, 100),
+          bio: currentBio,
+          links,
+          history,
+        });
 
-        let geminiResponse: Response | undefined;
-        let lastFailure: GeminiAttempt = {
-          detail: "",
-          status: 0,
-          timedOut: false,
-          model: GEMINI_MODELS[0],
-        };
+        const result = await callGemini(geminiKey, prompt);
 
-        for (const model of GEMINI_MODELS) {
-          const attempt = await requestGemini(geminiKey, model, prompt);
-          if (attempt.response?.ok) {
-            geminiResponse = attempt.response;
-            break;
-          }
-
-          lastFailure = attempt;
-
-          // Authentication/quota failures are project-wide; changing models will not fix them.
-          if ([400, 401, 403, 429].includes(attempt.status)) break;
-        }
-
-        if (!geminiResponse) {
+        if (!result.success) {
+          const failure = result.failure;
           const traceId = crypto.randomUUID();
           console.error("[Biofy AI] Gemini request failed", {
             traceId,
-            model: lastFailure.model,
-            status: lastFailure.status,
-            timedOut: lastFailure.timedOut,
-            detail: lastFailure.detail,
+            api: failure.api,
+            model: failure.model,
+            status: failure.status,
+            timedOut: failure.timedOut,
+            detail: failure.detail,
           });
 
           return Response.json(
             {
-              error: mapGeminiError(lastFailure),
-              code: lastFailure.status ? `GEMINI_${lastFailure.status}` : "GEMINI_NETWORK",
-              model: lastFailure.model,
+              error: mapGeminiError(failure),
+              code: failure.status ? `GEMINI_${failure.status}` : "GEMINI_NETWORK",
+              model: failure.model,
               traceId,
             },
             { status: 502, headers: { "Cache-Control": "no-store" } },
           );
         }
 
-        const payload = (await geminiResponse.json()) as {
-          candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-        };
-        const text = payload.candidates?.[0]?.content?.parts
-          ?.map((part) => part.text ?? "")
-          .join("")
-          .trim();
+        const payload = (await result.success.response.json()) as unknown;
+        const text =
+          result.success.api === "interactions"
+            ? extractInteractionText(payload)
+            : extractGenerateContentText(payload);
 
         if (!text) {
           return Response.json({ error: "O Gemini retornou uma resposta vazia." }, { status: 502 });
@@ -320,8 +535,7 @@ export const Route = createFileRoute("/api/ai/bio")({
 
         try {
           const parsed = parseJsonText(text);
-          const currentBio = String(body.bio ?? "").slice(0, 240);
-          const result = {
+          const response = {
             message:
               typeof parsed["message"] === "string" && parsed["message"].trim()
                 ? parsed["message"].trim().slice(0, 500)
@@ -348,7 +562,7 @@ export const Route = createFileRoute("/api/ai/bio")({
               : [],
           };
 
-          return Response.json(result, { headers: { "Cache-Control": "no-store" } });
+          return Response.json(response, { headers: { "Cache-Control": "no-store" } });
         } catch {
           return Response.json(
             { error: "O Gemini respondeu em um formato inesperado. Tente novamente." },
