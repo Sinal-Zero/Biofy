@@ -2,8 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { buildBiofyAiPrompt } from "@/lib/biofy-ai-prompt";
 import type { BioTheme } from "@/lib/bio-types";
 
-const GEMINI_TIMEOUT_MS = 16000;
-const DEFAULT_GEMINI_MODEL = "gemini-3.8-flash";
+const GEMINI_TIMEOUT_MS = 30000;
+const DEFAULT_GEMINI_MODEL = "gemini-3.5-flash-lite";
 const MODEL_CACHE_TTL_MS = 30 * 60 * 1000;
 const MAX_AI_BODY_BYTES = 96_000;
 const AI_RATE_WINDOW_MS = 60_000;
@@ -228,7 +228,7 @@ async function requestInteraction(
         model,
         input: prompt,
         store: false,
-        generation_config: { thinking_level: "low" },
+        generation_config: { thinking_level: "minimal" },
       }),
     });
 

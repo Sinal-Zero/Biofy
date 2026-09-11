@@ -189,7 +189,7 @@ export function BioAiAssistant() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        signal: AbortSignal.timeout(22_000),
+        signal: AbortSignal.timeout(35_000),
         body: JSON.stringify({
           instruction: cleanInstruction,
           history,
