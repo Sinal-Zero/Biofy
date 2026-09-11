@@ -56,7 +56,7 @@ export function BioPreview({
   const textScale = Math.min(1.35, Math.max(0.8, Number(theme.textScale) || 1));
   const panelWidth = Math.min(Math.max(Number(theme.width) || 480, 320), 620);
   const panelMinHeight = compact ? "660px" : "min(800px, calc(100dvh - 40px))";
-  const panelMaxHeight = compact ? undefined : "min(920px, calc(100dvh - 24px))";
+  const panelMaxHeight = undefined;
   const panelBorderWidth = Math.min(6, Math.max(0, Number(theme.panelBorderWidth) || 0));
 
   const panelBackground =
@@ -151,7 +151,7 @@ export function BioPreview({
     >
       <div
         className={cn(
-          "relative w-full transform-gpu overflow-x-hidden overflow-y-auto border shadow-[0_28px_80px_-40px_rgba(0,0,0,0.76)] transition-all duration-300 motion-safe:animate-rise",
+          "relative w-full transform-gpu overflow-x-clip overflow-y-visible border shadow-[0_28px_80px_-40px_rgba(0,0,0,0.76)] transition-all duration-300 motion-safe:animate-rise",
           compact ? "rounded-[1.35rem]" : "rounded-[1.85rem]",
         )}
         style={{
@@ -165,7 +165,7 @@ export function BioPreview({
           borderWidth: `${panelBorderWidth}px`,
           borderStyle: "solid",
           color: theme.textColor,
-          overscrollBehavior: "contain",
+          overscrollBehavior: "auto",
         }}
       >
         <div

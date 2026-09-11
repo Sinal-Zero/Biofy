@@ -22,7 +22,9 @@ export function PhoneFrame({
         <span className="h-1.5 w-1.5 rounded-full bg-white/20" />
       </div>
       <div className="relative aspect-[9/19] w-full overflow-hidden rounded-[2.42rem] bg-black ring-1 ring-white/[0.055]">
-        <div className="h-full w-full overflow-hidden">{children}</div>
+        <div className="no-scrollbar h-full w-full overflow-y-auto overscroll-y-auto">
+          {children}
+        </div>
       </div>
     </div>
   );
