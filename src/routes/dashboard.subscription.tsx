@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useBio } from "@/components/dashboard/BioContext";
 import { Button } from "@/components/ui/button";
 import { fetchSubscription } from "@/lib/bio-data";
+import { isPaidSubscription } from "@/lib/subscription";
 
 export const Route = createFileRoute("/dashboard/subscription")({
   component: SubscriptionPage,
@@ -104,12 +105,7 @@ function SubscriptionPage() {
 
   const currentPlan = subscription?.plan ?? "free";
   const paidPlan = currentPlan === "pro" || currentPlan === "business";
-  const activeStatus =
-    !subscription?.status || ["active", "trialing"].includes(subscription.status);
-  const periodActive =
-    !subscription?.current_period_end ||
-    new Date(subscription.current_period_end).getTime() >= Date.now();
-  const hasPaidSubscription = paidPlan && activeStatus && periodActive;
+  const hasPaidSubscription = isPaidSubscription(subscription);
 
   function startCheckout(planName: string, checkoutUrl: string) {
     setCheckoutPlan(planName);
