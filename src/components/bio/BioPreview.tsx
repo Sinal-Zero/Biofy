@@ -55,7 +55,7 @@ export function BioPreview({
   const theme = useMemo(() => mergeTheme(rawTheme), [rawTheme]);
   const textScale = Math.min(1.35, Math.max(0.8, Number(theme.textScale) || 1));
   const panelWidth = Math.min(Math.max(Number(theme.width) || 480, 320), 620);
-  const panelMinHeight = compact ? "520px" : "min(800px, calc(100dvh - 40px))";
+  const panelMinHeight = compact ? "660px" : "min(800px, calc(100dvh - 40px))";
   const panelMaxHeight = compact ? undefined : "min(920px, calc(100dvh - 24px))";
   const panelBorderWidth = Math.min(6, Math.max(0, Number(theme.panelBorderWidth) || 0));
 
