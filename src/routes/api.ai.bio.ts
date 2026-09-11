@@ -1,56 +1,83 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-const GEMINI_TIMEOUT_MS = 20000;
-const GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.5-flash-lite"] as const;
+const GEMINI_TIMEOUT_MS = 25000;
+const GEMINI_MODELS = ["gemini-3.8-flash", "gemini-2.5-flash", "gemini-2.5-flash-lite"] as const;
 
-function cleanGeminiDetail(detail: string) {
-  return detail
-    .replace(/AIza[0-9A-Za-z_-]{20,}/g, "[redacted]")
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, 280);
-}
-
-function mapGeminiError(detail: string, status: number) {
-  const normalized = detail.toLowerCase();
-  if (status === 429 || normalized.includes("quota") || normalized.includes("resource_exhausted")) {
-    return "A cota do Gemini foi atingida. Tente novamente em alguns minutos.";
-  }
-  if (
-    status === 401 ||
-    status === 403 ||
-    normalized.includes("api key") ||
-    normalized.includes("api_key") ||
-    normalized.includes("permission_denied") ||
-    normalized.includes("key not valid")
-  ) {
-    return "A chave do Gemini não foi aceita pelo Google. Confira a GEMINI_API_KEY e se ela pertence a um projeto com a Gemini API disponível.";
-  }
-  if (normalized.includes("location") && normalized.includes("not supported")) {
-    return "O Google informou que a localização do projeto/chave não é compatível com a Gemini API.";
-  }
-  if (normalized.includes("model") && (normalized.includes("not found") || normalized.includes("not supported"))) {
-    return "O modelo Gemini configurado não está disponível para esta chave.";
-  }
-  if (status >= 500 || status === 0) {
-    return "O Gemini está temporariamente indisponível. Tente novamente em instantes.";
-  }
-  if (status === 400 && detail) {
-    return `O Gemini recusou a solicitação: ${cleanGeminiDetail(detail)}`;
-  }
-  return "O Gemini recusou a solicitação. Tente novamente; se persistir, revise a chave e o projeto da Gemini API.";
-}
+type GeminiModel = (typeof GEMINI_MODELS)[number];
 
 type GeminiAttempt = {
   response?: Response;
   detail: string;
   status: number;
   timedOut: boolean;
+  model: GeminiModel;
 };
+
+function cleanGeminiDetail(detail: string) {
+  return detail
+    .replace(/AIza[0-9A-Za-z_-]{20,}/g, "[redacted]")
+    .replace(/AQ\.[0-9A-Za-z._-]{20,}/g, "[redacted]")
+    .replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, "[redacted-email]")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 320);
+}
+
+function mapGeminiError(attempt: GeminiAttempt) {
+  const normalized = attempt.detail.toLowerCase();
+
+  if (attempt.timedOut) {
+    return "O Gemini demorou demais para responder. Tente novamente.";
+  }
+
+  if (
+    attempt.status === 429 ||
+    normalized.includes("quota") ||
+    normalized.includes("resource_exhausted")
+  ) {
+    return "A cota do Gemini foi atingida. Tente novamente em alguns minutos.";
+  }
+
+  if (
+    attempt.status === 401 ||
+    attempt.status === 403 ||
+    normalized.includes("permission_denied") ||
+    normalized.includes("unauthenticated") ||
+    normalized.includes("api key") ||
+    normalized.includes("api_key") ||
+    normalized.includes("key not valid") ||
+    normalized.includes("standard key") ||
+    normalized.includes("unrestricted key")
+  ) {
+    return "A Gemini API recusou a autenticação. No Google AI Studio, confirme que a GEMINI_API_KEY é uma chave do tipo Auth criada para a Gemini API e substitua a chave antiga na Vercel.";
+  }
+
+  if (normalized.includes("location") && normalized.includes("not supported")) {
+    return "O Google informou que a localização do projeto não é compatível com a Gemini API.";
+  }
+
+  if (
+    attempt.status === 404 ||
+    (normalized.includes("model") &&
+      (normalized.includes("not found") || normalized.includes("not supported")))
+  ) {
+    return "Nenhum dos modelos Gemini configurados ficou disponível para este projeto.";
+  }
+
+  if (attempt.status >= 500 || attempt.status === 0) {
+    return "O Gemini está temporariamente indisponível. Tente novamente em instantes.";
+  }
+
+  if (attempt.status === 400) {
+    return "O Google recusou a chamada com HTTP 400. A Biofy já está usando o payload mínimo oficial; confira no Google AI Studio se a chave é do tipo Auth e pertence a um projeto com a Gemini API disponível.";
+  }
+
+  return `O Gemini recusou a chamada (HTTP ${attempt.status || "desconhecido"}). Revise a chave Auth e o projeto da Gemini API.`;
+}
 
 async function requestGemini(
   geminiKey: string,
-  model: (typeof GEMINI_MODELS)[number],
+  model: GeminiModel,
   prompt: string,
 ): Promise<GeminiAttempt> {
   try {
@@ -66,6 +93,7 @@ async function requestGemini(
         body: JSON.stringify({
           contents: [
             {
+              role: "user",
               parts: [{ text: prompt }],
             },
           ],
@@ -73,7 +101,9 @@ async function requestGemini(
       },
     );
 
-    if (response.ok) return { response, detail: "", status: response.status, timedOut: false };
+    if (response.ok) {
+      return { response, detail: "", status: response.status, timedOut: false, model };
+    }
 
     const raw = await response.text();
     let detail = raw;
@@ -81,17 +111,25 @@ async function requestGemini(
       const parsed = JSON.parse(raw) as { error?: { message?: string; status?: string } };
       detail = [parsed.error?.status, parsed.error?.message].filter(Boolean).join(": ") || raw;
     } catch {
-      // Keep the raw response text when Google does not return JSON.
+      // Keep Google's plain-text response for safe server-side diagnostics.
     }
 
-    return { response, detail: cleanGeminiDetail(detail), status: response.status, timedOut: false };
+    return {
+      response,
+      detail: cleanGeminiDetail(detail),
+      status: response.status,
+      timedOut: false,
+      model,
+    };
   } catch (error) {
     const timedOut =
       error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
+
     return {
-      detail: error instanceof Error ? error.message : "network_error",
+      detail: cleanGeminiDetail(error instanceof Error ? error.message : "network_error"),
       status: 0,
       timedOut,
+      model,
     };
   }
 }
@@ -119,7 +157,7 @@ export const Route = createFileRoute("/api/ai/bio")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const geminiKey = process.env["GEMINI_API_KEY"];
+        const geminiKey = process.env["GEMINI_API_KEY"]?.trim();
         const supabaseUrl = process.env["SUPABASE_URL"] || process.env["VITE_SUPABASE_URL"];
         const supabaseKey =
           process.env["SUPABASE_PUBLISHABLE_KEY"] ||
@@ -131,7 +169,9 @@ export const Route = createFileRoute("/api/ai/bio")({
 
         const authorization = request.headers.get("authorization");
         const accessToken = authorization?.startsWith("Bearer ") ? authorization.slice(7) : null;
-        if (!accessToken) return Response.json({ error: "Sessão não encontrada." }, { status: 401 });
+        if (!accessToken) {
+          return Response.json({ error: "Sessão não encontrada." }, { status: 401 });
+        }
 
         const authHeaders = { apikey: supabaseKey, Authorization: `Bearer ${accessToken}` };
         const userResponse = await fetch(`${supabaseUrl}/auth/v1/user`, { headers: authHeaders });
@@ -140,7 +180,9 @@ export const Route = createFileRoute("/api/ai/bio")({
         }
 
         const user = (await userResponse.json()) as { id?: string };
-        if (!user.id) return Response.json({ error: "Usuário inválido." }, { status: 401 });
+        if (!user.id) {
+          return Response.json({ error: "Usuário inválido." }, { status: 401 });
+        }
 
         const subscriptionResponse = await fetch(
           `${supabaseUrl}/rest/v1/subscriptions?user_id=eq.${encodeURIComponent(user.id)}&select=plan,status,current_period_end&limit=1`,
@@ -157,9 +199,12 @@ export const Route = createFileRoute("/api/ai/bio")({
         }>;
         const subscription = subscriptions[0];
         const isMaster = subscription?.plan === "business";
-        const activeStatus = Boolean(subscription?.status && ["active", "trialing"].includes(subscription.status));
+        const activeStatus = Boolean(
+          subscription?.status && ["active", "trialing"].includes(subscription.status),
+        );
         const periodActive =
-          !subscription?.current_period_end || new Date(subscription.current_period_end).getTime() >= Date.now();
+          !subscription?.current_period_end ||
+          new Date(subscription.current_period_end).getTime() >= Date.now();
 
         if (!isMaster || !activeStatus || !periodActive) {
           return Response.json(
@@ -177,11 +222,17 @@ export const Route = createFileRoute("/api/ai/bio")({
               history?: Array<{ role?: string; text?: string }>;
             }
           | null;
-        if (!body) return Response.json({ error: "Pedido inválido." }, { status: 400 });
+
+        if (!body) {
+          return Response.json({ error: "Pedido inválido." }, { status: 400 });
+        }
 
         const instruction = (body.instruction ?? "").trim().slice(0, 1000);
         if (!instruction) {
-          return Response.json({ error: "Explique o que você quer melhorar na sua Bio." }, { status: 400 });
+          return Response.json(
+            { error: "Explique o que você quer melhorar na sua Bio." },
+            { status: 400 },
+          );
         }
 
         const links = Array.isArray(body.links)
@@ -191,6 +242,7 @@ export const Route = createFileRoute("/api/ai/bio")({
               type: String(link.type ?? "link").slice(0, 40),
             }))
           : [];
+
         const history = Array.isArray(body.history)
           ? body.history
               .slice(-6)
@@ -211,10 +263,17 @@ export const Route = createFileRoute("/api/ai/bio")({
           history.length ? `Conversa recente: ${JSON.stringify(history)}` : "",
           `Pedido: ${instruction}`,
           'Retorne somente um objeto JSON válido, sem markdown, no formato {"message":"resposta curta","bio":"bio com até 240 caracteres","linkTitles":[{"id":"id existente","title":"novo título"}],"tips":["dica curta"]}. Se não mudar a bio, repita a bio atual. Só use IDs existentes.',
-        ].filter(Boolean).join("\n");
+        ]
+          .filter(Boolean)
+          .join("\n");
 
         let geminiResponse: Response | undefined;
-        let lastFailure: GeminiAttempt = { detail: "", status: 0, timedOut: false };
+        let lastFailure: GeminiAttempt = {
+          detail: "",
+          status: 0,
+          timedOut: false,
+          model: GEMINI_MODELS[0],
+        };
 
         for (const model of GEMINI_MODELS) {
           const attempt = await requestGemini(geminiKey, model, prompt);
@@ -222,20 +281,31 @@ export const Route = createFileRoute("/api/ai/bio")({
             geminiResponse = attempt.response;
             break;
           }
+
           lastFailure = attempt;
-          if ([401, 403, 429].includes(attempt.status)) break;
+
+          // Authentication/quota failures are project-wide; changing models will not fix them.
+          if ([400, 401, 403, 429].includes(attempt.status)) break;
         }
 
         if (!geminiResponse) {
-          const error = lastFailure.timedOut
-            ? "O Gemini demorou demais para responder. Tente novamente."
-            : mapGeminiError(lastFailure.detail, lastFailure.status);
+          const traceId = crypto.randomUUID();
+          console.error("[Biofy AI] Gemini request failed", {
+            traceId,
+            model: lastFailure.model,
+            status: lastFailure.status,
+            timedOut: lastFailure.timedOut,
+            detail: lastFailure.detail,
+          });
+
           return Response.json(
             {
-              error,
+              error: mapGeminiError(lastFailure),
               code: lastFailure.status ? `GEMINI_${lastFailure.status}` : "GEMINI_NETWORK",
+              model: lastFailure.model,
+              traceId,
             },
-            { status: 502 },
+            { status: 502, headers: { "Cache-Control": "no-store" } },
           );
         }
 
@@ -246,7 +316,13 @@ export const Route = createFileRoute("/api/ai/bio")({
           ?.map((part) => part.text ?? "")
           .join("")
           .trim();
-        if (!text) return Response.json({ error: "O Gemini retornou uma resposta vazia." }, { status: 502 });
+
+        if (!text) {
+          return Response.json(
+            { error: "O Gemini retornou uma resposta vazia." },
+            { status: 502 },
+          );
+        }
 
         try {
           const parsed = parseJsonText(text);
@@ -261,7 +337,8 @@ export const Route = createFileRoute("/api/ai/bio")({
               ? parsed["linkTitles"]
                   .filter(
                     (item): item is { id: string; title: string } =>
-                      typeof item === "object" && item !== null &&
+                      typeof item === "object" &&
+                      item !== null &&
                       typeof (item as { id?: unknown }).id === "string" &&
                       typeof (item as { title?: unknown }).title === "string",
                   )
@@ -276,6 +353,7 @@ export const Route = createFileRoute("/api/ai/bio")({
                   .map((tip) => tip.slice(0, 220))
               : [],
           };
+
           return Response.json(result, { headers: { "Cache-Control": "no-store" } });
         } catch {
           return Response.json(
