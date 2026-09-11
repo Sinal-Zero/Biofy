@@ -22,6 +22,8 @@ export const Route = createFileRoute("/$username")({
   head: ({ loaderData, params }) => {
     const name = loaderData?.profile.display_name || `@${params.username}`;
     const description = loaderData?.profile.bio || `Veja os links de ${name} no Biofy.`;
+    const url = `https://bio-fy.vercel.app/${params.username}`;
+
     return {
       meta: [
         { title: `${name} | Biofy` },
@@ -29,10 +31,12 @@ export const Route = createFileRoute("/$username")({
         { property: "og:title", content: `${name} | Biofy` },
         { property: "og:description", content: description.slice(0, 160) },
         { property: "og:type", content: "profile" },
+        { property: "og:url", content: url },
         ...(loaderData?.profile.avatar_url
           ? [{ property: "og:image", content: loaderData.profile.avatar_url }]
           : []),
       ],
+      links: [{ rel: "canonical", href: url }],
     };
   },
   component: PublicBioPage,
@@ -53,23 +57,21 @@ function PublicBioPage() {
   }, [bundle.page.id]);
 
   return (
-    <main className="min-h-dvh sm:flex sm:items-center sm:justify-center sm:bg-background sm:p-6">
-      <div className="min-h-dvh w-full sm:min-h-0 sm:h-[min(860px,calc(100dvh-48px))] sm:max-w-[560px] sm:overflow-hidden sm:rounded-[2rem] sm:border sm:border-border sm:shadow-2xl">
-        <BioPreview
-          displayName={bundle.profile.display_name}
-          username={bundle.profile.username}
-          bio={bundle.profile.bio}
-          avatarUrl={bundle.profile.avatar_url}
-          theme={bundle.page.theme}
-          blocks={bundle.blocks}
-          interactive
-          showBranding={showBranding}
-          onBlockClick={(block) => {
-            recordAnalytics(bundle.page.id, "click", block.id).catch(() => undefined);
-          }}
-          className="min-h-full"
-        />
-      </div>
+    <main className="min-h-dvh w-full">
+      <BioPreview
+        displayName={bundle.profile.display_name}
+        username={bundle.profile.username}
+        bio={bundle.profile.bio}
+        avatarUrl={bundle.profile.avatar_url}
+        theme={bundle.page.theme}
+        blocks={bundle.blocks}
+        interactive
+        showBranding={showBranding}
+        onBlockClick={(block) => {
+          recordAnalytics(bundle.page.id, "click", block.id).catch(() => undefined);
+        }}
+        className="min-h-dvh"
+      />
     </main>
   );
 }
