@@ -73,26 +73,31 @@ function OnboardingPage() {
   }
 
   return (
-    <main className="min-h-dvh bg-background px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mx-auto mb-8 flex max-w-6xl items-center justify-between">
+    <main className="relative min-h-dvh overflow-hidden bg-background px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
+      <div className="pointer-events-none absolute inset-0 grid-backdrop opacity-[0.1]" />
+      <div className="pointer-events-none absolute right-[-220px] top-[-180px] h-[520px] w-[520px] rounded-full bg-primary/[0.08] blur-[130px]" />
+
+      <div className="relative mx-auto mb-7 flex max-w-[1220px] items-center justify-between gap-4 sm:mb-9">
         <Logo />
-        <span className="text-xs text-muted-foreground">Configuração inicial</span>
+        <span className="rounded-full border border-border/70 bg-card/65 px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+          Configuração inicial
+        </span>
       </div>
 
-      <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1fr_380px] lg:items-start">
-        <section className="space-y-8 animate-rise">
-          <div>
-            <p className="mb-2 text-sm font-medium text-primary">Comece do seu jeito</p>
-            <h1 className="text-3xl font-bold sm:text-4xl">Crie o endereço da sua Bio</h1>
-            <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
+      <div className="relative mx-auto grid max-w-[1220px] gap-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start xl:gap-12">
+        <section className="biofy-page space-y-7 sm:space-y-8">
+          <header className="biofy-page-header">
+            <p className="biofy-page-kicker">Comece do seu jeito</p>
+            <h1 className="biofy-page-title sm:text-4xl">Crie o endereço da sua Bio</h1>
+            <p className="biofy-page-description max-w-xl">
               Escolha seu username e um visual inicial. Você pode ajustar tudo depois.
             </p>
-          </div>
+          </header>
 
-          <div className="rounded-2xl border border-border bg-card p-5 shadow-soft sm:p-6">
+          <div className="biofy-card p-5 sm:p-6">
             <Label htmlFor="username">Username</Label>
-            <div className="mt-2 flex items-center rounded-xl border border-input bg-background px-3 transition focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-ring/30">
-              <span className="shrink-0 text-sm text-muted-foreground">
+            <div className="mt-2 flex min-w-0 items-center rounded-xl border border-input/90 bg-background/55 px-3 transition-[border-color,background-color,box-shadow] duration-200 focus-within:border-primary/45 focus-within:bg-background focus-within:ring-2 focus-within:ring-ring/15">
+              <span className="shrink-0 whitespace-nowrap text-sm text-muted-foreground">
                 {getPublicBioDisplay()}
               </span>
               <Input
@@ -100,12 +105,12 @@ function OnboardingPage() {
                 value={username}
                 onChange={(event) => setUsername(normalizeUsername(event.target.value))}
                 placeholder="seunome"
-                className="border-0 bg-transparent px-1 shadow-none focus-visible:ring-0"
+                className="min-w-20 flex-1 border-0 bg-transparent px-1 shadow-none focus-visible:ring-0"
                 maxLength={30}
                 autoComplete="off"
               />
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">
+            <p className="mt-2 text-xs leading-5 text-muted-foreground">
               Use 3–30 caracteres: letras, números, ponto, hífen ou underline.
             </p>
           </div>
@@ -130,19 +135,27 @@ function OnboardingPage() {
                     key={template.id}
                     type="button"
                     onClick={() => setTemplateId(template.id)}
-                    className={`relative overflow-hidden rounded-2xl border p-4 text-left transition-all duration-300 active:scale-[0.99] ${
-                      active
-                        ? "border-primary bg-primary/[0.04] ring-2 ring-primary/20"
-                        : "border-border hover:-translate-y-0.5 hover:border-primary/35 hover:bg-card"
+                    className={`biofy-card biofy-card-interactive relative overflow-hidden p-4 text-left active:scale-[0.99] ${
+                      active ? "border-primary/70 bg-primary/[0.04] ring-2 ring-primary/12" : ""
                     }`}
+                    aria-pressed={active}
                   >
-                    <div className="mb-4 h-20 rounded-xl shadow-inner" style={{ background }} />
+                    <div
+                      className="mb-4 h-20 rounded-xl border border-white/[0.06] shadow-inner"
+                      style={{ background }}
+                    />
                     <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <strong className="text-sm">{template.name}</strong>
-                        <p className="mt-1 text-xs text-muted-foreground">{template.description}</p>
+                      <div className="min-w-0">
+                        <strong className="block truncate text-sm">{template.name}</strong>
+                        <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                          {template.description}
+                        </p>
                       </div>
-                      {active ? <Check className="h-4 w-4 shrink-0 text-primary" /> : null}
+                      {active ? (
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                          <Check className="h-3.5 w-3.5" />
+                        </span>
+                      ) : null}
                     </div>
                   </button>
                 );
@@ -150,14 +163,25 @@ function OnboardingPage() {
             </div>
           </div>
 
-          <Button size="lg" onClick={finish} disabled={loading} className="min-w-44">
+          <Button
+            size="lg"
+            onClick={finish}
+            disabled={loading}
+            className="w-full sm:w-auto sm:min-w-44"
+          >
             {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             {loading ? "Criando..." : "Criar minha Bio"}
           </Button>
         </section>
 
-        <aside className="sticky top-6 hidden lg:block animate-rise">
-          <PhoneFrame>
+        <aside className="biofy-sticky-panel hidden lg:block">
+          <div className="mb-3 flex items-center justify-between px-1">
+            <span className="text-xs font-medium text-muted-foreground">Preview</span>
+            <span className="max-w-[220px] truncate text-[11px] text-muted-foreground">
+              @{username || "seunome"}
+            </span>
+          </div>
+          <PhoneFrame glow={false}>
             <BioPreview
               displayName={bundle.profile.display_name || user.email?.split("@")[0] || "Seu nome"}
               username={username || "seunome"}
