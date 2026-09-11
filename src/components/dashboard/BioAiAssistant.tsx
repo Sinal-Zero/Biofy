@@ -143,11 +143,7 @@ export function BioAiAssistant() {
           : null;
       const createdId = await addBlock(block.type, {
         ...(block.title !== undefined ? { title: block.title } : {}),
-        ...(block.url !== undefined
-          ? { url: block.url }
-          : fallbackUrl
-            ? { url: fallbackUrl }
-            : {}),
+        ...(block.url !== undefined ? { url: block.url } : fallbackUrl ? { url: fallbackUrl } : {}),
       });
       if (createdId) appliedMutations += 1;
       await nextFrame();
@@ -312,7 +308,9 @@ export function BioAiAssistant() {
               <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/15 bg-primary/[0.06] text-primary">
                 <Sparkles className="h-4.5 w-4.5" />
               </span>
-              <h3 className="mt-4 text-sm font-semibold">Edite sua Bio com linguagem natural</h3>
+              <h3 className="mt-4 text-sm font-semibold">
+                Edite sua Bio com linguagem natural
+              </h3>
               <p className="mt-2 text-xs leading-5 text-muted-foreground">
                 Escreva o que quer mudar. A Biofy aplica as alterações compatíveis diretamente na página.
               </p>
