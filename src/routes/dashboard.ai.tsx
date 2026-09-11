@@ -1,10 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Monitor, Smartphone } from "lucide-react";
-import { useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { LockKeyhole, Monitor, Smartphone } from "lucide-react";
+import { useEffect, useState } from "react";
 import { BioPreview } from "@/components/bio/BioPreview";
 import { PhoneFrame } from "@/components/bio/PhoneFrame";
 import { BioAiAssistant } from "@/components/dashboard/BioAiAssistant";
 import { useBio } from "@/components/dashboard/BioContext";
+import { Button } from "@/components/ui/button";
+import { fetchSubscription } from "@/lib/bio-data";
 
 export const Route = createFileRoute("/dashboard/ai")({
   component: AiPage,
@@ -15,6 +17,53 @@ type PreviewMode = "mobile" | "desktop";
 function AiPage() {
   const { bundle, theme } = useBio();
   const [previewMode, setPreviewMode] = useState<PreviewMode>("desktop");
+  const [checkingPlan, setCheckingPlan] = useState(true);
+  const [isMaster, setIsMaster] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    void fetchSubscription(bundle.page.user_id)
+      .then((subscription) => {
+        if (!mounted) return;
+        const active = !subscription?.status || ["active", "trialing"].includes(subscription.status);
+        const periodActive =
+          !subscription?.current_period_end || new Date(subscription.current_period_end).getTime() >= Date.now();
+        setIsMaster(subscription?.plan === "business" && active && periodActive);
+      })
+      .catch(() => {
+        if (mounted) setIsMaster(false);
+      })
+      .finally(() => {
+        if (mounted) setCheckingPlan(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [bundle.page.user_id]);
+
+  if (checkingPlan) {
+    return <div className="py-16 text-center text-sm text-muted-foreground">Verificando seu plano...</div>;
+  }
+
+  if (!isMaster) {
+    return (
+      <div className="mx-auto max-w-xl py-12">
+        <div className="rounded-3xl border border-border bg-card p-8 text-center shadow-panel">
+          <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            <LockKeyhole className="h-5 w-5" />
+          </span>
+          <h1 className="mt-5 text-2xl font-bold">Biofy AI é exclusiva do Master</h1>
+          <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-muted-foreground">
+            Assine o plano Master para liberar o assistente de IA e editar sua Bio com comandos naturais.
+          </p>
+          <Button className="mt-6" asChild>
+            <Link to="/dashboard/subscription">Ver plano Master</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5">
