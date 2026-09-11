@@ -2,15 +2,16 @@ import { createFileRoute } from "@tanstack/react-router";
 import { buildBiofyAiPrompt } from "@/lib/biofy-ai-prompt";
 import type { BioTheme } from "@/lib/bio-types";
 
-const GEMINI_TIMEOUT_MS = 25000;
-const INTERACTIONS_MODELS = [
-  "gemini-3.8-flash",
-  "gemini-3.7-flash",
-  "gemini-3.6-flash",
-  "gemini-3.5-flash",
-  "gemini-3.5-flash-lite",
-  "gemini-3.1-flash-lite",
-] as const;
+const GEMINI_TIMEOUT_MS = 16000;
+const DEFAULT_GEMINI_MODEL = "gemini-3.8-flash";
+const MODEL_CACHE_TTL_MS = 30 * 60 * 1000;
+const MAX_AI_BODY_BYTES = 96_000;
+const AI_RATE_WINDOW_MS = 60_000;
+const AI_RATE_LIMIT = 20;
+
+let cachedGenerateContentModel: { model: string; expiresAt: number } | null = null;
+let skipPrimaryInteractionUntil = 0;
+const aiRateBuckets = new Map<string, { count: number; resetAt: number }>();
 
 const LEGACY_MODEL_PRIORITY = [
   "gemini-3.8-flash",
@@ -128,6 +129,18 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function allowAiRequest(userId: string) {
+  const now = Date.now();
+  const current = aiRateBuckets.get(userId);
+  if (!current || current.resetAt <= now) {
+    aiRateBuckets.set(userId, { count: 1, resetAt: now + AI_RATE_WINDOW_MS });
+    return true;
+  }
+  if (current.count >= AI_RATE_LIMIT) return false;
+  current.count += 1;
+  return true;
+}
+
 function cleanGeminiDetail(detail: string) {
   return detail
     .replace(/AIza[0-9A-Za-z_-]{20,}/g, "[redacted]")
@@ -204,14 +217,19 @@ async function requestInteraction(
   prompt: string,
 ): Promise<GeminiAttempt> {
   try {
-    const response = await fetch("https://generativelanguage.googleapis.com/v1/interactions", {
+    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "x-goog-api-key": geminiKey,
       },
       signal: AbortSignal.timeout(GEMINI_TIMEOUT_MS),
-      body: JSON.stringify({ model, input: prompt, store: false }),
+      body: JSON.stringify({
+        model,
+        input: prompt,
+        store: false,
+        generation_config: { thinking_level: "low" },
+      }),
     });
 
     if (response.ok) {
@@ -247,6 +265,10 @@ async function requestInteraction(
 }
 
 async function discoverGenerateContentModel(geminiKey: string) {
+  if (cachedGenerateContentModel && cachedGenerateContentModel.expiresAt > Date.now()) {
+    return { model: cachedGenerateContentModel.model, failure: null };
+  }
+
   try {
     const response = await fetch(
       "https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000",
@@ -297,7 +319,9 @@ async function discoverGenerateContentModel(geminiKey: string) {
         !model.includes("tts"),
     );
 
-    return { model: preferred ?? fallback ?? null, failure: null };
+    const model = preferred ?? fallback ?? null;
+    if (model) cachedGenerateContentModel = { model, expiresAt: Date.now() + MODEL_CACHE_TTL_MS };
+    return { model, failure: null };
   } catch (error) {
     const timedOut =
       error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
@@ -366,21 +390,22 @@ async function requestGenerateContent(
 }
 
 async function callGemini(geminiKey: string, prompt: string) {
+  const primaryModel = process.env["GEMINI_MODEL"]?.trim() || DEFAULT_GEMINI_MODEL;
   let lastFailure: GeminiAttempt = {
-    detail: "",
-    status: 0,
+    detail: "interaction_unavailable_cached",
+    status: 404,
     timedOut: false,
-    model: INTERACTIONS_MODELS[0],
+    model: primaryModel,
     api: "interactions",
   };
 
-  for (const model of INTERACTIONS_MODELS) {
-    const attempt = await requestInteraction(geminiKey, model, prompt);
+  if (Date.now() >= skipPrimaryInteractionUntil) {
+    const attempt = await requestInteraction(geminiKey, primaryModel, prompt);
     if (attempt.response?.ok) {
       return {
         success: {
           response: attempt.response,
-          model,
+          model: primaryModel,
           api: "interactions" as const,
         } satisfies GeminiSuccess,
         failure: null,
@@ -388,25 +413,30 @@ async function callGemini(geminiKey: string, prompt: string) {
     }
 
     lastFailure = attempt;
-    if ([400, 401, 403, 429].includes(attempt.status) || attempt.timedOut) {
+    if ([401, 403, 429].includes(attempt.status) || attempt.timedOut) {
+      return { success: null, failure: attempt };
+    }
+    if (attempt.status === 400 || attempt.status === 404) {
+      skipPrimaryInteractionUntil = Date.now() + MODEL_CACHE_TTL_MS;
+    } else if (attempt.status > 0) {
       return { success: null, failure: attempt };
     }
   }
 
   const discovery = await discoverGenerateContentModel(geminiKey);
   if (discovery.model) {
-    const legacyAttempt = await requestGenerateContent(geminiKey, discovery.model, prompt);
-    if (legacyAttempt.response?.ok) {
+    const fallbackAttempt = await requestGenerateContent(geminiKey, discovery.model, prompt);
+    if (fallbackAttempt.response?.ok) {
       return {
         success: {
-          response: legacyAttempt.response,
+          response: fallbackAttempt.response,
           model: discovery.model,
           api: "generateContent" as const,
         } satisfies GeminiSuccess,
         failure: null,
       };
     }
-    lastFailure = legacyAttempt;
+    lastFailure = fallbackAttempt;
   } else if (discovery.failure) {
     lastFailure = discovery.failure;
   }
@@ -675,6 +705,15 @@ export const Route = createFileRoute("/api/ai/bio")({
           return Response.json({ error: "Configuração do servidor incompleta." }, { status: 500 });
         }
 
+        const contentType = request.headers.get("content-type") ?? "";
+        if (!contentType.toLowerCase().includes("application/json")) {
+          return Response.json({ error: "Formato de pedido inválido." }, { status: 415 });
+        }
+        const contentLength = Number(request.headers.get("content-length") ?? 0);
+        if (Number.isFinite(contentLength) && contentLength > MAX_AI_BODY_BYTES) {
+          return Response.json({ error: "Pedido grande demais." }, { status: 413 });
+        }
+
         const authorization = request.headers.get("authorization");
         const accessToken = authorization?.startsWith("Bearer ") ? authorization.slice(7) : null;
         if (!accessToken) {
@@ -719,6 +758,13 @@ export const Route = createFileRoute("/api/ai/bio")({
           );
         }
 
+        if (!allowAiRequest(user.id)) {
+          return Response.json(
+            { error: "Muitas solicitações em pouco tempo. Aguarde alguns segundos." },
+            { status: 429, headers: { "Retry-After": "60", "Cache-Control": "no-store" } },
+          );
+        }
+
         const body = (await request.json().catch(() => null)) as {
           instruction?: string;
           displayName?: string | null;
@@ -759,10 +805,10 @@ export const Route = createFileRoute("/api/ai/bio")({
 
         const history = Array.isArray(body.history)
           ? body.history
-              .slice(-6)
+              .slice(-4)
               .map((item) => ({
                 role: item.role === "assistant" ? ("assistant" as const) : ("user" as const),
-                text: String(item.text ?? "").slice(0, 500),
+                text: String(item.text ?? "").slice(0, 400),
               }))
               .filter((item) => item.text.trim())
           : [];

@@ -8,10 +8,7 @@ const BLOCKED_EVENTS = new Set([
   "PAYMENT_REFUNDED",
   "PAYMENT_CHARGEBACK_REQUESTED",
 ]);
-const CANCELED_SUBSCRIPTION_EVENTS = new Set([
-  "SUBSCRIPTION_INACTIVATED",
-  "SUBSCRIPTION_DELETED",
-]);
+const CANCELED_SUBSCRIPTION_EVENTS = new Set(["SUBSCRIPTION_INACTIVATED", "SUBSCRIPTION_DELETED"]);
 
 type AsaasPayment = {
   id?: string;
@@ -208,7 +205,9 @@ export const Route = createFileRoute("/api/webhooks/asaas")({
       POST: async ({ request }) => {
         const webhookToken = process.env["ASAAS_WEBHOOK_TOKEN"]?.trim();
         const asaasApiKey = process.env["ASAAS_API_KEY"]?.trim();
-        const supabaseUrl = (process.env["SUPABASE_URL"] || process.env["VITE_SUPABASE_URL"])?.trim();
+        const supabaseUrl = (
+          process.env["SUPABASE_URL"] || process.env["VITE_SUPABASE_URL"]
+        )?.trim();
         const serviceKey = process.env["SUPABASE_SERVICE_ROLE_KEY"]?.trim();
 
         if (!webhookToken || !asaasApiKey || !supabaseUrl || !serviceKey) {

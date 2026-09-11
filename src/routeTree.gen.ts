@@ -20,12 +20,14 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
+import { Route as DashboardAiRouteImport } from './routes/dashboard.ai'
 import { Route as DashboardAnalyticsRouteImport } from './routes/dashboard.analytics'
 import { Route as DashboardAppearanceRouteImport } from './routes/dashboard.appearance'
 import { Route as DashboardEditorRouteImport } from './routes/dashboard.editor'
-import { Route as DashboardLinksRouteImport } from './routes/dashboard.links'
 import { Route as DashboardSettingsRouteImport } from './routes/dashboard.settings'
 import { Route as DashboardSubscriptionRouteImport } from './routes/dashboard.subscription'
+import { Route as ApiAiBioRouteImport } from './routes/api.ai.bio'
+import { Route as ApiWebhooksAsaasRouteImport } from './routes/api.webhooks.asaas'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -82,6 +84,11 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardAiRoute = DashboardAiRouteImport.update({
+  id: '/ai',
+  path: '/ai',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardAnalyticsRoute = DashboardAnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
@@ -97,11 +104,6 @@ const DashboardEditorRoute = DashboardEditorRouteImport.update({
   path: '/editor',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardLinksRoute = DashboardLinksRouteImport.update({
-  id: '/links',
-  path: '/links',
-  getParentRoute: () => DashboardRoute,
-} as any)
 const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -111,6 +113,16 @@ const DashboardSubscriptionRoute = DashboardSubscriptionRouteImport.update({
   id: '/subscription',
   path: '/subscription',
   getParentRoute: () => DashboardRoute,
+} as any)
+const ApiAiBioRoute = ApiAiBioRouteImport.update({
+  id: '/api/ai/bio',
+  path: '/api/ai/bio',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWebhooksAsaasRoute = ApiWebhooksAsaasRouteImport.update({
+  id: '/api/webhooks/asaas',
+  path: '/api/webhooks/asaas',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -124,13 +136,15 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
+  '/dashboard/ai': typeof DashboardAiRoute
   '/dashboard/analytics': typeof DashboardAnalyticsRoute
   '/dashboard/appearance': typeof DashboardAppearanceRoute
   '/dashboard/editor': typeof DashboardEditorRoute
-  '/dashboard/links': typeof DashboardLinksRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/subscription': typeof DashboardSubscriptionRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/api/ai/bio': typeof ApiAiBioRoute
+  '/api/webhooks/asaas': typeof ApiWebhooksAsaasRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -142,13 +156,15 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
+  '/dashboard/ai': typeof DashboardAiRoute
   '/dashboard/analytics': typeof DashboardAnalyticsRoute
   '/dashboard/appearance': typeof DashboardAppearanceRoute
   '/dashboard/editor': typeof DashboardEditorRoute
-  '/dashboard/links': typeof DashboardLinksRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/subscription': typeof DashboardSubscriptionRoute
   '/dashboard': typeof DashboardIndexRoute
+  '/api/ai/bio': typeof ApiAiBioRoute
+  '/api/webhooks/asaas': typeof ApiWebhooksAsaasRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -162,13 +178,15 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
+  '/dashboard/ai': typeof DashboardAiRoute
   '/dashboard/analytics': typeof DashboardAnalyticsRoute
   '/dashboard/appearance': typeof DashboardAppearanceRoute
   '/dashboard/editor': typeof DashboardEditorRoute
-  '/dashboard/links': typeof DashboardLinksRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/subscription': typeof DashboardSubscriptionRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/api/ai/bio': typeof ApiAiBioRoute
+  '/api/webhooks/asaas': typeof ApiWebhooksAsaasRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -183,13 +201,15 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/terms'
+    | '/dashboard/ai'
     | '/dashboard/analytics'
     | '/dashboard/appearance'
     | '/dashboard/editor'
-    | '/dashboard/links'
     | '/dashboard/settings'
     | '/dashboard/subscription'
     | '/dashboard/'
+    | '/api/ai/bio'
+    | '/api/webhooks/asaas'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -201,13 +221,15 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/terms'
+    | '/dashboard/ai'
     | '/dashboard/analytics'
     | '/dashboard/appearance'
     | '/dashboard/editor'
-    | '/dashboard/links'
     | '/dashboard/settings'
     | '/dashboard/subscription'
     | '/dashboard'
+    | '/api/ai/bio'
+    | '/api/webhooks/asaas'
   id:
     | '__root__'
     | '/'
@@ -220,13 +242,15 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/terms'
+    | '/dashboard/ai'
     | '/dashboard/analytics'
     | '/dashboard/appearance'
     | '/dashboard/editor'
-    | '/dashboard/links'
     | '/dashboard/settings'
     | '/dashboard/subscription'
     | '/dashboard/'
+    | '/api/ai/bio'
+    | '/api/webhooks/asaas'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -240,6 +264,8 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
   TermsRoute: typeof TermsRoute
+  ApiAiBioRoute: typeof ApiAiBioRoute
+  ApiWebhooksAsaasRoute: typeof ApiWebhooksAsaasRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -321,6 +347,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/ai': {
+      id: '/dashboard/ai'
+      path: '/ai'
+      fullPath: '/dashboard/ai'
+      preLoaderRoute: typeof DashboardAiRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/analytics': {
       id: '/dashboard/analytics'
       path: '/analytics'
@@ -342,13 +375,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardEditorRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/dashboard/links': {
-      id: '/dashboard/links'
-      path: '/links'
-      fullPath: '/dashboard/links'
-      preLoaderRoute: typeof DashboardLinksRouteImport
-      parentRoute: typeof DashboardRoute
-    }
     '/dashboard/settings': {
       id: '/dashboard/settings'
       path: '/settings'
@@ -363,24 +389,38 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSubscriptionRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/api/ai/bio': {
+      id: '/api/ai/bio'
+      path: '/api/ai/bio'
+      fullPath: '/api/ai/bio'
+      preLoaderRoute: typeof ApiAiBioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/webhooks/asaas': {
+      id: '/api/webhooks/asaas'
+      path: '/api/webhooks/asaas'
+      fullPath: '/api/webhooks/asaas'
+      preLoaderRoute: typeof ApiWebhooksAsaasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 interface DashboardRouteChildren {
+  DashboardAiRoute: typeof DashboardAiRoute
   DashboardAnalyticsRoute: typeof DashboardAnalyticsRoute
   DashboardAppearanceRoute: typeof DashboardAppearanceRoute
   DashboardEditorRoute: typeof DashboardEditorRoute
-  DashboardLinksRoute: typeof DashboardLinksRoute
   DashboardSettingsRoute: typeof DashboardSettingsRoute
   DashboardSubscriptionRoute: typeof DashboardSubscriptionRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardAiRoute: DashboardAiRoute,
   DashboardAnalyticsRoute: DashboardAnalyticsRoute,
   DashboardAppearanceRoute: DashboardAppearanceRoute,
   DashboardEditorRoute: DashboardEditorRoute,
-  DashboardLinksRoute: DashboardLinksRoute,
   DashboardSettingsRoute: DashboardSettingsRoute,
   DashboardSubscriptionRoute: DashboardSubscriptionRoute,
   DashboardIndexRoute: DashboardIndexRoute,
@@ -401,6 +441,8 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
   TermsRoute: TermsRoute,
+  ApiAiBioRoute: ApiAiBioRoute,
+  ApiWebhooksAsaasRoute: ApiWebhooksAsaasRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

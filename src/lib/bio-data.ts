@@ -224,11 +224,20 @@ export async function checkUsername(candidate: string): Promise<boolean> {
 export async function fetchSubscription(userId: string) {
   const { data, error } = await supabase
     .from("subscriptions")
-    .select("*")
+    .select("plan,status,current_period_end,cancel_at_period_end")
     .eq("user_id", userId)
     .maybeSingle();
   if (error) throw error;
   return data;
+}
+
+function safeReferrerOrigin() {
+  if (typeof document === "undefined" || !document.referrer) return null;
+  try {
+    return new URL(document.referrer).origin.slice(0, 300);
+  } catch {
+    return null;
+  }
 }
 
 export async function recordAnalytics(
@@ -240,7 +249,7 @@ export async function recordAnalytics(
     page_id: pageId,
     block_id: blockId ?? null,
     kind,
-    referrer: typeof document !== "undefined" ? document.referrer.slice(0, 1000) || null : null,
+    referrer: safeReferrerOrigin(),
   });
   if (error) throw error;
 }

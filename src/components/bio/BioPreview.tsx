@@ -151,7 +151,7 @@ export function BioPreview({
     >
       <div
         className={cn(
-          "relative w-full overflow-x-hidden overflow-y-auto border shadow-[0_28px_80px_-40px_rgba(0,0,0,0.76)] transition-all duration-300",
+          "relative w-full transform-gpu overflow-x-hidden overflow-y-auto border shadow-[0_28px_80px_-40px_rgba(0,0,0,0.76)] transition-all duration-300 motion-safe:animate-rise",
           compact ? "rounded-[1.35rem]" : "rounded-[1.85rem]",
         )}
         style={{

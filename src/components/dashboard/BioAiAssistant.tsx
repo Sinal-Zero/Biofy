@@ -84,14 +84,6 @@ export function BioAiAssistant() {
     textarea.style.height = `${Math.min(Math.max(textarea.scrollHeight, 52), 150)}px`;
   }
 
-  function chooseQuickPrompt(prompt: string) {
-    setInstruction(prompt);
-    requestAnimationFrame(() => {
-      resizeComposer();
-      composerRef.current?.focus();
-    });
-  }
-
   async function applyResult(payload: AiResult) {
     const profilePatch: { bio?: string; display_name?: string } = {};
     const currentBio = bundle.profile.bio ?? "";
@@ -156,11 +148,11 @@ export function BioAiAssistant() {
     }
   }
 
-  async function generate() {
-    const cleanInstruction = instruction.trim();
+  async function generate(overrideInstruction?: string) {
+    const cleanInstruction = (overrideInstruction ?? instruction).trim();
     if (!cleanInstruction || loading) return;
 
-    const history = messages.slice(-6).map((message) => ({
+    const history = messages.slice(-4).map((message) => ({
       role: message.role,
       text: message.text,
     }));
@@ -197,6 +189,7 @@ export function BioAiAssistant() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
+        signal: AbortSignal.timeout(22_000),
         body: JSON.stringify({
           instruction: cleanInstruction,
           history,
@@ -305,7 +298,7 @@ export function BioAiAssistant() {
                   <button
                     key={prompt}
                     type="button"
-                    onClick={() => chooseQuickPrompt(prompt)}
+                    onClick={() => void generate(prompt)}
                     className="rounded-full border border-border bg-background/65 px-3 py-1.5 text-xs text-muted-foreground transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:text-foreground active:scale-[0.98]"
                   >
                     {prompt}
@@ -352,7 +345,7 @@ export function BioAiAssistant() {
                 <span className="mb-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-primary/15 bg-primary/[0.07] text-primary">
                   <Bot className="h-3.5 w-3.5" />
                 </span>
-                <div className="flex items-center gap-1.5 rounded-2xl rounded-bl-md border border-border bg-background/75 px-4 py-3 shadow-sm">
+                <div className="flex items-center gap-2 rounded-2xl rounded-bl-md border border-border bg-background/75 px-4 py-3 text-xs text-muted-foreground shadow-sm">
                   <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
                   <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary [animation-delay:120ms]" />
                   <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary [animation-delay:240ms]" />

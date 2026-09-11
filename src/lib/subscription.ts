@@ -20,8 +20,8 @@ export function isSubscriptionActive(subscription: SubscriptionLike) {
 export function isPaidSubscription(subscription: SubscriptionLike) {
   return Boolean(
     subscription &&
-      (subscription.plan === "pro" || subscription.plan === "business") &&
-      isSubscriptionActive(subscription),
+    (subscription.plan === "pro" || subscription.plan === "business") &&
+    isSubscriptionActive(subscription),
   );
 }
 

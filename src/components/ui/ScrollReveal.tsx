@@ -49,7 +49,8 @@ export function ScrollReveal({
       ref={ref}
       className={cn(
         "transform-gpu transition-[opacity,transform,filter] duration-600 ease-[cubic-bezier(.16,1,.3,1)]",
-        state === "hidden" && "translate-y-4 scale-[0.995] opacity-0 blur-[1px] will-change-transform",
+        state === "hidden" &&
+          "translate-y-4 scale-[0.995] opacity-0 blur-[1px] will-change-transform",
         state !== "hidden" && "translate-y-0 scale-100 opacity-100 blur-0",
         className,
       )}
