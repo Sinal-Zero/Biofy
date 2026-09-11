@@ -1,0 +1,173 @@
+name: Final Biofy UI polish pass
+
+on:
+  push:
+    paths:
+      - .github/workflows/polish-large-pages-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  polish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - name: Refine large UI surfaces
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def swap(path, old, new):
+              p = Path(path)
+              text = p.read_text()
+              if old not in text:
+                  print(f"skip: {path}: {old[:72]!r}")
+                  return
+              p.write_text(text.replace(old, new))
+              print(f"updated: {path}")
+
+          # Biofy AI: responsive height without trapping page scrolling.
+          swap(
+              "src/components/dashboard/BioAiAssistant.tsx",
+              'className="flex min-h-[850px] flex-col rounded-[1.5rem] border border-border/90 bg-card/95 shadow-panel xl:min-h-[872px]"',
+              'className="biofy-card flex min-h-[600px] flex-col overflow-hidden sm:min-h-[640px] md:min-h-[680px] xl:min-h-[760px]"',
+          )
+          swap(
+              "src/components/dashboard/BioAiAssistant.tsx",
+              'className="mt-auto border-t border-border/80 p-3 sm:p-4"',
+              'className="mt-auto border-t border-border/75 bg-background/20 p-3 sm:p-4"',
+          )
+          swap(
+              "src/components/dashboard/BioAiAssistant.tsx",
+              'className="flex items-center gap-2 rounded-2xl border border-input/90 bg-background/80 p-1.5 shadow-sm transition-[border-color,box-shadow,background-color] duration-200 focus-within:border-primary/45 focus-within:bg-background focus-within:ring-2 focus-within:ring-primary/10"',
+              'className="flex items-center gap-2 rounded-xl border border-input/90 bg-background/80 p-1.5 shadow-sm transition-[border-color,box-shadow,background-color] duration-200 focus-within:border-primary/45 focus-within:bg-background focus-within:ring-2 focus-within:ring-primary/10"',
+          )
+
+          # Editor: clearer hierarchy, safer mobile menus, consistent panels.
+          swap("src/routes/dashboard.editor.tsx", 'className="space-y-6"', 'className="biofy-page space-y-6 sm:space-y-7"')
+          swap(
+              "src/routes/dashboard.editor.tsx",
+              'className="flex items-end justify-between gap-3"',
+              'className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"',
+          )
+          swap(
+              "src/routes/dashboard.editor.tsx",
+              'className="rounded-2xl border border-border bg-card p-5 transition hover:border-primary/20 sm:p-6"',
+              'className="biofy-card p-5 sm:p-6"',
+          )
+          swap(
+              "src/routes/dashboard.editor.tsx",
+              'className="rounded-2xl border border-border bg-card p-5 sm:p-6"',
+              'className="biofy-card p-5 sm:p-6"',
+          )
+          swap(
+              "src/routes/dashboard.editor.tsx",
+              'className={`rounded-2xl border bg-background p-4 transition duration-200 hover:border-primary/30 ${',
+              'className={`biofy-muted-panel p-4 transition-[border-color,background-color,transform] duration-200 hover:border-primary/30 ${',
+          )
+          swap(
+              "src/routes/dashboard.editor.tsx",
+              'className="absolute left-0 top-12 z-30 w-[280px] rounded-2xl border border-border bg-popover p-3 shadow-xl"',
+              'className="absolute left-0 top-12 z-30 w-[min(280px,calc(100vw-3.5rem))] rounded-2xl border border-border/90 bg-popover/95 p-3 shadow-panel backdrop-blur-xl"',
+          )
+          swap(
+              "src/routes/dashboard.editor.tsx",
+              'className="mb-3 flex items-center justify-between rounded-xl border border-border bg-card px-3 py-2"',
+              'className="biofy-card mb-3 flex items-center justify-between px-3 py-2.5"',
+          )
+
+          # Appearance: bring preview beside controls sooner and remove nested scroll traps.
+          swap("src/routes/dashboard.appearance.tsx", 'className="space-y-6 animate-rise"', 'className="biofy-page space-y-6 sm:space-y-7"')
+          swap(
+              "src/routes/dashboard.appearance.tsx",
+              'className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_560px]"',
+              'className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_500px]"',
+          )
+          swap(
+              "src/routes/dashboard.appearance.tsx",
+              'className="flex items-center gap-3 rounded-2xl border border-border bg-background/55 p-3 transition-all duration-200 hover:border-primary/25"',
+              'className="biofy-muted-panel flex items-center gap-3 p-3 transition-colors duration-200 hover:border-primary/25"',
+          )
+          swap(
+              "src/routes/dashboard.appearance.tsx",
+              'className="rounded-2xl border border-border bg-background/55 p-4"',
+              'className="biofy-muted-panel p-4"',
+          )
+          swap(
+              "src/routes/dashboard.appearance.tsx",
+              'className="grid grid-cols-2 rounded-xl border border-border bg-background/55 p-1"',
+              'className="biofy-segmented"',
+          )
+          swap(
+              "src/routes/dashboard.appearance.tsx",
+              'className="rounded-2xl border border-border bg-card p-5 shadow-soft sm:p-6"',
+              'className="biofy-card p-5 sm:p-6"',
+          )
+          swap(
+              "src/routes/dashboard.appearance.tsx",
+              'className="2xl:sticky 2xl:top-8 2xl:self-start"',
+              'className="xl:sticky xl:top-8 xl:self-start"',
+          )
+          swap(
+              "src/routes/dashboard.appearance.tsx",
+              'className="overflow-hidden rounded-[1.5rem] border border-border bg-card shadow-panel"',
+              'className="biofy-card overflow-hidden"',
+          )
+          swap(
+              "src/routes/dashboard.appearance.tsx",
+              'className="min-h-[650px] bg-black/15 p-4"',
+              'className="flex min-h-[620px] items-center justify-center bg-black/[0.08] p-3 sm:p-4"',
+          )
+          swap(
+              "src/routes/dashboard.appearance.tsx",
+              'className="h-[650px] overflow-auto rounded-xl border border-border/70 bg-background/35 animate-rise"',
+              'className="flex min-h-[610px] w-full items-center justify-center overflow-hidden rounded-2xl border border-border/65 bg-background/25"',
+          )
+
+          # Landing page: calmer hero and cards; no endless floating device animation.
+          swap(
+              "src/routes/index.tsx",
+              'className="fixed inset-x-0 top-0 z-50 border-b border-white/[0.06] bg-background/78 backdrop-blur-xl"',
+              'className="fixed inset-x-0 top-0 z-50 border-b border-white/[0.06] bg-background/90 backdrop-blur-xl"',
+          )
+          swap(
+              "src/routes/index.tsx",
+              'className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8"',
+              'className="mx-auto flex h-16 max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-8 xl:px-10"',
+          )
+          swap(
+              "src/routes/index.tsx",
+              'className="text-5xl font-bold leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl"',
+              'className="text-[clamp(2.75rem,10vw,4.75rem)] font-bold leading-[1.02] tracking-[-0.035em]"',
+          )
+          swap(
+              "src/routes/index.tsx",
+              'PhoneFrame className="relative animate-float"',
+              'PhoneFrame className="relative"',
+          )
+          swap(
+              "src/routes/index.tsx",
+              'className="group h-full rounded-3xl border border-border bg-card p-6 shadow-soft transition-all duration-300 hover:-translate-y-1 hover:border-primary/25"',
+              'className="biofy-card biofy-card-interactive group h-full p-6"',
+          )
+          PY
+      - run: bunx prettier --write src/components/dashboard/BioAiAssistant.tsx src/routes/dashboard.editor.tsx src/routes/dashboard.appearance.tsx src/routes/index.tsx
+      - run: |
+          bun run build
+          bunx tsc --noEmit
+          bun run lint
+      - name: Commit polish and remove helper
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/polish-large-pages-once.yml
+          git add src/components/dashboard/BioAiAssistant.tsx src/routes/dashboard.editor.tsx src/routes/dashboard.appearance.tsx src/routes/index.tsx
+          git commit -m "style: polish responsive Biofy surfaces"
+          git push origin HEAD:main
