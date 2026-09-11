@@ -42,15 +42,17 @@ function AiPage() {
 
   if (checkingPlan) {
     return (
-      <div className="py-16 text-center text-sm text-muted-foreground">Verificando plano...</div>
+      <div className="biofy-card mx-auto max-w-md px-5 py-10 text-center text-sm text-muted-foreground">
+        Verificando plano...
+      </div>
     );
   }
 
   if (!isMaster) {
     return (
-      <div className="mx-auto max-w-xl py-12 animate-rise">
-        <div className="rounded-3xl border border-border bg-card p-8 text-center shadow-panel">
-          <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+      <div className="biofy-page mx-auto max-w-xl py-8 sm:py-12">
+        <div className="biofy-card p-7 text-center sm:p-8">
+          <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/10 bg-primary/[0.07] text-primary">
             <LockKeyhole className="h-5 w-5" />
           </span>
           <h1 className="mt-5 text-2xl font-bold">Biofy AI é exclusiva do Master</h1>
@@ -66,21 +68,21 @@ function AiPage() {
   }
 
   return (
-    <div className="space-y-5 animate-rise">
-      <header>
-        <p className="text-sm font-medium text-primary">Assistente</p>
-        <h1 className="mt-1 text-3xl font-bold">Biofy AI</h1>
-        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+    <div className="biofy-page space-y-5 sm:space-y-6">
+      <header className="biofy-page-header">
+        <p className="biofy-page-kicker">Assistente</p>
+        <h1 className="biofy-page-title">Biofy AI</h1>
+        <p className="biofy-page-description">
           Peça uma mudança e acompanhe o resultado ao lado.
         </p>
       </header>
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(340px,0.62fr)_minmax(600px,1.38fr)] xl:items-stretch">
+      <div className="grid gap-5 xl:grid-cols-[minmax(340px,0.62fr)_minmax(560px,1.38fr)] xl:items-stretch">
         <BioAiAssistant />
 
-        <aside className="h-full">
-          <div className="h-full min-h-[850px] overflow-hidden rounded-[1.5rem] border border-border/90 bg-card/95 shadow-panel xl:min-h-[872px]">
-            <div className="border-b border-border/80 bg-background/35 p-3">
+        <aside className="min-w-0">
+          <div className="biofy-card h-full overflow-hidden xl:min-h-[760px]">
+            <div className="border-b border-border/80 bg-background/25 p-3.5 sm:p-4">
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-foreground">Preview</p>
@@ -90,7 +92,7 @@ function AiPage() {
                 </div>
               </div>
 
-              <div className="mt-3 grid grid-cols-2 rounded-xl border border-border/80 bg-background/55 p-1">
+              <div className="biofy-segmented mt-3">
                 {(
                   [
                     ["mobile", Smartphone, "Celular"],
@@ -101,7 +103,7 @@ function AiPage() {
                     key={mode}
                     type="button"
                     onClick={() => setPreviewMode(mode)}
-                    className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-all duration-200 active:scale-[0.99] ${
+                    className={`flex items-center justify-center gap-2 rounded-[0.7rem] px-3 py-2 text-xs font-semibold transition-[background-color,color,box-shadow] duration-200 ${
                       previewMode === mode
                         ? "bg-card text-foreground shadow-sm"
                         : "text-muted-foreground hover:bg-card/50 hover:text-foreground"
@@ -114,9 +116,9 @@ function AiPage() {
               </div>
             </div>
 
-            <div className="flex min-h-[760px] items-center justify-center bg-black/10 p-4 2xl:min-h-[820px]">
+            <div className="flex min-h-[610px] items-center justify-center bg-black/[0.08] p-3 sm:min-h-[680px] sm:p-4 xl:min-h-[690px]">
               {previewMode === "mobile" ? (
-                <div className="mx-auto w-full max-w-[340px] animate-rise">
+                <div className="mx-auto w-full max-w-[330px]">
                   <PhoneFrame glow={false}>
                     <BioPreview
                       displayName={bundle.profile.display_name}
@@ -132,7 +134,7 @@ function AiPage() {
                   </PhoneFrame>
                 </div>
               ) : (
-                <div className="flex h-[720px] w-full items-center justify-center overflow-hidden rounded-2xl border border-border/70 bg-background/35 animate-rise 2xl:h-[780px]">
+                <div className="flex min-h-[610px] w-full items-center justify-center overflow-hidden rounded-2xl border border-border/65 bg-background/25 sm:min-h-[650px] xl:min-h-[660px]">
                   <BioPreview
                     displayName={bundle.profile.display_name}
                     username={bundle.profile.username}
