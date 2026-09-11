@@ -62,24 +62,24 @@ function SettingsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 animate-rise">
-      <header>
-        <p className="text-sm font-medium text-primary">Conta</p>
-        <h1 className="mt-1 text-3xl font-bold">Configurações</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Endereço público e acesso à conta.</p>
+    <div className="biofy-page mx-auto max-w-5xl space-y-6 sm:space-y-7">
+      <header className="biofy-page-header">
+        <p className="biofy-page-kicker">Conta</p>
+        <h1 className="biofy-page-title">Configurações</h1>
+        <p className="biofy-page-description">Endereço público e acesso à sua conta Biofy.</p>
       </header>
 
-      <div className="grid gap-5 lg:grid-cols-[1.35fr_.65fr]">
-        <section className="rounded-2xl border border-border bg-card p-5 shadow-soft sm:p-6">
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,.65fr)]">
+        <section className="biofy-card p-5 sm:p-6">
           <h2 className="text-lg font-semibold">Endereço da Bio</h2>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-1 max-w-xl text-xs leading-5 text-muted-foreground">
             Ao trocar o username, o endereço anterior deixa de funcionar.
           </p>
 
           <div className="mt-5 space-y-2">
             <Label htmlFor="settings-username">Username</Label>
             <div className="flex flex-col gap-2 sm:flex-row">
-              <div className="flex min-w-0 flex-1 items-center overflow-hidden rounded-xl border border-input bg-background px-3 transition focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-ring/25">
+              <div className="flex min-w-0 flex-1 items-center overflow-hidden rounded-xl border border-input/90 bg-background/55 px-3 transition-[border-color,box-shadow,background-color] duration-200 focus-within:border-primary/45 focus-within:bg-background focus-within:ring-2 focus-within:ring-ring/15">
                 <span className="shrink-0 whitespace-nowrap text-sm text-muted-foreground">
                   {getPublicBioDisplay()}
                 </span>
@@ -92,7 +92,7 @@ function SettingsPage() {
                   autoComplete="off"
                 />
               </div>
-              <Button onClick={saveUsername} disabled={saving}>
+              <Button onClick={saveUsername} disabled={saving} className="sm:min-w-[110px]">
                 <Save className="mr-2 h-4 w-4" />
                 {saving ? "Salvando..." : "Salvar"}
               </Button>
@@ -100,7 +100,7 @@ function SettingsPage() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-border bg-card p-5 shadow-soft sm:p-6">
+        <section className="biofy-card p-5 sm:p-6">
           <h2 className="text-lg font-semibold">Sua conta</h2>
           <div className="mt-5 space-y-4">
             <div className="space-y-2">
