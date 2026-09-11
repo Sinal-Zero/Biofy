@@ -1,0 +1,207 @@
+name: Final Biofy product design pass
+
+on:
+  push:
+    paths:
+      - .github/workflows/final-product-polish-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  polish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - name: Finish product design details
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def replace(path, old, new):
+              p = Path(path)
+              text = p.read_text()
+              if old not in text:
+                  print(f"skip {path}: {old[:80]!r}")
+                  return
+              p.write_text(text.replace(old, new))
+              print(f"updated {path}")
+
+          # Public Bio: preserve user customization while making default motion quieter.
+          replace(
+              "src/components/bio/BioPreview.tsx",
+              '"transform 180ms cubic-bezier(.22,1,.36,1), box-shadow 180ms ease, filter 180ms ease, background-color 180ms ease",',
+              '"transform 150ms ease, box-shadow 150ms ease, filter 150ms ease, background-color 150ms ease",',
+          )
+          replace(
+              "src/components/bio/BioPreview.tsx",
+              'boxShadow: shadow ? `0 10px 26px -14px ${withAlpha(color, 0.9)}` : "none",',
+              'boxShadow: shadow ? `0 8px 20px -16px ${withAlpha(color, 0.75)}` : "none",',
+          )
+          replace(
+              "src/components/bio/BioPreview.tsx",
+              'backdropFilter: "blur(12px)",',
+              'backdropFilter: "blur(8px)",',
+          )
+          replace(
+              "src/components/bio/BioPreview.tsx",
+              'if (anim === "lift") return "hover:-translate-y-1";\n    if (anim === "scale") return "hover:scale-[1.025]";\n    if (anim === "glow") return "hover:brightness-110 hover:saturate-125";',
+              'if (anim === "lift") return "hover:-translate-y-0.5";\n    if (anim === "scale") return "hover:scale-[1.01]";\n    if (anim === "glow") return "hover:brightness-105";',
+          )
+          replace(
+              "src/components/bio/BioPreview.tsx",
+              '"flex min-h-full w-full justify-center overflow-x-hidden transition-colors duration-300",',
+              '"flex min-h-full w-full justify-center overflow-x-hidden transition-colors duration-200",',
+          )
+          replace(
+              "src/components/bio/BioPreview.tsx",
+              '"relative w-full transform-gpu overflow-x-clip overflow-y-visible border shadow-[0_28px_80px_-40px_rgba(0,0,0,0.76)] transition-all duration-300 motion-safe:animate-rise",\n          compact ? "rounded-[1.35rem]" : "rounded-[1.85rem]",',
+              '"relative w-full transform-gpu overflow-x-clip overflow-y-visible border shadow-[0_20px_60px_-42px_rgba(0,0,0,0.72)] transition-[background-color,border-color,box-shadow] duration-200 motion-safe:animate-rise",\n          compact ? "rounded-[1.25rem]" : "rounded-[1.5rem]",',
+          )
+          replace(
+              "src/components/bio/BioPreview.tsx",
+              'className="flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/10 hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 active:scale-95"',
+              'className="flex h-9 w-9 items-center justify-center rounded-full transition-[background-color,opacity,transform] duration-150 hover:bg-white/[0.07] hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 active:scale-[0.97]"',
+          )
+          replace(
+              "src/components/bio/BioPreview.tsx",
+              '"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/55 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent active:scale-[0.985]",',
+              '"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/55 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent active:scale-[0.99]",',
+          )
+          replace(
+              "src/components/bio/BioPreview.tsx",
+              'className="mt-8 inline-flex items-center gap-2 rounded-full px-2 py-1 opacity-65 transition-all duration-200 hover:bg-white/[0.06] hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"',
+              'className="mt-8 inline-flex items-center gap-2 rounded-full px-2 py-1 opacity-60 transition-opacity duration-150 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"',
+          )
+
+          # Appearance: remove decorative lift/glow patterns and standardize hierarchy.
+          replace(
+              "src/routes/dashboard.appearance.tsx",
+              '<header>\n        <p className="text-sm font-medium text-primary">Identidade visual</p>\n        <h1 className="mt-1 text-3xl font-bold">Aparência</h1>\n        <p className="mt-2 text-sm text-muted-foreground">\n          Cores, tipografia e proporção da sua página.\n        </p>\n      </header>',
+              '<header className="biofy-page-header">\n        <p className="biofy-page-kicker">Identidade visual</p>\n        <h1 className="biofy-page-title">Aparência</h1>\n        <p className="biofy-page-description">Cores, tipografia e proporção da sua página.</p>\n      </header>',
+          )
+          replace(
+              "src/routes/dashboard.appearance.tsx",
+              'className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-all duration-200 active:scale-[0.99] ${',
+              'className={`flex items-center justify-center gap-2 rounded-[0.65rem] px-3 py-2 text-xs font-semibold transition-[background-color,color] duration-150 ${',
+          )
+          replace(
+              "src/routes/dashboard.appearance.tsx",
+              '? "bg-card text-foreground shadow-sm"\n              : "text-muted-foreground hover:bg-card/50 hover:text-foreground"',
+              '? "bg-card text-foreground"\n              : "text-muted-foreground hover:bg-card/45 hover:text-foreground"',
+          )
+          replace(
+              "src/routes/dashboard.appearance.tsx",
+              'className={`group rounded-2xl border p-3 text-left transition-all duration-300 active:scale-[0.99] ${\n                        active\n                          ? "border-primary bg-primary/[0.04] ring-2 ring-primary/15"\n                          : "border-border hover:-translate-y-0.5 hover:border-primary/35"\n                      }`}',
+              'className={`group rounded-xl border p-3 text-left transition-[border-color,background-color] duration-150 ${\n                        active\n                          ? "border-primary/60 bg-primary/[0.035]"\n                          : "border-border hover:border-foreground/15"\n                      }`}',
+          )
+          replace(
+              "src/routes/dashboard.appearance.tsx",
+              'className="absolute inset-x-4 bottom-2 top-2 rounded-lg border transition-transform duration-300 group-hover:scale-[1.02]"',
+              'className="absolute inset-x-4 bottom-2 top-2 rounded-lg border"',
+          )
+          replace(
+              "src/routes/dashboard.appearance.tsx",
+              '<span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/[0.08] text-primary">\n                <Palette className="h-4 w-4" />\n              </span>',
+              '<Palette className="h-4 w-4 shrink-0 text-primary" />',
+          )
+          replace(
+              "src/routes/dashboard.appearance.tsx",
+              'className={`rounded-xl border px-3 py-3 text-left transition-all duration-200 active:scale-[0.99] ${\n                              active\n                                ? "border-primary bg-primary/[0.06] ring-2 ring-primary/15"\n                                : "border-border bg-background/45 hover:-translate-y-0.5 hover:border-primary/35"\n                            }`}',
+              'className={`rounded-[10px] border px-3 py-3 text-left transition-[border-color,background-color] duration-150 ${\n                              active\n                                ? "border-primary/60 bg-primary/[0.04]"\n                                : "border-border bg-background/45 hover:border-foreground/15"\n                            }`}',
+          )
+          replace(
+              "src/routes/dashboard.appearance.tsx",
+              '<span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">\n                    <Lock className="h-4 w-4" />\n                  </span>',
+              '<Lock className="mt-0.5 h-4 w-4 shrink-0 text-primary" />',
+          )
+          replace(
+              "src/routes/dashboard.appearance.tsx",
+              'className="flex min-h-[620px] items-center justify-center bg-black/[0.08] p-3 sm:p-4"',
+              'className="flex min-h-[620px] items-center justify-center bg-background/30 p-3 sm:p-4"',
+          )
+
+          # Editor: use the same page hierarchy and calmer menus/forms.
+          replace(
+              "src/routes/dashboard.editor.tsx",
+              '<div>\n          <p className="text-sm font-medium text-primary">Editor</p>\n          <h1 className="mt-1 text-3xl font-bold">Minha Bio</h1>\n        </div>',
+              '<div className="biofy-page-header">\n          <p className="biofy-page-kicker">Editor</p>\n          <h1 className="biofy-page-title">Minha Bio</h1>\n        </div>',
+          )
+          replace(
+              "src/routes/dashboard.editor.tsx",
+              'className="inline-flex w-fit items-center rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground"',
+              'className="biofy-status w-fit"',
+          )
+          replace(
+              "src/routes/dashboard.editor.tsx",
+              'className="min-h-24 w-full resize-y rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none transition focus:border-primary/50 focus:ring-2 focus:ring-ring"',
+              'className="min-h-24 w-full resize-y rounded-[10px] border border-input/90 bg-background/50 px-3 py-2 text-sm outline-none transition-[border-color,background-color,box-shadow] duration-150 focus:border-primary/45 focus:bg-background focus:ring-2 focus:ring-ring/12"',
+          )
+          replace(
+              "src/routes/dashboard.editor.tsx",
+              'className="absolute right-0 top-12 z-40 w-48 origin-top-right animate-in rounded-2xl border border-border bg-popover p-2 shadow-xl fade-in zoom-in-95"',
+              'className="absolute right-0 top-12 z-40 w-48 origin-top-right animate-pop rounded-xl border border-border/90 bg-popover p-2 shadow-panel"',
+          )
+          replace(
+              "src/routes/dashboard.editor.tsx",
+              'className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent text-foreground"',
+              'className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border/70 bg-background/45 text-muted-foreground"',
+          )
+          replace(
+              "src/routes/dashboard.editor.tsx",
+              'className="flex h-10 w-full items-center justify-center rounded-xl border border-input bg-card text-sm font-medium transition hover:border-primary/50"',
+              'className="flex h-10 w-full items-center justify-center rounded-[10px] border border-input/90 bg-background/50 text-sm font-medium transition-colors duration-150 hover:border-foreground/18"',
+          )
+          replace(
+              "src/routes/dashboard.editor.tsx",
+              'className="absolute left-0 top-12 z-30 w-[min(280px,calc(100vw-3.5rem))] rounded-2xl border border-border/90 bg-popover/95 p-3 shadow-panel backdrop-blur-xl"',
+              'className="absolute left-0 top-12 z-30 w-[min(280px,calc(100vw-3.5rem))] rounded-xl border border-border/90 bg-popover p-3 shadow-panel"',
+          )
+
+          # Settings: consistent control radius and motion.
+          replace(
+              "src/routes/dashboard.settings.tsx",
+              'className="flex min-w-0 flex-1 items-center overflow-hidden rounded-xl border border-input/90 bg-background/55 px-3 transition-[border-color,box-shadow,background-color] duration-200 focus-within:border-primary/45 focus-within:bg-background focus-within:ring-2 focus-within:ring-ring/15"',
+              'className="flex min-w-0 flex-1 items-center overflow-hidden rounded-[10px] border border-input/90 bg-background/50 px-3 transition-[border-color,box-shadow,background-color] duration-150 focus-within:border-primary/45 focus-within:bg-background focus-within:ring-2 focus-within:ring-ring/12"',
+          )
+
+          # Root states: calm error pages, no decorative glow/grid.
+          replace(
+              "src/routes/__root.tsx",
+              '<div className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-background px-4 py-10">\n      <div className="pointer-events-none absolute inset-0 grid-backdrop opacity-20" />\n      <div className="pointer-events-none absolute left-1/2 top-[-240px] h-[520px] w-[min(620px,92vw)] -translate-x-1/2 rounded-full bg-primary/12 blur-[130px]" />',
+              '<div className="flex min-h-dvh items-center justify-center bg-background px-4 py-10">',
+          )
+          replace(
+              "src/routes/__root.tsx",
+              '<h1 className="gradient-text text-7xl font-bold">404</h1>',
+              '<p className="biofy-section-label">Erro 404</p>',
+          )
+          replace(
+              "src/routes/__root.tsx",
+              'className="inline-flex h-10 items-center justify-center rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-soft transition-[transform,filter] duration-200 hover:brightness-105 active:scale-[0.985]"',
+              'className="inline-flex h-10 items-center justify-center rounded-[10px] border border-primary/80 bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors duration-150 hover:bg-primary/94"',
+          )
+          PY
+      - run: bunx prettier --write src
+      - run: |
+          bun run build
+          bunx tsc --noEmit
+          bun run lint
+      - name: Commit final polish and remove helper
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/final-product-polish-once.yml
+          git add src
+          if git diff --cached --quiet; then
+            git commit --allow-empty -m "chore: complete Biofy design validation"
+          else
+            git commit -m "style: complete Biofy product design pass"
+          fi
+          git push origin HEAD:main
