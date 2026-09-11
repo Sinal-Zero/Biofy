@@ -20,7 +20,7 @@ export interface BioPreviewProps {
 
 function withAlpha(hex: string, alpha: number): string {
   const clean = hex.replace("#", "");
-  if (clean.length !== 6) return hex;
+  if (clean.length !== 6 && clean.length !== 8) return hex;
   const r = parseInt(clean.slice(0, 2), 16);
   const g = parseInt(clean.slice(2, 4), 16);
   const b = parseInt(clean.slice(4, 6), 16);
@@ -54,6 +54,10 @@ export function BioPreview({
 }: BioPreviewProps) {
   const theme = useMemo(() => mergeTheme(rawTheme), [rawTheme]);
   const textScale = Math.min(1.35, Math.max(0.8, Number(theme.textScale) || 1));
+  const panelWidth = Math.min(Math.max(Number(theme.width) || 480, 320), 620);
+  const panelMinHeight = compact ? "520px" : "min(800px, calc(100dvh - 40px))";
+  const panelMaxHeight = compact ? undefined : "min(920px, calc(100dvh - 24px))";
+  const panelBorderWidth = Math.min(6, Math.max(0, Number(theme.panelBorderWidth) || 0));
 
   const panelBackground =
     theme.bgType === "gradient"
@@ -64,14 +68,9 @@ export function BioPreview({
 
   const socials = blocks.filter((block) => block.is_visible && isSocial(block.type) && block.url);
   const mainBlocks = blocks.filter((block) => block.is_visible && !isSocial(block.type));
-
   const avatarRadius =
     theme.avatarShape === "circle" ? "999px" : theme.avatarShape === "rounded" ? "18px" : "4px";
-
   const initials = (displayName || username || "B").trim().charAt(0).toUpperCase();
-  const panelWidth = Math.min(Math.max(Number(theme.width) || 480, 320), 620);
-  const panelMinHeight = compact ? "520px" : "min(720px, calc(100dvh - 48px))";
-  const panelMaxHeight = compact ? undefined : "min(860px, calc(100dvh - 32px))";
 
   function buttonStyleFor(block: BioBlock) {
     const cfg = block.config ?? {};
@@ -85,9 +84,10 @@ export function BioPreview({
 
     const base: React.CSSProperties = {
       borderRadius: shapeRadius[shape] ?? "14px",
-      padding: compact ? "10px 13px" : (sizePadding[theme.buttonSize] ?? sizePadding["md"]),
+      padding: compact ? "10px 13px" : (sizePadding[theme.buttonSize] ?? sizePadding.md),
       boxShadow: shadow ? `0 10px 26px -14px ${withAlpha(color, 0.9)}` : "none",
-      transition: "transform 180ms cubic-bezier(.22,1,.36,1), box-shadow 180ms, filter 180ms",
+      transition:
+        "transform 180ms cubic-bezier(.22,1,.36,1), box-shadow 180ms ease, filter 180ms ease, background-color 180ms ease",
       border: "1px solid transparent",
       width: "100%",
       textAlign: "center",
@@ -133,23 +133,25 @@ export function BioPreview({
     const cfg = block.config ?? {};
     const anim = !cfg.animation || cfg.animation === "inherit" ? theme.hoverAnim : cfg.animation;
     if (anim === "lift") return "hover:-translate-y-1";
-    if (anim === "scale") return "hover:scale-[1.03]";
-    if (anim === "glow") return "hover:brightness-125 hover:saturate-150";
+    if (anim === "scale") return "hover:scale-[1.025]";
+    if (anim === "glow") return "hover:brightness-110 hover:saturate-125";
     return "";
   }
 
   return (
     <div
       className={cn(
-        "flex min-h-full w-full items-start justify-center overflow-x-hidden transition-colors duration-300",
-        compact ? "p-3 pt-8" : "min-h-dvh px-4 py-6 sm:px-6 sm:py-10 lg:py-14",
+        "flex min-h-full w-full justify-center overflow-x-hidden transition-colors duration-300",
+        compact
+          ? "items-start p-3 pt-8"
+          : "min-h-dvh items-center px-4 py-5 sm:px-6 sm:py-7 lg:py-8",
         className,
       )}
       style={{ backgroundColor: theme.pageBgColor, fontFamily: fontStacks[theme.font] }}
     >
       <div
         className={cn(
-          "w-full overflow-x-hidden overflow-y-auto border shadow-[0_24px_70px_-36px_rgba(0,0,0,0.72)] transition-all duration-300",
+          "relative w-full overflow-x-hidden overflow-y-auto border shadow-[0_28px_80px_-40px_rgba(0,0,0,0.76)] transition-all duration-300",
           compact ? "rounded-[1.35rem]" : "rounded-[1.85rem]",
         )}
         style={{
@@ -160,7 +162,7 @@ export function BioPreview({
           backgroundSize: "cover",
           backgroundPosition: "center",
           borderColor: theme.panelBorderColor,
-          borderWidth: `${theme.panelBorderWidth}px`,
+          borderWidth: `${panelBorderWidth}px`,
           borderStyle: "solid",
           color: theme.textColor,
           overscrollBehavior: "contain",
@@ -168,8 +170,8 @@ export function BioPreview({
       >
         <div
           className={cn(
-            "mx-auto flex min-h-[inherit] w-full flex-col px-5",
-            compact ? "py-7" : "px-6 py-10 sm:px-8 sm:py-12",
+            "mx-auto flex min-h-[inherit] w-full flex-col justify-center px-5",
+            compact ? "py-8" : "px-6 py-12 sm:px-9 sm:py-14",
             theme.align === "left" ? "items-start text-left" : "items-center text-center",
           )}
         >
@@ -238,7 +240,7 @@ export function BioPreview({
 
           {socials.length > 0 ? (
             <div
-              className={cn("flex flex-wrap items-center gap-3", compact ? "mt-3" : "mt-5")}
+              className={cn("flex flex-wrap items-center gap-2", compact ? "mt-3" : "mt-5")}
               style={{ justifyContent: theme.align === "left" ? "flex-start" : "center" }}
             >
               {socials.map((block) => {
@@ -255,10 +257,10 @@ export function BioPreview({
                           onClick: () => onBlockClick?.(block),
                         }
                       : {})}
-                    className="transition-transform duration-200 hover:-translate-y-0.5 hover:opacity-80"
+                    className="flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/10 hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 active:scale-95"
                     aria-label={block.title || getBlockDef(block.type).label}
                   >
-                    <Icon size={(compact ? 16 : 22) * textScale} color={theme.textColor} />
+                    <Icon size={(compact ? 16 : 20) * textScale} color={theme.textColor} />
                   </El>
                 );
               })}
@@ -326,7 +328,10 @@ export function BioPreview({
                     rel="noreferrer noopener"
                     onClick={() => onBlockClick?.(block)}
                     style={buttonStyleFor(block)}
-                    className={animClass(block)}
+                    className={cn(
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/55 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent active:scale-[0.985]",
+                      animClass(block),
+                    )}
                   >
                     {content}
                   </a>
@@ -344,7 +349,7 @@ export function BioPreview({
           {showBranding ? (
             <a
               href="/"
-              className="mt-auto inline-flex items-center gap-2 pt-9 opacity-70 transition-all hover:opacity-100"
+              className="mt-8 inline-flex items-center gap-2 rounded-full px-2 py-1 opacity-65 transition-all duration-200 hover:bg-white/[0.06] hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
               style={{
                 color: theme.mutedColor,
                 fontSize: `${(compact ? 9 : 11) * textScale}px`,
