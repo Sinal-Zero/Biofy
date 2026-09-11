@@ -1,12 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-const GEMINI_TIMEOUT_MS = 15000;
+const GEMINI_TIMEOUT_MS = 20000;
 const GEMINI_MODELS = ["gemini-2.5-flash-lite", "gemini-2.5-flash"] as const;
 
 function mapGeminiError(detail: string, status: number) {
   const normalized = detail.toLowerCase();
   if (status === 429 || normalized.includes("quota") || normalized.includes("resource_exhausted")) {
-    return "A cota gratuita do Gemini foi atingida. Tente novamente em alguns minutos.";
+    return "A cota do Gemini foi atingida. Tente novamente em alguns minutos.";
   }
   if (
     status === 401 ||
@@ -15,15 +15,15 @@ function mapGeminiError(detail: string, status: number) {
     normalized.includes("api_key") ||
     normalized.includes("permission_denied")
   ) {
-    return "A GEMINI_API_KEY não foi aceita pelo Google. Confira a chave e as restrições dela no Google AI Studio.";
+    return "A chave do Gemini não foi aceita pelo Google. Confira a GEMINI_API_KEY e as restrições dela no Google AI Studio.";
   }
   if (normalized.includes("model") && (normalized.includes("not found") || normalized.includes("not supported"))) {
-    return "Nenhum dos modelos Gemini configurados está disponível para essa chave.";
+    return "O modelo Gemini configurado não está disponível para esta chave.";
   }
-  if (status >= 500) {
-    return "O serviço do Gemini está temporariamente instável. Tente novamente em alguns instantes.";
+  if (status >= 500 || status === 0) {
+    return "O Gemini está temporariamente indisponível. Tente novamente em instantes.";
   }
-  return "O Google recusou a solicitação da Biofy AI. Revise a configuração da Gemini API e tente novamente.";
+  return "O Gemini recusou a solicitação. Tente novamente; se persistir, revise a chave e o projeto da Gemini API.";
 }
 
 type GeminiAttempt = {
@@ -37,8 +37,6 @@ async function requestGemini(
   geminiKey: string,
   model: (typeof GEMINI_MODELS)[number],
   prompt: string,
-  responseSchema: Record<string, unknown>,
-  simplified = false,
 ): Promise<GeminiAttempt> {
   try {
     const response = await fetch(
@@ -51,19 +49,11 @@ async function requestGemini(
         },
         signal: AbortSignal.timeout(GEMINI_TIMEOUT_MS),
         body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: simplified
-            ? {
-                temperature: 0.45,
-                maxOutputTokens: 600,
-                responseMimeType: "application/json",
-              }
-            : {
-                temperature: 0.45,
-                maxOutputTokens: 600,
-                responseMimeType: "application/json",
-                responseSchema,
-              },
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.45,
+            maxOutputTokens: 700,
+          },
         }),
       },
     );
@@ -86,6 +76,25 @@ async function requestGemini(
   }
 }
 
+function parseJsonText(text: string) {
+  const trimmed = text.trim();
+  const unfenced = trimmed
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/i, "")
+    .trim();
+
+  try {
+    return JSON.parse(unfenced) as Record<string, unknown>;
+  } catch {
+    const start = unfenced.indexOf("{");
+    const end = unfenced.lastIndexOf("}");
+    if (start >= 0 && end > start) {
+      return JSON.parse(unfenced.slice(start, end + 1)) as Record<string, unknown>;
+    }
+    throw new Error("INVALID_JSON");
+  }
+}
+
 export const Route = createFileRoute("/api/ai/bio")({
   server: {
     handlers: {
@@ -102,31 +111,21 @@ export const Route = createFileRoute("/api/ai/bio")({
 
         const authorization = request.headers.get("authorization");
         const accessToken = authorization?.startsWith("Bearer ") ? authorization.slice(7) : null;
+        if (!accessToken) return Response.json({ error: "Sessão não encontrada." }, { status: 401 });
 
-        if (!accessToken) {
-          return Response.json({ error: "Sessão não encontrada." }, { status: 401 });
-        }
-
-        const authHeaders = {
-          apikey: supabaseKey,
-          Authorization: `Bearer ${accessToken}`,
-        };
-
+        const authHeaders = { apikey: supabaseKey, Authorization: `Bearer ${accessToken}` };
         const userResponse = await fetch(`${supabaseUrl}/auth/v1/user`, { headers: authHeaders });
         if (!userResponse.ok) {
           return Response.json({ error: "Sessão inválida ou expirada." }, { status: 401 });
         }
 
         const user = (await userResponse.json()) as { id?: string };
-        if (!user.id) {
-          return Response.json({ error: "Usuário inválido." }, { status: 401 });
-        }
+        if (!user.id) return Response.json({ error: "Usuário inválido." }, { status: 401 });
 
         const subscriptionResponse = await fetch(
-          `${supabaseUrl}/rest/v1/subscriptions?user_id=eq.${encodeURIComponent(user.id)}&select=plan,status&limit=1`,
+          `${supabaseUrl}/rest/v1/subscriptions?user_id=eq.${encodeURIComponent(user.id)}&select=plan,status,current_period_end&limit=1`,
           { headers: authHeaders },
         );
-
         if (!subscriptionResponse.ok) {
           return Response.json({ error: "Não foi possível validar seu plano." }, { status: 403 });
         }
@@ -134,14 +133,17 @@ export const Route = createFileRoute("/api/ai/bio")({
         const subscriptions = (await subscriptionResponse.json()) as Array<{
           plan?: string;
           status?: string;
+          current_period_end?: string | null;
         }>;
         const subscription = subscriptions[0];
-        const allowedPlan = subscription?.plan === "pro" || subscription?.plan === "business";
-        const activeStatus = !subscription?.status || ["active", "trialing"].includes(subscription.status);
+        const isMaster = subscription?.plan === "business";
+        const activeStatus = Boolean(subscription?.status && ["active", "trialing"].includes(subscription.status));
+        const periodActive =
+          !subscription?.current_period_end || new Date(subscription.current_period_end).getTime() >= Date.now();
 
-        if (!allowedPlan || !activeStatus) {
+        if (!isMaster || !activeStatus || !periodActive) {
           return Response.json(
-            { error: "A Biofy AI está disponível nos planos Pro e Master." },
+            { error: "A Biofy AI é exclusiva do plano Master." },
             { status: 403 },
           );
         }
@@ -155,10 +157,7 @@ export const Route = createFileRoute("/api/ai/bio")({
               history?: Array<{ role?: string; text?: string }>;
             }
           | null;
-
-        if (!body) {
-          return Response.json({ error: "Pedido inválido." }, { status: 400 });
-        }
+        if (!body) return Response.json({ error: "Pedido inválido." }, { status: 400 });
 
         const instruction = (body.instruction ?? "").trim().slice(0, 1000);
         if (!instruction) {
@@ -172,7 +171,6 @@ export const Route = createFileRoute("/api/ai/bio")({
               type: String(link.type ?? "link").slice(0, 40),
             }))
           : [];
-
         const history = Array.isArray(body.history)
           ? body.history
               .slice(-6)
@@ -184,64 +182,28 @@ export const Route = createFileRoute("/api/ai/bio")({
           : [];
 
         const prompt = [
-          "Você é a Biofy AI, uma assistente rápida de edição de páginas de bio.",
-          "Responda em português do Brasil. Seja curta, natural e útil.",
-          "Edite apenas o que o pedido exige. Não invente fatos, números, clientes ou credenciais. Não altere URLs.",
-          `Nome: ${String(body.displayName ?? "").slice(0, 100)}`,
+          "Você é a Biofy AI, assistente de edição de páginas de bio.",
+          "Responda em português do Brasil, de forma curta, natural e útil.",
+          "Edite somente o que foi pedido. Não invente fatos, números, clientes ou credenciais. Nunca altere URLs.",
+          `Nome atual: ${String(body.displayName ?? "").slice(0, 100)}`,
           `Bio atual: ${String(body.bio ?? "").slice(0, 240)}`,
-          `Links: ${JSON.stringify(links)}`,
+          `Links atuais: ${JSON.stringify(links)}`,
           history.length ? `Conversa recente: ${JSON.stringify(history)}` : "",
-          `Pedido atual: ${instruction}`,
-          'Retorne SOMENTE JSON válido no formato: {"message":"resposta curta","bio":"bio com até 240 caracteres","linkTitles":[{"id":"id existente","title":"novo título"}],"tips":["dica curta"]}. Se não precisar mudar a bio, repita a bio atual. Use apenas ids de links existentes.',
-        ]
-          .filter(Boolean)
-          .join("\n");
-
-        const responseSchema = {
-          type: "object",
-          properties: {
-            message: { type: "string" },
-            bio: { type: "string" },
-            linkTitles: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  id: { type: "string" },
-                  title: { type: "string" },
-                },
-                required: ["id", "title"],
-              },
-            },
-            tips: { type: "array", items: { type: "string" } },
-          },
-          required: ["message", "bio", "linkTitles", "tips"],
-        };
+          `Pedido: ${instruction}`,
+          'Retorne somente um objeto JSON válido, sem markdown, no formato {"message":"resposta curta","bio":"bio com até 240 caracteres","linkTitles":[{"id":"id existente","title":"novo título"}],"tips":["dica curta"]}. Se não mudar a bio, repita a bio atual. Só use IDs existentes.',
+        ].filter(Boolean).join("\n");
 
         let geminiResponse: Response | undefined;
         let lastFailure: GeminiAttempt = { detail: "", status: 0, timedOut: false };
 
         for (const model of GEMINI_MODELS) {
-          const fullAttempt = await requestGemini(geminiKey, model, prompt, responseSchema, false);
-          if (fullAttempt.response?.ok) {
-            geminiResponse = fullAttempt.response;
+          const attempt = await requestGemini(geminiKey, model, prompt);
+          if (attempt.response?.ok) {
+            geminiResponse = attempt.response;
             break;
           }
-          lastFailure = fullAttempt;
-
-          // A 400 normalmente indica incompatibilidade de algum recurso opcional da configuração.
-          // Repetimos uma vez com payload mínimo antes de trocar de modelo.
-          if (fullAttempt.status === 400) {
-            const simpleAttempt = await requestGemini(geminiKey, model, prompt, responseSchema, true);
-            if (simpleAttempt.response?.ok) {
-              geminiResponse = simpleAttempt.response;
-              break;
-            }
-            lastFailure = simpleAttempt;
-          }
-
-          // Erros de chave/permissão e quota não melhoram tentando outro modelo.
-          if ([401, 403, 429].includes(lastFailure.status)) break;
+          lastFailure = attempt;
+          if ([401, 403, 429].includes(attempt.status)) break;
         }
 
         if (!geminiResponse) {
@@ -249,10 +211,7 @@ export const Route = createFileRoute("/api/ai/bio")({
             ? "O Gemini demorou demais para responder. Tente novamente."
             : mapGeminiError(lastFailure.detail, lastFailure.status);
           return Response.json(
-            {
-              error,
-              code: lastFailure.status ? `GEMINI_${lastFailure.status}` : "GEMINI_NETWORK",
-            },
+            { error, code: lastFailure.status ? `GEMINI_${lastFailure.status}` : "GEMINI_NETWORK" },
             { status: 502 },
           );
         }
@@ -260,33 +219,26 @@ export const Route = createFileRoute("/api/ai/bio")({
         const payload = (await geminiResponse.json()) as {
           candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
         };
-        const text = payload.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-
-        if (!text) {
-          return Response.json({ error: "O Gemini retornou uma resposta vazia." }, { status: 502 });
-        }
+        const text = payload.candidates?.[0]?.content?.parts
+          ?.map((part) => part.text ?? "")
+          .join("")
+          .trim();
+        if (!text) return Response.json({ error: "O Gemini retornou uma resposta vazia." }, { status: 502 });
 
         try {
-          const parsed = JSON.parse(text) as {
-            message?: unknown;
-            bio?: unknown;
-            linkTitles?: unknown;
-            tips?: unknown;
-          };
-
+          const parsed = parseJsonText(text);
           const currentBio = String(body.bio ?? "").slice(0, 240);
           const result = {
             message:
-              typeof parsed.message === "string" && parsed.message.trim()
-                ? parsed.message.trim().slice(0, 500)
+              typeof parsed["message"] === "string" && parsed["message"].trim()
+                ? parsed["message"].trim().slice(0, 500)
                 : "Pronto. Ajustei sua Bio.",
-            bio: typeof parsed.bio === "string" ? parsed.bio.slice(0, 240) : currentBio,
-            linkTitles: Array.isArray(parsed.linkTitles)
-              ? parsed.linkTitles
+            bio: typeof parsed["bio"] === "string" ? parsed["bio"].slice(0, 240) : currentBio,
+            linkTitles: Array.isArray(parsed["linkTitles"])
+              ? parsed["linkTitles"]
                   .filter(
                     (item): item is { id: string; title: string } =>
-                      typeof item === "object" &&
-                      item !== null &&
+                      typeof item === "object" && item !== null &&
                       typeof (item as { id?: unknown }).id === "string" &&
                       typeof (item as { title?: unknown }).title === "string",
                   )
@@ -294,18 +246,17 @@ export const Route = createFileRoute("/api/ai/bio")({
                   .slice(0, 30)
                   .map((item) => ({ id: item.id, title: item.title.slice(0, 120) }))
               : [],
-            tips: Array.isArray(parsed.tips)
-              ? parsed.tips
+            tips: Array.isArray(parsed["tips"])
+              ? parsed["tips"]
                   .filter((tip): tip is string => typeof tip === "string")
                   .slice(0, 3)
                   .map((tip) => tip.slice(0, 220))
               : [],
           };
-
           return Response.json(result, { headers: { "Cache-Control": "no-store" } });
         } catch {
           return Response.json(
-            { error: "O Gemini respondeu em um formato inválido. Tente novamente." },
+            { error: "O Gemini respondeu em um formato inesperado. Tente novamente." },
             { status: 502 },
           );
         }
