@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Check, Crown, ExternalLink, ShieldCheck } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Check, Crown, ExternalLink, Loader2, RefreshCw, ShieldCheck } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { useBio } from "@/components/dashboard/BioContext";
 import { Button } from "@/components/ui/button";
 import { fetchSubscription } from "@/lib/bio-data";
@@ -60,6 +60,22 @@ function SubscriptionPage() {
   const { bundle } = useBio();
   const [subscription, setSubscription] = useState<Subscription>(null);
   const [loading, setLoading] = useState(true);
+  const [checking, setChecking] = useState(false);
+  const [checkoutPlan, setCheckoutPlan] = useState<string | null>(null);
+
+  const refreshSubscription = useCallback(
+    async (manual = false) => {
+      if (manual) setChecking(true);
+      try {
+        const data = await fetchSubscription(bundle.page.user_id);
+        setSubscription(data);
+      } finally {
+        if (manual) setChecking(false);
+        setLoading(false);
+      }
+    },
+    [bundle.page.user_id],
+  );
 
   useEffect(() => {
     let active = true;
@@ -70,15 +86,27 @@ function SubscriptionPage() {
       .finally(() => {
         if (active) setLoading(false);
       });
+
+    const handleFocus = () => {
+      if (active) void refreshSubscription();
+    };
+    window.addEventListener("focus", handleFocus);
+
     return () => {
       active = false;
+      window.removeEventListener("focus", handleFocus);
     };
-  }, [bundle.page.user_id]);
+  }, [bundle.page.user_id, refreshSubscription]);
 
   const currentPlan = subscription?.plan ?? "free";
   const hasPaidSubscription =
     (currentPlan === "pro" || currentPlan === "business") &&
     (!subscription?.status || ["active", "trialing"].includes(subscription.status));
+
+  function startCheckout(planName: string, checkoutUrl: string) {
+    setCheckoutPlan(planName);
+    window.open(checkoutUrl, "_blank", "noopener,noreferrer");
+  }
 
   return (
     <div className="space-y-6">
@@ -125,12 +153,37 @@ function SubscriptionPage() {
       </section>
 
       {!hasPaidSubscription ? (
-        <div className="flex items-start gap-3 rounded-2xl border border-primary/20 bg-primary/[0.05] px-4 py-3.5 text-sm">
-          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-          <p className="leading-5 text-muted-foreground">
-            No checkout, use <strong className="font-semibold text-foreground">o mesmo e-mail da sua conta Biofy</strong>.
-            Assim o pagamento é identificado e o plano é ativado automaticamente.
-          </p>
+        <div className="rounded-2xl border border-primary/20 bg-primary/[0.05] px-4 py-4">
+          <div className="flex items-start gap-3 text-sm">
+            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+            <div className="min-w-0 flex-1">
+              <p className="leading-5 text-muted-foreground">
+                No checkout, use <strong className="font-semibold text-foreground">o mesmo e-mail da sua conta Biofy</strong>.
+                Assim o pagamento é identificado e o plano é ativado automaticamente.
+              </p>
+              {checkoutPlan ? (
+                <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <p className="flex-1 text-xs text-muted-foreground">
+                    Finalizou o pagamento do {checkoutPlan}? A Biofy também verifica novamente quando você volta para esta aba.
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => void refreshSubscription(true)}
+                    disabled={checking}
+                  >
+                    {checking ? (
+                      <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <RefreshCw className="mr-2 h-3.5 w-3.5" />
+                    )}
+                    {checking ? "Verificando" : "Verificar pagamento"}
+                  </Button>
+                </div>
+              ) : null}
+            </div>
+          </div>
         </div>
       ) : null}
 
@@ -171,11 +224,13 @@ function SubscriptionPage() {
                   Você já está neste plano
                 </div>
               ) : canCheckout && plan.checkoutUrl ? (
-                <Button className="mt-6 w-full" asChild>
-                  <a href={plan.checkoutUrl} target="_blank" rel="noreferrer noopener">
-                    Assinar {plan.name}
-                    <ExternalLink className="ml-2 h-4 w-4" />
-                  </a>
+                <Button
+                  className="mt-6 w-full"
+                  type="button"
+                  onClick={() => startCheckout(plan.name, plan.checkoutUrl)}
+                >
+                  Assinar {plan.name}
+                  <ExternalLink className="ml-2 h-4 w-4" />
                 </Button>
               ) : plan.id === "free" ? (
                 <Button className="mt-6 w-full" variant="outline" disabled>
