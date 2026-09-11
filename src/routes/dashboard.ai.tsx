@@ -75,12 +75,12 @@ function AiPage() {
         </p>
       </header>
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(340px,0.62fr)_minmax(600px,1.38fr)] xl:items-start">
+      <div className="grid gap-5 xl:grid-cols-[minmax(340px,0.62fr)_minmax(600px,1.38fr)] xl:items-stretch">
         <BioAiAssistant />
 
-        <aside className="xl:sticky xl:top-6 xl:self-start">
-          <div className="overflow-hidden rounded-[1.5rem] border border-border bg-card shadow-panel">
-            <div className="border-b border-border bg-background/45 p-3 backdrop-blur-xl">
+        <aside className="h-full">
+          <div className="h-full min-h-[850px] overflow-hidden rounded-[1.5rem] border border-border/90 bg-card/95 shadow-panel xl:min-h-[872px]">
+            <div className="border-b border-border/80 bg-background/35 p-3">
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-foreground">Preview</p>
@@ -90,7 +90,7 @@ function AiPage() {
                 </div>
               </div>
 
-              <div className="mt-3 grid grid-cols-2 rounded-xl border border-border bg-background/60 p-1">
+              <div className="mt-3 grid grid-cols-2 rounded-xl border border-border/80 bg-background/55 p-1">
                 {(
                   [
                     ["mobile", Smartphone, "Celular"],
@@ -114,10 +114,10 @@ function AiPage() {
               </div>
             </div>
 
-            <div className="min-h-[760px] bg-black/15 p-4 2xl:min-h-[820px]">
+            <div className="flex min-h-[760px] items-center justify-center bg-black/10 p-4 2xl:min-h-[820px]">
               {previewMode === "mobile" ? (
                 <div className="mx-auto w-full max-w-[340px] animate-rise">
-                  <PhoneFrame>
+                  <PhoneFrame glow={false}>
                     <BioPreview
                       displayName={bundle.profile.display_name}
                       username={bundle.profile.username}
@@ -132,7 +132,7 @@ function AiPage() {
                   </PhoneFrame>
                 </div>
               ) : (
-                <div className="h-[760px] overflow-auto rounded-xl border border-border/70 bg-background/35 animate-rise 2xl:h-[820px]">
+                <div className="flex h-[720px] w-full items-center justify-center overflow-hidden rounded-2xl border border-border/70 bg-background/35 animate-rise 2xl:h-[780px]">
                   <BioPreview
                     displayName={bundle.profile.display_name}
                     username={bundle.profile.username}
@@ -140,9 +140,8 @@ function AiPage() {
                     avatarUrl={bundle.profile.avatar_url}
                     theme={theme}
                     blocks={bundle.blocks}
-                    compact
                     showBranding={false}
-                    className="min-h-full"
+                    className="h-full min-h-full"
                   />
                 </div>
               )}
