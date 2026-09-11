@@ -73,18 +73,13 @@ function OnboardingPage() {
   }
 
   return (
-    <main className="relative min-h-dvh overflow-hidden bg-background px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
-      <div className="pointer-events-none absolute inset-0 grid-backdrop opacity-[0.1]" />
-      <div className="pointer-events-none absolute right-[-220px] top-[-180px] h-[520px] w-[520px] rounded-full bg-primary/[0.08] blur-[130px]" />
-
-      <div className="relative mx-auto mb-7 flex max-w-[1220px] items-center justify-between gap-4 sm:mb-9">
+    <main className="min-h-dvh bg-background px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
+      <div className="mx-auto mb-8 flex max-w-[1180px] items-center justify-between gap-4">
         <Logo />
-        <span className="rounded-full border border-border/70 bg-card/65 px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
-          Configuração inicial
-        </span>
+        <span className="text-xs font-medium text-muted-foreground">Configuração inicial</span>
       </div>
 
-      <div className="relative mx-auto grid max-w-[1220px] gap-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start xl:gap-12">
+      <div className="mx-auto grid max-w-[1180px] gap-9 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start xl:gap-12">
         <section className="biofy-page space-y-7 sm:space-y-8">
           <header className="biofy-page-header">
             <p className="biofy-page-kicker">Comece do seu jeito</p>
@@ -96,7 +91,7 @@ function OnboardingPage() {
 
           <div className="biofy-card p-5 sm:p-6">
             <Label htmlFor="username">Username</Label>
-            <div className="mt-2 flex min-w-0 items-center rounded-xl border border-input/90 bg-background/55 px-3 transition-[border-color,background-color,box-shadow] duration-200 focus-within:border-primary/45 focus-within:bg-background focus-within:ring-2 focus-within:ring-ring/15">
+            <div className="mt-2 flex min-w-0 items-center rounded-[10px] border border-input/90 bg-background/50 px-3 transition-[border-color,background-color,box-shadow] duration-150 focus-within:border-primary/45 focus-within:bg-background focus-within:ring-2 focus-within:ring-ring/12">
               <span className="shrink-0 whitespace-nowrap text-sm text-muted-foreground">
                 {getPublicBioDisplay()}
               </span>
@@ -117,11 +112,12 @@ function OnboardingPage() {
 
           <div>
             <div className="mb-4">
-              <h2 className="text-xl font-semibold">Escolha um template</h2>
+              <h2 className="text-xl font-semibold tracking-[-0.02em]">Escolha um template</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                Só um ponto de partida para sua página.
+                Um ponto de partida para você continuar personalizando depois.
               </p>
             </div>
+
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {templates.map((template) => {
                 const active = template.id === templateId;
@@ -135,13 +131,13 @@ function OnboardingPage() {
                     key={template.id}
                     type="button"
                     onClick={() => setTemplateId(template.id)}
-                    className={`biofy-card biofy-card-interactive relative overflow-hidden p-4 text-left active:scale-[0.99] ${
-                      active ? "border-primary/70 bg-primary/[0.04] ring-2 ring-primary/12" : ""
+                    className={`biofy-card relative overflow-hidden p-4 text-left transition-[border-color,background-color] duration-150 ${
+                      active ? "border-primary/60 bg-primary/[0.035]" : "hover:border-foreground/15"
                     }`}
                     aria-pressed={active}
                   >
                     <div
-                      className="mb-4 h-20 rounded-xl border border-white/[0.06] shadow-inner"
+                      className="mb-4 h-20 rounded-lg border border-white/[0.06]"
                       style={{ background }}
                     />
                     <div className="flex items-start justify-between gap-3">
