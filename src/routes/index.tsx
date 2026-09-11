@@ -141,7 +141,8 @@ const plans = [
 
 function HomePage() {
   const navigate = useNavigate();
-  const [user, setUser] = useState<Awaited<ReturnType<typeof supabase.auth.getUser>>["data"]["user"]>(null);
+  const [user, setUser] =
+    useState<Awaited<ReturnType<typeof supabase.auth.getUser>>["data"]["user"]>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
 
@@ -208,10 +209,18 @@ function HomePage() {
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Logo />
           <nav className="hidden items-center gap-7 text-sm text-muted-foreground md:flex">
-            <a href="#como-funciona" className="transition hover:text-foreground">Como funciona</a>
-            <a href="#templates" className="transition hover:text-foreground">Templates</a>
-            <a href="#recursos" className="transition hover:text-foreground">Recursos</a>
-            <a href="#precos" className="transition hover:text-foreground">Preços</a>
+            <a href="#como-funciona" className="transition hover:text-foreground">
+              Como funciona
+            </a>
+            <a href="#templates" className="transition hover:text-foreground">
+              Templates
+            </a>
+            <a href="#recursos" className="transition hover:text-foreground">
+              Recursos
+            </a>
+            <a href="#precos" className="transition hover:text-foreground">
+              Preços
+            </a>
           </nav>
 
           {user ? (
@@ -224,22 +233,41 @@ function HomePage() {
                 aria-expanded={profileOpen}
               >
                 {avatarUrl ? (
-                  <img src={avatarUrl} alt={displayName} className="h-7 w-7 rounded-full object-cover" />
+                  <img
+                    src={avatarUrl}
+                    alt={displayName}
+                    className="h-7 w-7 rounded-full object-cover"
+                  />
                 ) : (
-                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">{initial}</span>
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
+                    {initial}
+                  </span>
                 )}
-                <span className="hidden max-w-32 truncate text-sm font-medium sm:block">{displayName}</span>
-                <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 ${profileOpen ? "rotate-180" : ""}`} />
+                <span className="hidden max-w-32 truncate text-sm font-medium sm:block">
+                  {displayName}
+                </span>
+                <ChevronDown
+                  className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 ${profileOpen ? "rotate-180" : ""}`}
+                />
               </button>
 
               {profileOpen ? (
-                <div role="menu" className="absolute right-0 top-12 w-64 origin-top-right animate-in rounded-2xl border border-border bg-popover p-2 shadow-xl fade-in zoom-in-95">
+                <div
+                  role="menu"
+                  className="absolute right-0 top-12 w-64 origin-top-right animate-in rounded-2xl border border-border bg-popover p-2 shadow-xl fade-in zoom-in-95"
+                >
                   <div className="border-b border-border px-3 py-3">
                     <div className="flex items-center gap-3">
                       {avatarUrl ? (
-                        <img src={avatarUrl} alt={displayName} className="h-10 w-10 rounded-full object-cover" />
+                        <img
+                          src={avatarUrl}
+                          alt={displayName}
+                          className="h-10 w-10 rounded-full object-cover"
+                        />
                       ) : (
-                        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/15 font-semibold text-primary">{initial}</span>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/15 font-semibold text-primary">
+                          {initial}
+                        </span>
                       )}
                       <div className="min-w-0">
                         <p className="truncate text-sm font-semibold">{displayName}</p>
@@ -248,17 +276,32 @@ function HomePage() {
                     </div>
                   </div>
 
-                  <Link to="/dashboard" onClick={() => setProfileOpen(false)} className="mt-2 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition hover:bg-accent" role="menuitem">
+                  <Link
+                    to="/dashboard"
+                    onClick={() => setProfileOpen(false)}
+                    className="mt-2 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition hover:bg-accent"
+                    role="menuitem"
+                  >
                     <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
                     Painel
                   </Link>
 
-                  <button type="button" disabled className="flex w-full cursor-not-allowed items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-muted-foreground opacity-60" role="menuitem">
+                  <button
+                    type="button"
+                    disabled
+                    className="flex w-full cursor-not-allowed items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-muted-foreground opacity-60"
+                    role="menuitem"
+                  >
                     <Settings className="h-4 w-4" />
                     <span className="flex-1">Configurações</span>
                   </button>
 
-                  <button type="button" onClick={() => void signOut()} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-destructive transition hover:bg-destructive/10" role="menuitem">
+                  <button
+                    type="button"
+                    onClick={() => void signOut()}
+                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-destructive transition hover:bg-destructive/10"
+                    role="menuitem"
+                  >
                     <LogOut className="h-4 w-4" />
                     Sair
                   </button>
@@ -267,8 +310,12 @@ function HomePage() {
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" asChild><Link to="/login">Entrar</Link></Button>
-              <Button size="sm" asChild><Link to="/signup">Criar minha Bio</Link></Button>
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/login">Entrar</Link>
+              </Button>
+              <Button size="sm" asChild>
+                <Link to="/signup">Criar minha Bio</Link>
+              </Button>
             </div>
           )}
         </div>
@@ -284,36 +331,68 @@ function HomePage() {
                 <Sparkles className="h-3.5 w-3.5" />
                 Mais que links. É você.
               </div>
-              <h1 className="text-5xl font-bold leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">Sua bio. <span className="gradient-text">Do seu jeito.</span></h1>
+              <h1 className="text-5xl font-bold leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
+                Sua bio. <span className="gradient-text">Do seu jeito.</span>
+              </h1>
               <p className="mt-6 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
-                Reúna tudo o que importa em uma página que realmente parece sua. Escolha um template, personalize, publique e compartilhe um único link.
+                Reúna tudo o que importa em uma página que realmente parece sua. Escolha um
+                template, personalize, publique e compartilhe um único link.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <Button size="lg" asChild><Link to="/signup">Criar minha Bio <ArrowRight className="ml-2 h-4 w-4" /></Link></Button>
-                <Button size="lg" variant="outline" asChild><a href="#templates">Explorar templates</a></Button>
+                <Button size="lg" asChild>
+                  <Link to="/signup">
+                    Criar minha Bio <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button size="lg" variant="outline" asChild>
+                  <a href="#templates">Explorar templates</a>
+                </Button>
               </div>
               <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-primary" />Comece grátis</span>
-                <span className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-primary" />Sem precisar programar</span>
-                <span className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-primary" />Preview em tempo real</span>
+                <span className="flex items-center gap-1.5">
+                  <Check className="h-3.5 w-3.5 text-primary" />
+                  Comece grátis
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Check className="h-3.5 w-3.5 text-primary" />
+                  Sem precisar programar
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Check className="h-3.5 w-3.5 text-primary" />
+                  Preview em tempo real
+                </span>
               </div>
             </div>
 
             <div className="relative mx-auto w-full max-w-md">
               <div className="absolute -inset-12 rounded-full bg-brand-2/15 blur-3xl" />
               <PhoneFrame className="relative animate-[biofy-float_6s_ease-in-out_infinite]">
-                <BioPreview displayName="Marina Costa" username="marina" bio="Design, fotografia e coisas que eu gosto de criar." avatarUrl={null} theme={templates.find((template) => template.id === "gradient")?.theme} blocks={demoBlocks} compact />
+                <BioPreview
+                  displayName="Marina Costa"
+                  username="marina"
+                  bio="Design, fotografia e coisas que eu gosto de criar."
+                  avatarUrl={null}
+                  theme={templates.find((template) => template.id === "gradient")?.theme}
+                  blocks={demoBlocks}
+                  compact
+                />
               </PhoneFrame>
             </div>
           </div>
         </section>
 
-        <section id="como-funciona" className="border-y border-border bg-surface/40 px-4 py-20 sm:px-6 lg:px-8">
+        <section
+          id="como-funciona"
+          className="border-y border-border bg-surface/40 px-4 py-20 sm:px-6 lg:px-8"
+        >
           <div className="mx-auto max-w-7xl">
             <div className="mx-auto max-w-2xl text-center">
               <p className="text-sm font-medium text-primary">Simples de propósito</p>
               <h2 className="mt-2 text-3xl font-bold sm:text-4xl">Crie. Personalize. Publique.</h2>
-              <p className="mt-3 text-sm leading-6 text-muted-foreground">Sem um formulário gigante, sem código e sem precisar aprender uma ferramenta complicada.</p>
+              <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                Sem um formulário gigante, sem código e sem precisar aprender uma ferramenta
+                complicada.
+              </p>
             </div>
             <div className="mt-12 grid gap-4 md:grid-cols-3">
               {[
@@ -321,7 +400,10 @@ function HomePage() {
                 ["02", "Personalize", "Adicione seus links e deixe cada detalhe com a sua cara."],
                 ["03", "Publique", "Compartilhe sua URL e volte quando quiser para editar."],
               ].map(([number, title, text]) => (
-                <article key={number} className="rounded-3xl border border-border bg-card p-6 shadow-soft">
+                <article
+                  key={number}
+                  className="rounded-3xl border border-border bg-card p-6 shadow-soft"
+                >
                   <span className="text-xs font-semibold text-primary">{number}</span>
                   <h3 className="mt-7 text-xl font-semibold">{title}</h3>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">{text}</p>
@@ -336,17 +418,33 @@ function HomePage() {
             <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div className="max-w-2xl">
                 <p className="text-sm font-medium text-primary">Templates</p>
-                <h2 className="mt-2 text-3xl font-bold sm:text-4xl">Escolha uma base que acompanhe o que você faz.</h2>
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">Em vez de espalhar links em vários lugares, reúna portfólio, redes e contato em um endereço fácil de compartilhar — e atualize tudo sem trocar o link da sua bio.</p>
+                <h2 className="mt-2 text-3xl font-bold sm:text-4xl">
+                  Escolha uma base que acompanhe o que você faz.
+                </h2>
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
+                  Em vez de espalhar links em vários lugares, reúna portfólio, redes e contato em um
+                  endereço fácil de compartilhar — e atualize tudo sem trocar o link da sua bio.
+                </p>
               </div>
-              <Button variant="outline" asChild><Link to="/signup">Usar um template</Link></Button>
+              <Button variant="outline" asChild>
+                <Link to="/signup">Usar um template</Link>
+              </Button>
             </div>
             <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
               {templates.slice(0, 10).map((template) => {
-                const background = template.theme.bgType === "gradient" ? `linear-gradient(${template.theme.bgAngle}deg, ${template.theme.bgFrom}, ${template.theme.bgTo})` : template.theme.bgColor;
+                const background =
+                  template.theme.bgType === "gradient"
+                    ? `linear-gradient(${template.theme.bgAngle}deg, ${template.theme.bgFrom}, ${template.theme.bgTo})`
+                    : template.theme.bgColor;
                 return (
-                  <article key={template.id} className="group rounded-2xl border border-border bg-card p-3 transition duration-300 hover:-translate-y-1 hover:border-primary/30">
-                    <div className="h-40 rounded-xl transition duration-300 group-hover:scale-[1.01]" style={{ background }}>
+                  <article
+                    key={template.id}
+                    className="group rounded-2xl border border-border bg-card p-3 transition duration-300 hover:-translate-y-1 hover:border-primary/30"
+                  >
+                    <div
+                      className="h-40 rounded-xl transition duration-300 group-hover:scale-[1.01]"
+                      style={{ background }}
+                    >
                       <div className="flex h-full flex-col items-center justify-center gap-2 px-4">
                         <div className="h-8 w-8 rounded-full border border-white/30 bg-white/20" />
                         <div className="h-2 w-20 rounded-full bg-white/50" />
@@ -367,14 +465,21 @@ function HomePage() {
           <div className="mx-auto max-w-7xl">
             <div className="max-w-2xl">
               <p className="text-sm font-medium text-primary">Recursos</p>
-              <h2 className="mt-2 text-3xl font-bold sm:text-4xl">O essencial para sua Bio representar você.</h2>
+              <h2 className="mt-2 text-3xl font-bold sm:text-4xl">
+                O essencial para sua Bio representar você.
+              </h2>
             </div>
             <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {resources.map((resource) => {
                 const Icon = resource.icon;
                 return (
-                  <article key={resource.title} className="rounded-2xl border border-border bg-card p-6">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><Icon className="h-5 w-5" /></div>
+                  <article
+                    key={resource.title}
+                    className="rounded-2xl border border-border bg-card p-6"
+                  >
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <Icon className="h-5 w-5" />
+                    </div>
                     <h3 className="mt-5 text-lg font-semibold">{resource.title}</h3>
                     <p className="mt-2 text-sm leading-6 text-muted-foreground">{resource.text}</p>
                   </article>
@@ -388,26 +493,40 @@ function HomePage() {
           <div className="mx-auto max-w-7xl">
             <div className="mx-auto max-w-2xl text-center">
               <p className="text-sm font-medium text-primary">Planos</p>
-              <h2 className="mt-2 text-3xl font-bold sm:text-4xl">Comece grátis e evolua quando precisar.</h2>
-              <p className="mt-3 text-sm text-muted-foreground">Planos pagos com cobrança mensal segura pelo Asaas.</p>
+              <h2 className="mt-2 text-3xl font-bold sm:text-4xl">
+                Comece grátis e evolua quando precisar.
+              </h2>
+              <p className="mt-3 text-sm text-muted-foreground">
+                Planos pagos com cobrança mensal segura pelo Asaas.
+              </p>
             </div>
             <div className="mt-10 grid gap-4 lg:grid-cols-3">
               {plans.map((plan, index) => (
-                <article key={plan.name} className={`rounded-3xl border bg-card p-6 ${index === 1 ? "border-primary/50 shadow-glow" : "border-border"}`}>
+                <article
+                  key={plan.name}
+                  className={`rounded-3xl border bg-card p-6 ${index === 1 ? "border-primary/50 shadow-glow" : "border-border"}`}
+                >
                   <h3 className="text-xl font-semibold">{plan.name}</h3>
                   <p className="mt-1 text-sm text-muted-foreground">{plan.text}</p>
                   <p className="mt-5 text-3xl font-bold">{plan.price}</p>
                   <ul className="mt-6 space-y-3 text-sm">
                     {plan.features.map((feature) => (
-                      <li key={feature} className="flex gap-2 text-muted-foreground"><Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{feature}</li>
+                      <li key={feature} className="flex gap-2 text-muted-foreground">
+                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                        {feature}
+                      </li>
                     ))}
                   </ul>
 
                   {index === 0 ? (
-                    <Button className="mt-7 w-full" asChild><Link to="/signup">Começar grátis</Link></Button>
+                    <Button className="mt-7 w-full" asChild>
+                      <Link to="/signup">Começar grátis</Link>
+                    </Button>
                   ) : user && plan.checkoutUrl ? (
                     <Button className="mt-7 w-full" variant="outline" asChild>
-                      <a href={plan.checkoutUrl} target="_blank" rel="noreferrer noopener">Assinar {plan.name}</a>
+                      <a href={plan.checkoutUrl} target="_blank" rel="noreferrer noopener">
+                        Assinar {plan.name}
+                      </a>
                     </Button>
                   ) : (
                     <Button className="mt-7 w-full" variant="outline" asChild>
@@ -423,8 +542,14 @@ function HomePage() {
         <section className="px-4 pb-24 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-5xl overflow-hidden rounded-[2rem] border border-primary/20 bg-gradient-to-br from-primary/15 via-card to-brand-2/10 p-8 text-center shadow-glow sm:p-12">
             <h2 className="text-3xl font-bold sm:text-4xl">Sua bio pode ser muito mais.</h2>
-            <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-muted-foreground">Transforme um simples link em uma página que representa você ou sua marca.</p>
-            <Button size="lg" className="mt-7" asChild><Link to="/signup">Criar minha Bio <ArrowRight className="ml-2 h-4 w-4" /></Link></Button>
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
+              Transforme um simples link em uma página que representa você ou sua marca.
+            </p>
+            <Button size="lg" className="mt-7" asChild>
+              <Link to="/signup">
+                Criar minha Bio <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
           </div>
         </section>
       </main>
@@ -434,8 +559,12 @@ function HomePage() {
           <Logo />
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
             <span>Biofy — Sua bio. Do seu jeito.</span>
-            <Link to="/terms" className="transition hover:text-foreground">Termos de Uso</Link>
-            <Link to="/privacy" className="transition hover:text-foreground">Privacidade</Link>
+            <Link to="/terms" className="transition hover:text-foreground">
+              Termos de Uso
+            </Link>
+            <Link to="/privacy" className="transition hover:text-foreground">
+              Privacidade
+            </Link>
           </div>
         </div>
       </footer>

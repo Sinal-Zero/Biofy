@@ -163,13 +163,17 @@ function SubscriptionPage() {
             <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             <div className="min-w-0 flex-1">
               <p className="leading-5 text-muted-foreground">
-                No checkout, use <strong className="font-semibold text-foreground">o mesmo e-mail da sua conta Biofy</strong>.
-                Assim o pagamento é identificado e o plano é ativado automaticamente.
+                No checkout, use{" "}
+                <strong className="font-semibold text-foreground">
+                  o mesmo e-mail da sua conta Biofy
+                </strong>
+                . Assim o pagamento é identificado e o plano é ativado automaticamente.
               </p>
               {checkoutPlan ? (
                 <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
                   <p className="flex-1 text-xs text-muted-foreground">
-                    Finalizou o pagamento do {checkoutPlan}? A Biofy também verifica novamente quando você volta para esta aba.
+                    Finalizou o pagamento do {checkoutPlan}? A Biofy também verifica novamente
+                    quando você volta para esta aba.
                   </p>
                   <Button
                     type="button"

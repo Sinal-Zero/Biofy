@@ -7,10 +7,7 @@ const BLOCKED_EVENTS = new Set([
   "PAYMENT_REFUNDED",
   "PAYMENT_CHARGEBACK_REQUESTED",
 ]);
-const CANCELED_SUBSCRIPTION_EVENTS = new Set([
-  "SUBSCRIPTION_INACTIVATED",
-  "SUBSCRIPTION_DELETED",
-]);
+const CANCELED_SUBSCRIPTION_EVENTS = new Set(["SUBSCRIPTION_INACTIVATED", "SUBSCRIPTION_DELETED"]);
 
 type AsaasPayment = {
   id?: string;
@@ -97,11 +94,7 @@ async function asaasGet<T>(path: string, apiKey: string): Promise<T> {
   return (await response.json()) as T;
 }
 
-async function alreadyProcessed(
-  eventId: string,
-  supabaseUrl: string,
-  serviceRole: string,
-) {
+async function alreadyProcessed(eventId: string, supabaseUrl: string, serviceRole: string) {
   const response = await fetch(
     `${supabaseUrl}/rest/v1/asaas_webhook_events?id=eq.${encodeURIComponent(eventId)}&select=id&limit=1`,
     { headers: serviceHeaders(serviceRole) },
@@ -128,11 +121,7 @@ async function markProcessed(
   if (!response.ok) throw new Error("SUPABASE_EVENT_WRITE_FAILED");
 }
 
-async function findBiofyUserByEmail(
-  email: string,
-  supabaseUrl: string,
-  serviceRole: string,
-) {
+async function findBiofyUserByEmail(email: string, supabaseUrl: string, serviceRole: string) {
   const response = await fetch(`${supabaseUrl}/rest/v1/rpc/find_user_id_by_email`, {
     method: "POST",
     headers: serviceHeaders(serviceRole),

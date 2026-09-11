@@ -1,5 +1,13 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { Check, Lock, Monitor, Pipette, SlidersHorizontal, Smartphone, Sparkles } from "lucide-react";
+import {
+  Check,
+  Lock,
+  Monitor,
+  Pipette,
+  SlidersHorizontal,
+  Smartphone,
+  Sparkles,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { BioPreview } from "@/components/bio/BioPreview";
 import { PhoneFrame } from "@/components/bio/PhoneFrame";
@@ -73,7 +81,10 @@ function BrandedColorPicker({
             <p className="mt-1 text-[11px] leading-4 text-muted-foreground">{description}</p>
           </div>
           <label className="relative flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-border bg-card transition hover:scale-105 hover:border-primary/40">
-            <span className="h-5 w-5 rounded-md border border-white/10" style={{ backgroundColor: value }} />
+            <span
+              className="h-5 w-5 rounded-md border border-white/10"
+              style={{ backgroundColor: value }}
+            />
             <input
               type="color"
               value={pickerValue}
@@ -129,7 +140,8 @@ function AppearancePage() {
         <p className="text-sm font-medium text-primary">Identidade visual</p>
         <h1 className="text-3xl font-bold">Aparência</h1>
         <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-          Ajuste cores, tipografia e estrutura visual da sua página com uma visualização limpa ao lado.
+          Ajuste cores, tipografia e estrutura visual da sua página com uma visualização limpa ao
+          lado.
         </p>
       </div>
 
@@ -262,7 +274,9 @@ function AppearancePage() {
                       max="6"
                       step="1"
                       value={theme.panelBorderWidth}
-                      onChange={(event) => patchTheme({ panelBorderWidth: Number(event.target.value) })}
+                      onChange={(event) =>
+                        patchTheme({ panelBorderWidth: Number(event.target.value) })
+                      }
                       className="mt-4 w-full accent-primary"
                     />
                   </div>
@@ -297,32 +311,34 @@ function AppearancePage() {
                   </div>
 
                   <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                    {(Object.entries(fontLabels) as Array<[FontKey, string]>).map(([key, label]) => {
-                      const active = theme.font === key;
-                      return (
-                        <button
-                          key={key}
-                          type="button"
-                          onClick={() => patchTheme({ font: key })}
-                          className={`rounded-xl border px-3 py-3 text-left transition duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-accent/40 ${
-                            active
-                              ? "border-primary bg-primary/[0.06] ring-2 ring-primary/15"
-                              : "border-border bg-card"
-                          }`}
-                          aria-pressed={active}
-                        >
-                          <span
-                            className="block truncate text-lg text-foreground"
-                            style={{ fontFamily: fontStacks[key] }}
+                    {(Object.entries(fontLabels) as Array<[FontKey, string]>).map(
+                      ([key, label]) => {
+                        const active = theme.font === key;
+                        return (
+                          <button
+                            key={key}
+                            type="button"
+                            onClick={() => patchTheme({ font: key })}
+                            className={`rounded-xl border px-3 py-3 text-left transition duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-accent/40 ${
+                              active
+                                ? "border-primary bg-primary/[0.06] ring-2 ring-primary/15"
+                                : "border-border bg-card"
+                            }`}
+                            aria-pressed={active}
                           >
-                            Aa Biofy
-                          </span>
-                          <span className="mt-1 block truncate text-[11px] text-muted-foreground">
-                            {label}
-                          </span>
-                        </button>
-                      );
-                    })}
+                            <span
+                              className="block truncate text-lg text-foreground"
+                              style={{ fontFamily: fontStacks[key] }}
+                            >
+                              Aa Biofy
+                            </span>
+                            <span className="mt-1 block truncate text-[11px] text-muted-foreground">
+                              {label}
+                            </span>
+                          </button>
+                        );
+                      },
+                    )}
                   </div>
 
                   <div className="mt-5 border-t border-border pt-5">

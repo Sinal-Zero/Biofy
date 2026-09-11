@@ -25,9 +25,11 @@ function AiPage() {
     void fetchSubscription(bundle.page.user_id)
       .then((subscription) => {
         if (!mounted) return;
-        const active = !subscription?.status || ["active", "trialing"].includes(subscription.status);
+        const active =
+          !subscription?.status || ["active", "trialing"].includes(subscription.status);
         const periodActive =
-          !subscription?.current_period_end || new Date(subscription.current_period_end).getTime() >= Date.now();
+          !subscription?.current_period_end ||
+          new Date(subscription.current_period_end).getTime() >= Date.now();
         setIsMaster(subscription?.plan === "business" && active && periodActive);
       })
       .catch(() => {
@@ -43,7 +45,11 @@ function AiPage() {
   }, [bundle.page.user_id]);
 
   if (checkingPlan) {
-    return <div className="py-16 text-center text-sm text-muted-foreground">Verificando seu plano...</div>;
+    return (
+      <div className="py-16 text-center text-sm text-muted-foreground">
+        Verificando seu plano...
+      </div>
+    );
   }
 
   if (!isMaster) {
@@ -55,7 +61,8 @@ function AiPage() {
           </span>
           <h1 className="mt-5 text-2xl font-bold">Biofy AI é exclusiva do Master</h1>
           <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-muted-foreground">
-            Assine o plano Master para liberar o assistente de IA e editar sua Bio com comandos naturais.
+            Assine o plano Master para liberar o assistente de IA e editar sua Bio com comandos
+            naturais.
           </p>
           <Button className="mt-6" asChild>
             <Link to="/dashboard/subscription">Ver plano Master</Link>

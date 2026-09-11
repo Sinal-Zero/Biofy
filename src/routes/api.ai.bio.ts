@@ -160,8 +160,7 @@ export const Route = createFileRoute("/api/ai/bio")({
         const geminiKey = process.env["GEMINI_API_KEY"]?.trim();
         const supabaseUrl = process.env["SUPABASE_URL"] || process.env["VITE_SUPABASE_URL"];
         const supabaseKey =
-          process.env["SUPABASE_PUBLISHABLE_KEY"] ||
-          process.env["VITE_SUPABASE_PUBLISHABLE_KEY"];
+          process.env["SUPABASE_PUBLISHABLE_KEY"] || process.env["VITE_SUPABASE_PUBLISHABLE_KEY"];
 
         if (!geminiKey || !supabaseUrl || !supabaseKey) {
           return Response.json({ error: "Configuração do servidor incompleta." }, { status: 500 });
@@ -213,15 +212,13 @@ export const Route = createFileRoute("/api/ai/bio")({
           );
         }
 
-        const body = (await request.json().catch(() => null)) as
-          | {
-              instruction?: string;
-              displayName?: string | null;
-              bio?: string | null;
-              links?: Array<{ id?: string; title?: string | null; type?: string }>;
-              history?: Array<{ role?: string; text?: string }>;
-            }
-          | null;
+        const body = (await request.json().catch(() => null)) as {
+          instruction?: string;
+          displayName?: string | null;
+          bio?: string | null;
+          links?: Array<{ id?: string; title?: string | null; type?: string }>;
+          history?: Array<{ role?: string; text?: string }>;
+        } | null;
 
         if (!body) {
           return Response.json({ error: "Pedido inválido." }, { status: 400 });
@@ -318,10 +315,7 @@ export const Route = createFileRoute("/api/ai/bio")({
           .trim();
 
         if (!text) {
-          return Response.json(
-            { error: "O Gemini retornou uma resposta vazia." },
-            { status: 502 },
-          );
+          return Response.json({ error: "O Gemini retornou uma resposta vazia." }, { status: 502 });
         }
 
         try {

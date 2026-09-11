@@ -133,7 +133,7 @@ export const fontStacks: Record<FontKey, string> = {
   mono: '"JetBrains Mono", ui-monospace, monospace',
   condensed: '"Bebas Neue", Impact, sans-serif',
   system: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-  inter: 'Inter, ui-sans-serif, system-ui, sans-serif',
+  inter: "Inter, ui-sans-serif, system-ui, sans-serif",
   georgia: 'Georgia, "Times New Roman", serif',
   optima: 'Optima, Candara, "Segoe UI", sans-serif',
   trebuchet: '"Trebuchet MS", Arial, sans-serif',

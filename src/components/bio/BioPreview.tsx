@@ -178,7 +178,9 @@ export function BioPreview({
                 height: compact ? theme.avatarSize * 0.7 : theme.avatarSize,
                 borderRadius: avatarRadius,
                 objectFit: "cover",
-                border: theme.avatarBorder ? `2px solid ${withAlpha(theme.textColor, 0.7)}` : "none",
+                border: theme.avatarBorder
+                  ? `2px solid ${withAlpha(theme.textColor, 0.7)}`
+                  : "none",
               }}
             />
           ) : (
@@ -189,7 +191,9 @@ export function BioPreview({
                 height: compact ? theme.avatarSize * 0.7 : theme.avatarSize,
                 borderRadius: avatarRadius,
                 background: withAlpha(theme.textColor, 0.14),
-                border: theme.avatarBorder ? `2px solid ${withAlpha(theme.textColor, 0.5)}` : "none",
+                border: theme.avatarBorder
+                  ? `2px solid ${withAlpha(theme.textColor, 0.5)}`
+                  : "none",
                 fontSize: (compact ? 20 : 30) * textScale,
               }}
             >
@@ -209,10 +213,7 @@ export function BioPreview({
             {displayName || (username ? `@${username}` : "Seu nome")}
           </h1>
           {username && (
-            <p
-              className="opacity-70"
-              style={{ fontSize: `${(compact ? 10 : 12) * textScale}px` }}
-            >
+            <p className="opacity-70" style={{ fontSize: `${(compact ? 10 : 12) * textScale}px` }}>
               @{username}
             </p>
           )}
