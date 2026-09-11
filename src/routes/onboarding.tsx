@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { checkUsername, fetchMyBio, updatePage, updateProfile } from "@/lib/bio-data";
+import { getPublicBioDisplay, normalizeUsername } from "@/lib/public-url";
 import { getTemplate, templates } from "@/lib/templates";
 
 export const Route = createFileRoute("/onboarding")({
@@ -26,14 +27,6 @@ export const Route = createFileRoute("/onboarding")({
   },
   component: OnboardingPage,
 });
-
-function normalizeUsername(value: string) {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9._-]/g, "")
-    .slice(0, 30);
-}
 
 function OnboardingPage() {
   const navigate = useNavigate();
@@ -53,8 +46,7 @@ function OnboardingPage() {
 
     setLoading(true);
     try {
-      const available = await checkUsername(normalized);
-      if (!available) {
+      if (!(await checkUsername(normalized))) {
         toast.error("Esse username não está disponível.");
         return;
       }
@@ -81,27 +73,26 @@ function OnboardingPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background px-4 py-6 sm:px-6 lg:px-8">
+    <main className="min-h-dvh bg-background px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto mb-8 flex max-w-6xl items-center justify-between">
         <Logo />
         <span className="text-xs text-muted-foreground">Configuração inicial</span>
       </div>
 
       <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1fr_380px] lg:items-start">
-        <section className="space-y-8">
+        <section className="space-y-8 animate-rise">
           <div>
             <p className="mb-2 text-sm font-medium text-primary">Comece do seu jeito</p>
             <h1 className="text-3xl font-bold sm:text-4xl">Crie o endereço da sua Bio</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
-              Escolha seu username e um visual inicial. Você poderá mudar cores, fontes, links e
-              layout depois.
+            <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
+              Escolha seu username e um visual inicial. Você pode ajustar tudo depois.
             </p>
           </div>
 
-          <div className="rounded-2xl border border-border bg-card p-5 sm:p-6">
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-soft sm:p-6">
             <Label htmlFor="username">Username</Label>
-            <div className="mt-2 flex items-center rounded-xl border border-input bg-background px-3 focus-within:ring-2 focus-within:ring-ring">
-              <span className="text-sm text-muted-foreground">bio-fy.vercel.app/</span>
+            <div className="mt-2 flex items-center rounded-xl border border-input bg-background px-3 transition focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-ring/30">
+              <span className="shrink-0 text-sm text-muted-foreground">{getPublicBioDisplay()}</span>
               <Input
                 id="username"
                 value={username}
@@ -113,16 +104,14 @@ function OnboardingPage() {
               />
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
-              3–30 caracteres: letras minúsculas, números, ponto, hífen ou underline.
+              Use 3–30 caracteres: letras, números, ponto, hífen ou underline.
             </p>
           </div>
 
           <div>
             <div className="mb-4">
               <h2 className="text-xl font-semibold">Escolha um template</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                É só o ponto de partida — nada fica bloqueado.
-              </p>
+              <p className="mt-1 text-sm text-muted-foreground">Só um ponto de partida para sua página.</p>
             </div>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {templates.map((template) => {
@@ -131,20 +120,25 @@ function OnboardingPage() {
                   template.theme.bgType === "gradient"
                     ? `linear-gradient(${template.theme.bgAngle}deg, ${template.theme.bgFrom}, ${template.theme.bgTo})`
                     : template.theme.bgColor;
+
                 return (
                   <button
                     key={template.id}
                     type="button"
                     onClick={() => setTemplateId(template.id)}
-                    className={`relative overflow-hidden rounded-2xl border p-4 text-left transition hover:-translate-y-0.5 ${active ? "border-primary ring-2 ring-primary/30" : "border-border"}`}
+                    className={`relative overflow-hidden rounded-2xl border p-4 text-left transition-all duration-300 active:scale-[0.99] ${
+                      active
+                        ? "border-primary bg-primary/[0.04] ring-2 ring-primary/20"
+                        : "border-border hover:-translate-y-0.5 hover:border-primary/35 hover:bg-card"
+                    }`}
                   >
-                    <div className="mb-4 h-20 rounded-xl" style={{ background }} />
+                    <div className="mb-4 h-20 rounded-xl shadow-inner" style={{ background }} />
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <strong className="text-sm">{template.name}</strong>
                         <p className="mt-1 text-xs text-muted-foreground">{template.description}</p>
                       </div>
-                      {active && <Check className="h-4 w-4 shrink-0 text-primary" />}
+                      {active ? <Check className="h-4 w-4 shrink-0 text-primary" /> : null}
                     </div>
                   </button>
                 );
@@ -158,7 +152,7 @@ function OnboardingPage() {
           </Button>
         </section>
 
-        <aside className="sticky top-6 hidden lg:block">
+        <aside className="sticky top-6 hidden lg:block animate-rise">
           <PhoneFrame>
             <BioPreview
               displayName={bundle.profile.display_name || user.email?.split("@")[0] || "Seu nome"}
