@@ -126,13 +126,21 @@ function RangeControl({
   );
 }
 
-function PreviewToggle({ mode, onChange }: { mode: PreviewMode; onChange: (mode: PreviewMode) => void }) {
+function PreviewToggle({
+  mode,
+  onChange,
+}: {
+  mode: PreviewMode;
+  onChange: (mode: PreviewMode) => void;
+}) {
   return (
     <div className="grid grid-cols-2 rounded-xl border border-border bg-background/55 p-1">
-      {([
-        ["mobile", Smartphone, "Celular"],
-        ["desktop", Monitor, "Computador"],
-      ] as const).map(([value, Icon, label]) => (
+      {(
+        [
+          ["mobile", Smartphone, "Celular"],
+          ["desktop", Monitor, "Computador"],
+        ] as const
+      ).map(([value, Icon, label]) => (
         <button
           key={value}
           type="button"
@@ -175,7 +183,9 @@ function AppearancePage() {
       <header>
         <p className="text-sm font-medium text-primary">Identidade visual</p>
         <h1 className="mt-1 text-3xl font-bold">Aparência</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Cores, tipografia e proporção da sua página.</p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Cores, tipografia e proporção da sua página.
+        </p>
       </header>
 
       <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_560px]">
@@ -324,30 +334,34 @@ function AppearancePage() {
                     <p className="text-xs font-semibold uppercase tracking-[0.14em]">Tipografia</p>
                   </div>
                   <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                    {(Object.entries(fontLabels) as Array<[FontKey, string]>).map(([key, label]) => {
-                      const active = theme.font === key;
-                      return (
-                        <button
-                          key={key}
-                          type="button"
-                          onClick={() => patchTheme({ font: key })}
-                          className={`rounded-xl border px-3 py-3 text-left transition-all duration-200 active:scale-[0.99] ${
-                            active
-                              ? "border-primary bg-primary/[0.06] ring-2 ring-primary/15"
-                              : "border-border bg-background/45 hover:-translate-y-0.5 hover:border-primary/35"
-                          }`}
-                          aria-pressed={active}
-                        >
-                          <span
-                            className="block truncate text-lg text-foreground"
-                            style={{ fontFamily: fontStacks[key] }}
+                    {(Object.entries(fontLabels) as Array<[FontKey, string]>).map(
+                      ([key, label]) => {
+                        const active = theme.font === key;
+                        return (
+                          <button
+                            key={key}
+                            type="button"
+                            onClick={() => patchTheme({ font: key })}
+                            className={`rounded-xl border px-3 py-3 text-left transition-all duration-200 active:scale-[0.99] ${
+                              active
+                                ? "border-primary bg-primary/[0.06] ring-2 ring-primary/15"
+                                : "border-border bg-background/45 hover:-translate-y-0.5 hover:border-primary/35"
+                            }`}
+                            aria-pressed={active}
                           >
-                            Aa Biofy
-                          </span>
-                          <span className="mt-1 block truncate text-[11px] text-muted-foreground">{label}</span>
-                        </button>
-                      );
-                    })}
+                            <span
+                              className="block truncate text-lg text-foreground"
+                              style={{ fontFamily: fontStacks[key] }}
+                            >
+                              Aa Biofy
+                            </span>
+                            <span className="mt-1 block truncate text-[11px] text-muted-foreground">
+                              {label}
+                            </span>
+                          </button>
+                        );
+                      },
+                    )}
                   </div>
                   <div className="mt-3">
                     <RangeControl
@@ -393,7 +407,9 @@ function AppearancePage() {
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div>
                   <p className="text-sm font-semibold text-foreground">Preview</p>
-                  <p className="mt-0.5 text-[11px] text-muted-foreground">@{bundle.profile.username}</p>
+                  <p className="mt-0.5 text-[11px] text-muted-foreground">
+                    @{bundle.profile.username}
+                  </p>
                 </div>
               </div>
               <PreviewToggle mode={previewMode} onChange={setPreviewMode} />

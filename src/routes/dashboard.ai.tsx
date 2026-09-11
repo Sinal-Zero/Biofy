@@ -46,7 +46,9 @@ function AiPage() {
   }, [bundle.page.user_id]);
 
   if (checkingPlan) {
-    return <div className="py-16 text-center text-sm text-muted-foreground">Verificando plano...</div>;
+    return (
+      <div className="py-16 text-center text-sm text-muted-foreground">Verificando plano...</div>
+    );
   }
 
   if (!isMaster) {
@@ -94,10 +96,12 @@ function AiPage() {
               </div>
 
               <div className="mt-3 grid grid-cols-2 rounded-xl border border-border bg-background/60 p-1">
-                {([
-                  ["mobile", Smartphone, "Celular"],
-                  ["desktop", Monitor, "Computador"],
-                ] as const).map(([mode, Icon, label]) => (
+                {(
+                  [
+                    ["mobile", Smartphone, "Celular"],
+                    ["desktop", Monitor, "Computador"],
+                  ] as const
+                ).map(([mode, Icon, label]) => (
                   <button
                     key={mode}
                     type="button"

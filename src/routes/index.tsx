@@ -192,14 +192,18 @@ function HomePage() {
     (user?.user_metadata?.["picture"] as string | undefined) ||
     null;
   const initial = displayName.trim().charAt(0).toUpperCase() || "U";
-  const heroTheme = templates.find((template) => template.id === "dark")?.theme ?? templates[0]!.theme;
+  const heroTheme =
+    templates.find((template) => template.id === "dark")?.theme ?? templates[0]!.theme;
 
   return (
     <div className="min-h-dvh overflow-x-clip bg-background text-foreground">
       <header className="fixed inset-x-0 top-0 z-50 border-b border-white/[0.06] bg-background/78 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Logo />
-          <nav className="hidden items-center gap-1 text-sm text-muted-foreground md:flex" aria-label="Navegação principal">
+          <nav
+            className="hidden items-center gap-1 text-sm text-muted-foreground md:flex"
+            aria-label="Navegação principal"
+          >
             {[
               ["#como-funciona", "Como funciona"],
               ["#templates", "Templates"],
@@ -232,7 +236,9 @@ function HomePage() {
                     {initial}
                   </span>
                 )}
-                <span className="hidden max-w-32 truncate text-sm font-medium sm:block">{displayName}</span>
+                <span className="hidden max-w-32 truncate text-sm font-medium sm:block">
+                  {displayName}
+                </span>
                 <ChevronDown
                   className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 ${profileOpen ? "rotate-180" : ""}`}
                 />
@@ -246,7 +252,11 @@ function HomePage() {
                   <div className="border-b border-border px-3 py-3">
                     <div className="flex items-center gap-3">
                       {avatarUrl ? (
-                        <img src={avatarUrl} alt="" className="h-10 w-10 rounded-full object-cover" />
+                        <img
+                          src={avatarUrl}
+                          alt=""
+                          className="h-10 w-10 rounded-full object-cover"
+                        />
                       ) : (
                         <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/15 font-semibold text-primary">
                           {initial}
@@ -316,7 +326,8 @@ function HomePage() {
                 Sua bio. <span className="gradient-text">Do seu jeito.</span>
               </h1>
               <p className="mt-6 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg">
-                Uma página para reunir seus links, mostrar sua identidade e compartilhar tudo em um só endereço.
+                Uma página para reunir seus links, mostrar sua identidade e compartilhar tudo em um
+                só endereço.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Button size="lg" asChild>
@@ -358,11 +369,16 @@ function HomePage() {
           </div>
         </section>
 
-        <section id="como-funciona" className="border-y border-border bg-surface/35 px-4 py-20 sm:px-6 lg:px-8">
+        <section
+          id="como-funciona"
+          className="border-y border-border bg-surface/35 px-4 py-20 sm:px-6 lg:px-8"
+        >
           <ScrollReveal className="mx-auto max-w-7xl">
             <div className="mx-auto max-w-2xl text-center">
               <p className="text-sm font-medium text-primary">Como funciona</p>
-              <h2 className="mt-2 text-3xl font-bold sm:text-4xl">Crie. Personalize. Compartilhe.</h2>
+              <h2 className="mt-2 text-3xl font-bold sm:text-4xl">
+                Crie. Personalize. Compartilhe.
+              </h2>
             </div>
             <div className="mt-10 grid gap-4 md:grid-cols-3">
               {[
@@ -451,7 +467,9 @@ function HomePage() {
           <ScrollReveal className="mx-auto max-w-7xl">
             <div className="max-w-2xl">
               <p className="text-sm font-medium text-primary">Recursos</p>
-              <h2 className="mt-2 text-3xl font-bold sm:text-4xl">Tudo gira em torno da sua página.</h2>
+              <h2 className="mt-2 text-3xl font-bold sm:text-4xl">
+                Tudo gira em torno da sua página.
+              </h2>
             </div>
             <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {resources.map((resource, index) => {
@@ -463,7 +481,9 @@ function HomePage() {
                         <Icon className="h-5 w-5" />
                       </div>
                       <h3 className="mt-5 text-lg font-semibold">{resource.title}</h3>
-                      <p className="mt-2 text-sm leading-6 text-muted-foreground">{resource.text}</p>
+                      <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                        {resource.text}
+                      </p>
                     </article>
                   </ScrollReveal>
                 );
@@ -476,14 +496,18 @@ function HomePage() {
           <ScrollReveal className="mx-auto max-w-7xl">
             <div className="mx-auto max-w-2xl text-center">
               <p className="text-sm font-medium text-primary">Planos</p>
-              <h2 className="mt-2 text-3xl font-bold sm:text-4xl">Comece grátis. Evolua quando precisar.</h2>
+              <h2 className="mt-2 text-3xl font-bold sm:text-4xl">
+                Comece grátis. Evolua quando precisar.
+              </h2>
             </div>
             <div className="mt-10 grid gap-4 lg:grid-cols-3">
               {plans.map((plan, index) => (
                 <ScrollReveal key={plan.name} delay={index * 70}>
                   <article
                     className={`relative h-full rounded-3xl border bg-card p-6 shadow-soft transition-all duration-300 hover:-translate-y-1 ${
-                      index === 1 ? "border-primary/45 shadow-glow" : "border-border hover:border-primary/25"
+                      index === 1
+                        ? "border-primary/45 shadow-glow"
+                        : "border-border hover:border-primary/25"
                     }`}
                   >
                     {index === 1 ? (
@@ -528,9 +552,12 @@ function HomePage() {
         <section className="px-4 pb-24 sm:px-6 lg:px-8">
           <ScrollReveal className="mx-auto max-w-5xl">
             <div className="overflow-hidden rounded-[2rem] border border-primary/20 bg-gradient-to-br from-primary/15 via-card to-brand-2/10 p-8 text-center shadow-glow sm:p-12">
-              <h2 className="text-3xl font-bold sm:text-4xl">Coloque sua bio para trabalhar por você.</h2>
+              <h2 className="text-3xl font-bold sm:text-4xl">
+                Coloque sua bio para trabalhar por você.
+              </h2>
               <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-muted-foreground">
-                Reúna sua presença digital em uma página simples de atualizar e fácil de compartilhar.
+                Reúna sua presença digital em uma página simples de atualizar e fácil de
+                compartilhar.
               </p>
               <Button size="lg" className="mt-7" asChild>
                 <Link to={user ? "/dashboard/editor" : "/signup"}>

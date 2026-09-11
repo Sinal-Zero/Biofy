@@ -92,7 +92,9 @@ function OnboardingPage() {
           <div className="rounded-2xl border border-border bg-card p-5 shadow-soft sm:p-6">
             <Label htmlFor="username">Username</Label>
             <div className="mt-2 flex items-center rounded-xl border border-input bg-background px-3 transition focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-ring/30">
-              <span className="shrink-0 text-sm text-muted-foreground">{getPublicBioDisplay()}</span>
+              <span className="shrink-0 text-sm text-muted-foreground">
+                {getPublicBioDisplay()}
+              </span>
               <Input
                 id="username"
                 value={username}
@@ -111,7 +113,9 @@ function OnboardingPage() {
           <div>
             <div className="mb-4">
               <h2 className="text-xl font-semibold">Escolha um template</h2>
-              <p className="mt-1 text-sm text-muted-foreground">Só um ponto de partida para sua página.</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Só um ponto de partida para sua página.
+              </p>
             </div>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {templates.map((template) => {

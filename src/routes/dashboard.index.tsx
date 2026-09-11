@@ -1,5 +1,12 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { BarChart3, CheckCircle2, Copy, ExternalLink, Link2, MousePointerClick } from "lucide-react";
+import {
+  BarChart3,
+  CheckCircle2,
+  Copy,
+  ExternalLink,
+  Link2,
+  MousePointerClick,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useBio } from "@/components/dashboard/BioContext";
@@ -67,7 +74,9 @@ function DashboardOverview() {
                 className={`h-2.5 w-2.5 rounded-full ${username ? "bg-emerald-400" : "bg-amber-400"}`}
                 aria-hidden="true"
               />
-              <span className="text-sm font-medium">{username ? "Bio online" : "Defina seu username"}</span>
+              <span className="text-sm font-medium">
+                {username ? "Bio online" : "Defina seu username"}
+              </span>
             </div>
             <p className="mt-2 truncate text-sm text-muted-foreground">
               {username ? getPublicBioDisplay(username) : "Sua URL aparecerá aqui."}
@@ -108,7 +117,9 @@ function DashboardOverview() {
                   <Icon className="h-4 w-4" />
                 </span>
               </div>
-              <strong className="mt-5 block text-3xl font-semibold tracking-tight">{card.value}</strong>
+              <strong className="mt-5 block text-3xl font-semibold tracking-tight">
+                {card.value}
+              </strong>
             </article>
           );
         })}
