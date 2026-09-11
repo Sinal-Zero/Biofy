@@ -170,7 +170,7 @@ export function BioPreview({
       >
         <div
           className={cn(
-            "mx-auto flex min-h-[inherit] w-full flex-col justify-center px-5",
+            "mx-auto flex min-h-[inherit] w-full flex-col justify-start px-5",
             compact ? "py-8" : "px-6 py-12 sm:px-9 sm:py-14",
             theme.align === "left" ? "items-start text-left" : "items-center text-center",
           )}
