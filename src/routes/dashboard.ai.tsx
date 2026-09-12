@@ -133,17 +133,22 @@ function AiPage() {
                   </PhoneFrame>
                 </div>
               ) : (
-                <div className="flex min-h-[610px] w-full items-center justify-center sm:min-h-[650px] xl:min-h-[660px]">
-                  <BioPreview
-                    displayName={bundle.profile.display_name}
-                    username={bundle.profile.username}
-                    bio={bundle.profile.bio}
-                    avatarUrl={bundle.profile.avatar_url}
-                    theme={theme}
-                    blocks={bundle.blocks}
-                    compact
-                    showBranding={false}
-                  />
+                <div className="min-h-[610px] w-full overflow-auto rounded-xl sm:min-h-[650px] xl:min-h-[660px]">
+                  <div
+                    className="flex min-h-[610px] items-center justify-center p-2 sm:min-h-[650px] xl:min-h-[660px]"
+                    style={{ minWidth: `${Math.max(theme.width + 80, 560)}px` }}
+                  >
+                    <BioPreview
+                      displayName={bundle.profile.display_name}
+                      username={bundle.profile.username}
+                      bio={bundle.profile.bio}
+                      avatarUrl={bundle.profile.avatar_url}
+                      theme={theme}
+                      blocks={bundle.blocks}
+                      showBranding={false}
+                      className="min-h-[610px] sm:min-h-[650px] xl:min-h-[660px]"
+                    />
+                  </div>
                 </div>
               )}
             </div>
