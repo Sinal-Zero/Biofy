@@ -1,0 +1,809 @@
+from pathlib import Path
+
+
+def replace(path: str, old: str, new: str, count: int | None = None) -> None:
+    p = Path(path)
+    text = p.read_text()
+    found = text.count(old)
+    if found == 0:
+        raise SystemExit(f"required pattern missing in {path}: {old[:120]!r}")
+    if count is not None and found != count:
+        raise SystemExit(f"unexpected pattern count in {path}: expected {count}, got {found}")
+    p.write_text(text.replace(old, new))
+    print(f"updated {path}")
+
+
+# 1) Persisted AI-only precision controls.
+replace(
+    "src/lib/bio-types.ts",
+    "  panelBorderWidth: number;\n",
+    "  panelBorderWidth: number;\n  panelRadius?: number;\n  panelPaddingX?: number;\n  panelPaddingTop?: number;\n  panelPaddingBottom?: number;\n  panelHeight?: number;\n  panelShadow?: boolean;\n  panelShadowBlur?: number;\n",
+    1,
+)
+replace(
+    "src/lib/bio-types.ts",
+    "  buttonBorderWidth: number;\n",
+    "  buttonBorderWidth: number;\n  buttonRadius?: number;\n  buttonPaddingX?: number;\n  buttonPaddingY?: number;\n  buttonWidth?: number;\n  buttonHeight?: number;\n  buttonFontSize?: number;\n  buttonIconSize?: number;\n",
+    1,
+)
+replace(
+    "src/lib/bio-types.ts",
+    "  avatarBorder: boolean;\n  hoverAnim: HoverAnim;\n",
+    "  avatarBorder: boolean;\n  nameFontSize?: number;\n  usernameFontSize?: number;\n  bioFontSize?: number;\n  socialIconSize?: number;\n  socialGap?: number;\n  hoverAnim: HoverAnim;\n",
+    1,
+)
+replace(
+    "src/lib/bio-types.ts",
+    '  animation?: HoverAnim | "inherit";\n',
+    '  animation?: HoverAnim | "inherit";\n  widthPx?: number;\n  heightPx?: number;\n  radiusPx?: number;\n  paddingXPx?: number;\n  paddingYPx?: number;\n  fontSizePx?: number;\n  iconSizePx?: number;\n  opacity?: number;\n  blockAlign?: "left" | "center" | "right" | "stretch";\n',
+    1,
+)
+
+# 2) Agent contract: exact numbers are requirements, not suggestions.
+replace(
+    "src/lib/biofy-ai-prompt.ts",
+    "Pode editar: nome exibido, bio, títulos, visibilidade e ordem de blocos, criação/remoção/duplicação de blocos e aparência suportada pelo tema.\n",
+    "Pode editar: nome exibido, bio, conteúdo de blocos de texto, títulos, visibilidade e ordem de blocos, criação/remoção/duplicação de blocos e TODAS as propriedades visuais expostas pelo tema e pelos blocos, inclusive controles avançados exclusivos da IA.\n",
+    1,
+)
+replace(
+    "src/lib/biofy-ai-prompt.ts",
+    "- Faça apenas mudanças relacionadas ao pedido. Preserve a identidade do usuário.\n",
+    "- Faça apenas mudanças relacionadas ao pedido. Preserve a identidade do usuário.\n- PEDIDOS EXATOS SÃO REQUISITOS, NÃO SUGESTÕES. Se o usuário disser 10px, retorne o número 10 no campo correto. Não arredonde, não normalize para um valor mais 'bonito' e não substitua por um padrão profissional.\n- Interprete box/caixa/card/painel central como o cartão principal da Bio. Ex.: 'box com 10px de largura' => theme.width:10.\n- Quando o pedido se referir a um bloco/link específico, use blocks[].config para medidas e estilo daquele bloco, sem alterar os demais.\n- Ajustes avançados podem ficar fora dos controles manuais da tela Aparência; isso é intencional. A Biofy AI deve aplicá-los mesmo assim.\n",
+    1,
+)
+replace(
+    "src/lib/biofy-ai-prompt.ts",
+    '- Para visual profissional: contraste claro, poucas cores, legibilidade forte, borda discreta (0–2), width normalmente 420–560, gap normalmente 10–18, sombras e animações moderadas.\n',
+    "- Para pedidos amplos, prefira contraste claro, poucas cores, legibilidade forte, borda discreta, width normalmente 420–560, gap normalmente 10–18, sombras e animações moderadas.\n- Para pedidos específicos, a medida explícita do usuário sempre vence essas recomendações.\n",
+    1,
+)
+replace(
+    "src/lib/biofy-ai-prompt.ts",
+    "pageBgColor, panelBorderColor, panelBorderWidth,\nbgType(solid|gradient|image), bgColor, bgFrom, bgTo, bgAngle,\ntextColor, mutedColor,\nfont(sans|display|serif|mono|condensed|system|inter|georgia|optima|trebuchet|garamond|consolas), textScale,\nbuttonStyle(solid|outline|glass|transparent|gradient), buttonShape(square|rounded|pill),\nbuttonColor, buttonTextColor, buttonShadow, buttonSize(sm|md|lg), buttonBorderWidth,\ngap, width, align(left|center), avatarSize, avatarShape(circle|rounded|square), avatarBorder,\nhoverAnim(none|lift|scale|glow).\n",
+    "pageBgColor, panelBorderColor, panelBorderWidth, panelRadius, panelPaddingX, panelPaddingTop, panelPaddingBottom, panelHeight, panelShadow, panelShadowBlur,\nbgType(solid|gradient|image), bgColor, bgFrom, bgTo, bgAngle,\ntextColor, mutedColor,\nfont(sans|display|serif|mono|condensed|system|inter|georgia|optima|trebuchet|garamond|consolas), textScale, nameFontSize, usernameFontSize, bioFontSize, socialIconSize, socialGap,\nbuttonStyle(solid|outline|glass|transparent|gradient), buttonShape(square|rounded|pill),\nbuttonColor, buttonTextColor, buttonShadow, buttonSize(sm|md|lg), buttonBorderWidth, buttonRadius, buttonPaddingX, buttonPaddingY, buttonWidth, buttonHeight, buttonFontSize, buttonIconSize,\ngap, width, align(left|center), avatarSize, avatarShape(circle|rounded|square), avatarBorder,\nhoverAnim(none|lift|scale|glow).\n",
+    1,
+)
+replace(
+    "src/lib/biofy-ai-prompt.ts",
+    "link, instagram, tiktok, youtube, whatsapp, spotify, telegram, discord, linkedin, x, email, website.\n",
+    "link, instagram, tiktok, youtube, whatsapp, spotify, telegram, discord, linkedin, x, email, website, text, image.\n",
+    1,
+)
+replace(
+    "src/lib/biofy-ai-prompt.ts",
+    '  "blocks":[{"id":"id existente","title":"opcional","url":"URL exata opcional","isVisible":true}],\n',
+    '  "blocks":[{"id":"id existente","title":"opcional","url":"URL exata opcional","isVisible":true,"config":{"text":"opcional","widthPx":10,"heightPx":40,"radiusPx":8,"paddingXPx":12,"paddingYPx":8,"fontSizePx":14,"iconSizePx":18,"opacity":1,"blockAlign":"center"}}],\n',
+    1,
+)
+replace(
+    "src/lib/biofy-ai-prompt.ts",
+    '  "addBlocks":[{"type":"link","title":"Título","url":null}],\n',
+    '  "addBlocks":[{"type":"link","title":"Título","url":null,"config":{"widthPx":300}}],\n',
+    1,
+)
+replace(
+    "src/lib/biofy-ai-prompt.ts",
+    "- order só deve ser preenchido ao reordenar e precisa conter todos os IDs existentes na ordem final.\n",
+    "- order só deve ser preenchido ao reordenar e precisa conter todos os IDs existentes na ordem final.\n- Config avançada por bloco permitida: text, buttonStyle, buttonColor, buttonTextColor, buttonShape, buttonShadow, animation, widthPx, heightPx, radiusPx, paddingXPx, paddingYPx, fontSizePx, iconSizePx, opacity, blockAlign(left|center|right|stretch).\n- Valores numéricos explícitos do usuário devem ser preservados exatamente dentro dos limites técnicos de renderização.\n",
+    1,
+)
+
+# 3) API safe schema and deterministic exact px extraction.
+replace(
+    "src/routes/api.ai.bio.ts",
+    'import type { BioTheme } from "@/lib/bio-types";\n',
+    'import type { BioTheme, BlockConfig } from "@/lib/bio-types";\n',
+    1,
+)
+replace(
+    "src/routes/api.ai.bio.ts",
+    '  "website",\n]);',
+    '  "website",\n  "text",\n  "image",\n]);',
+    1,
+)
+replace(
+    "src/routes/api.ai.bio.ts",
+    'const BOOLEAN_FIELDS = new Set(["buttonShadow", "avatarBorder"]);',
+    'const BOOLEAN_FIELDS = new Set(["buttonShadow", "avatarBorder", "panelShadow"]);',
+    1,
+)
+replace(
+    "src/routes/api.ai.bio.ts",
+    '''const NUMBER_LIMITS: Record<string, [number, number]> = {
+  panelBorderWidth: [0, 8],
+  bgAngle: [0, 360],
+  textScale: [0.8, 1.35],
+  buttonBorderWidth: [0, 8],
+  gap: [0, 40],
+  width: [300, 760],
+  avatarSize: [40, 180],
+};''',
+    '''const NUMBER_LIMITS: Record<string, [number, number]> = {
+  panelBorderWidth: [0, 50],
+  panelRadius: [0, 500],
+  panelPaddingX: [0, 300],
+  panelPaddingTop: [0, 500],
+  panelPaddingBottom: [0, 500],
+  panelHeight: [0, 2400],
+  panelShadowBlur: [0, 400],
+  bgAngle: [0, 360],
+  textScale: [0.1, 5],
+  nameFontSize: [1, 300],
+  usernameFontSize: [1, 200],
+  bioFontSize: [1, 300],
+  socialIconSize: [0, 200],
+  socialGap: [0, 200],
+  buttonBorderWidth: [0, 50],
+  buttonRadius: [0, 500],
+  buttonPaddingX: [0, 300],
+  buttonPaddingY: [0, 300],
+  buttonWidth: [0, 1600],
+  buttonHeight: [0, 1600],
+  buttonFontSize: [1, 300],
+  buttonIconSize: [0, 200],
+  gap: [0, 300],
+  width: [0, 1600],
+  avatarSize: [0, 600],
+};''',
+    1,
+)
+replace(
+    "src/routes/api.ai.bio.ts",
+    '''type CurrentBlock = {
+  id: string;
+  title: string;
+  type: string;
+  isVisible: boolean;
+  position: number;
+};''',
+    '''type CurrentBlock = {
+  id: string;
+  title: string;
+  type: string;
+  url: string | null;
+  config: BlockConfig;
+  isVisible: boolean;
+  position: number;
+};''',
+    1,
+)
+replace(
+    "src/routes/api.ai.bio.ts",
+    '''  blocks: Array<{ id: string; title?: string; url?: string | null; isVisible?: boolean }>;
+  order: string[];
+  removeBlockIds: string[];
+  duplicateBlockIds: string[];
+  addBlocks: Array<{ type: string; title?: string | null; url?: string | null }>;''',
+    '''  blocks: Array<{
+    id: string;
+    title?: string;
+    url?: string | null;
+    isVisible?: boolean;
+    config?: BlockConfig;
+  }>;
+  order: string[];
+  removeBlockIds: string[];
+  duplicateBlockIds: string[];
+  addBlocks: Array<{
+    type: string;
+    title?: string | null;
+    url?: string | null;
+    config?: BlockConfig;
+  }>;''',
+    1,
+)
+
+api = Path("src/routes/api.ai.bio.ts")
+text = api.read_text()
+marker = "function uniqueExistingIds(value: unknown, existingIds: Set<string>, max = 30) {"
+if marker not in text:
+    raise SystemExit("uniqueExistingIds marker missing")
+helpers = r'''function sanitizeBlockConfigPatch(value: unknown): BlockConfig {
+  if (!isRecord(value)) return {};
+  const result: Record<string, unknown> = {};
+  const enums: Record<string, readonly string[]> = {
+    buttonStyle: ["solid", "outline", "glass", "transparent", "gradient", "inherit"],
+    buttonShape: ["square", "rounded", "pill", "inherit"],
+    animation: ["none", "lift", "scale", "glow", "inherit"],
+    blockAlign: ["left", "center", "right", "stretch"],
+  };
+  const numeric: Record<string, [number, number]> = {
+    widthPx: [0, 1600],
+    heightPx: [0, 1600],
+    radiusPx: [0, 500],
+    paddingXPx: [0, 300],
+    paddingYPx: [0, 300],
+    fontSizePx: [1, 300],
+    iconSizePx: [0, 200],
+    opacity: [0, 1],
+  };
+
+  for (const [key, raw] of Object.entries(value)) {
+    if (key === "text" && typeof raw === "string") {
+      result[key] = raw.slice(0, 1000);
+      continue;
+    }
+    if ((key === "buttonColor" || key === "buttonTextColor") && typeof raw === "string") {
+      if (/^#[0-9a-fA-F]{6}(?:[0-9a-fA-F]{2})?$/.test(raw)) result[key] = raw;
+      continue;
+    }
+    if (key === "buttonShadow" && typeof raw === "boolean") {
+      result[key] = raw;
+      continue;
+    }
+    const limits = numeric[key];
+    if (limits && typeof raw === "number" && Number.isFinite(raw)) {
+      result[key] = Math.max(limits[0], Math.min(limits[1], raw));
+      continue;
+    }
+    const allowed = enums[key];
+    if (allowed && typeof raw === "string" && allowed.includes(raw)) result[key] = raw;
+  }
+
+  return result as BlockConfig;
+}
+
+function normalizeMatchText(value: string) {
+  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
+function pxNear(text: string, subject: string, property: string) {
+  const number = "([0-9]+(?:[.,][0-9]+)?)\\s*px";
+  const patterns = [
+    new RegExp(`${subject}.{0,40}${property}[^0-9]{0,16}${number}`, "i"),
+    new RegExp(`${property}.{0,40}${subject}[^0-9]{0,16}${number}`, "i"),
+    new RegExp(`${subject}[^0-9]{0,24}${number}.{0,24}${property}`, "i"),
+  ];
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (!match) continue;
+    const value = Number(match[1]?.replace(",", "."));
+    if (Number.isFinite(value)) return value;
+  }
+  return undefined;
+}
+
+function exactStandalonePx(text: string, phrase: string) {
+  const pattern = new RegExp(`${phrase}[^0-9]{0,18}([0-9]+(?:[.,][0-9]+)?)\\s*px`, "i");
+  const match = text.match(pattern);
+  if (!match) return undefined;
+  const value = Number(match[1]?.replace(",", "."));
+  return Number.isFinite(value) ? value : undefined;
+}
+
+function extractExplicitThemeMeasurements(instruction: string): Partial<BioTheme> {
+  const text = normalizeMatchText(instruction);
+  const patch: Record<string, number> = {};
+  const card = "(?:box|caixa|card|cartao|painel)(?:\\s+central)?";
+  const buttons = "(?:botao|botoes|link|links|bloco|blocos)";
+  const assign = (key: string, value: number | undefined, min: number, max: number) => {
+    if (value === undefined) return;
+    patch[key] = Math.max(min, Math.min(max, value));
+  };
+
+  assign("width", pxNear(text, card, "(?:largura|width)"), 0, 1600);
+  assign("panelHeight", pxNear(text, card, "(?:altura|height)"), 0, 2400);
+  assign("panelRadius", pxNear(text, card, "(?:raio|radius|arredondamento)"), 0, 500);
+  assign(
+    "panelBorderWidth",
+    pxNear(text, "(?:borda|contorno)(?:\\s+(?:da|do))?\\s*" + card, "(?:largura|espessura)"),
+    0,
+    50,
+  );
+  assign("panelPaddingX", exactStandalonePx(text, "(?:padding|espacamento interno)\\s+horizontal"), 0, 300);
+  assign("panelPaddingTop", exactStandalonePx(text, "(?:padding|espacamento interno)\\s+(?:de\\s+)?cima"), 0, 500);
+  assign("panelPaddingBottom", exactStandalonePx(text, "(?:padding|espacamento interno)\\s+(?:de\\s+)?baixo"), 0, 500);
+  assign("gap", exactStandalonePx(text, "(?:gap|espacamento)\\s+(?:entre\\s+)?(?:links|blocos|botoes)"), 0, 300);
+  assign("avatarSize", pxNear(text, "(?:avatar|foto)", "(?:tamanho|diametro|largura|altura)"), 0, 600);
+  assign("buttonWidth", pxNear(text, buttons, "(?:largura|width)"), 0, 1600);
+  assign("buttonHeight", pxNear(text, buttons, "(?:altura|height)"), 0, 1600);
+  assign("buttonRadius", pxNear(text, buttons, "(?:raio|radius|arredondamento)"), 0, 500);
+  assign("buttonFontSize", pxNear(text, "(?:fonte|texto)(?:\\s+(?:dos|do))?\\s*" + buttons, "(?:tamanho|size)"), 1, 300);
+  assign("buttonIconSize", pxNear(text, "(?:icone|icones)(?:\\s+(?:dos|do))?\\s*" + buttons, "(?:tamanho|size)"), 0, 200);
+  return patch as Partial<BioTheme>;
+}
+
+'''
+api.write_text(text.replace(marker, helpers + marker))
+
+replace(
+    "src/routes/api.ai.bio.ts",
+    '''          const update: { id: string; title?: string; url?: string | null; isVisible?: boolean } = {
+            id: String(item["id"]),
+          };''',
+    '''          const update: {
+            id: string;
+            title?: string;
+            url?: string | null;
+            isVisible?: boolean;
+            config?: BlockConfig;
+          } = { id: String(item["id"]) };''',
+    1,
+)
+replace(
+    "src/routes/api.ai.bio.ts",
+    '''          if (typeof item["isVisible"] === "boolean") update.isVisible = item["isVisible"];
+          if (item["url"] === null) update.url = null;''',
+    '''          if (typeof item["isVisible"] === "boolean") update.isVisible = item["isVisible"];
+          const config = sanitizeBlockConfigPatch(item["config"]);
+          if (Object.keys(config).length > 0) update.config = config;
+          if (item["url"] === null) update.url = null;''',
+    1,
+)
+replace(
+    "src/routes/api.ai.bio.ts",
+    '''          const block: { type: string; title?: string | null; url?: string | null } = {
+            type: String(item["type"]),
+          };''',
+    '''          const block: {
+            type: string;
+            title?: string | null;
+            url?: string | null;
+            config?: BlockConfig;
+          } = { type: String(item["type"]) };''',
+    1,
+)
+replace(
+    "src/routes/api.ai.bio.ts",
+    '''          if (item["url"] === null) block.url = null;
+          if (
+            typeof item["url"] === "string" &&''',
+    '''          const config = sanitizeBlockConfigPatch(item["config"]);
+          if (Object.keys(config).length > 0) block.config = config;
+          if (item["url"] === null) block.url = null;
+          if (
+            typeof item["url"] === "string" &&''',
+    1,
+)
+replace(
+    "src/routes/api.ai.bio.ts",
+    '    theme: sanitizeThemePatch(parsed["theme"]),',
+    '''    theme: {
+      ...sanitizeThemePatch(parsed["theme"]),
+      ...extractExplicitThemeMeasurements(instruction),
+    },''',
+    1,
+)
+replace(
+    "src/routes/api.ai.bio.ts",
+    '''            position?: number;
+          }>;''',
+    '''            position?: number;
+            url?: string | null;
+            config?: Record<string, unknown>;
+          }>;''',
+    1,
+)
+replace(
+    "src/routes/api.ai.bio.ts",
+    '''              type: String(link.type ?? "link").slice(0, 40),
+              isVisible: link.isVisible !== false,''',
+    '''              type: String(link.type ?? "link").slice(0, 40),
+              url: typeof link.url === "string" ? link.url.slice(0, 2048) : null,
+              config: sanitizeBlockConfigPatch(link.config),
+              isVisible: link.isVisible !== false,''',
+    1,
+)
+
+# 4) Frontend agent applies advanced config and exposes current state.
+replace(
+    "src/components/dashboard/BioAiAssistant.tsx",
+    'import type { BioTheme } from "@/lib/bio-types";\n',
+    'import type { BioTheme, BlockConfig } from "@/lib/bio-types";\n',
+    1,
+)
+replace(
+    "src/components/dashboard/BioAiAssistant.tsx",
+    "  isVisible?: boolean;\n};",
+    "  isVisible?: boolean;\n  config?: BlockConfig;\n};",
+    1,
+)
+replace(
+    "src/components/dashboard/BioAiAssistant.tsx",
+    "  url?: string | null;\n};\n\ntype AiResult",
+    "  url?: string | null;\n  config?: BlockConfig;\n};\n\ntype AiResult",
+    1,
+)
+replace(
+    "src/components/dashboard/BioAiAssistant.tsx",
+    '''        ...(typeof update.isVisible === "boolean" ? { is_visible: update.isVisible } : {}),
+      });''',
+    '''        ...(typeof update.isVisible === "boolean" ? { is_visible: update.isVisible } : {}),
+        ...(update.config && Object.keys(update.config).length > 0 ? { config: update.config } : {}),
+      });''',
+    1,
+)
+replace(
+    "src/components/dashboard/BioAiAssistant.tsx",
+    '''        ...(block.url !== undefined ? { url: block.url } : fallbackUrl ? { url: fallbackUrl } : {}),
+      });''',
+    '''        ...(block.url !== undefined ? { url: block.url } : fallbackUrl ? { url: fallbackUrl } : {}),
+        ...(block.config && Object.keys(block.config).length > 0 ? { config: block.config } : {}),
+      });''',
+    1,
+)
+replace(
+    "src/components/dashboard/BioAiAssistant.tsx",
+    '''            type: block.type,
+            isVisible: block.is_visible,
+            position: block.position,''',
+    '''            type: block.type,
+            url: block.url,
+            config: block.config,
+            isVisible: block.is_visible,
+            position: block.position,''',
+    1,
+)
+replace(
+    "src/components/dashboard/BioAiAssistant.tsx",
+    '''              A Biofy pode ajustar texto, visual, ordem e blocos compatíveis diretamente na sua
+              página.''',
+    '''              Peça mudanças simples ou avançadas. Medidas exatas, como “caixa com 420px de largura”,
+              são aplicadas como você escrever.''',
+    1,
+)
+
+# 5) Renderer honors exact AI-only values while preserving current defaults.
+replace(
+    "src/components/bio/BioPreview.tsx",
+    '''const sizePadding: Record<string, string> = {
+  sm: "10px 14px",
+  md: "14px 18px",
+  lg: "18px 22px",
+};''',
+    '''const sizePadding: Record<string, { x: number; y: number }> = {
+  sm: { x: 14, y: 10 },
+  md: { x: 18, y: 14 },
+  lg: { x: 22, y: 18 },
+};''',
+    1,
+)
+replace(
+    "src/components/bio/BioPreview.tsx",
+    '''  const textScale = Math.min(1.35, Math.max(0.8, Number(theme.textScale) || 1));
+  const panelWidth = Math.min(Math.max(Number(theme.width) || 480, 320), 620);
+  const panelMinHeight = compact ? "660px" : "min(800px, calc(100dvh - 40px))";
+  const panelMaxHeight = undefined;
+  const panelBorderWidth = Math.min(6, Math.max(0, Number(theme.panelBorderWidth) || 0));''',
+    '''  const numericTextScale = Number(theme.textScale);
+  const textScale = Number.isFinite(numericTextScale)
+    ? Math.min(5, Math.max(0.1, numericTextScale))
+    : 1;
+  const numericPanelWidth = Number(theme.width);
+  const panelWidth = Number.isFinite(numericPanelWidth)
+    ? Math.min(1600, Math.max(0, numericPanelWidth))
+    : 480;
+  const panelMinHeight = compact ? "660px" : "min(800px, calc(100dvh - 40px))";
+  const panelMaxHeight = undefined;
+  const panelBorderWidth = Math.min(50, Math.max(0, Number(theme.panelBorderWidth) || 0));''',
+    1,
+)
+replace(
+    "src/components/bio/BioPreview.tsx",
+    '''    const shadow = cfg.buttonShadow ?? theme.buttonShadow;
+
+    const base: React.CSSProperties = {
+      borderRadius: shapeRadius[shape] ?? "14px",
+      padding: compact ? "10px 13px" : (sizePadding[theme.buttonSize] ?? sizePadding["md"]),
+      boxShadow: shadow ? `0 8px 20px -16px ${withAlpha(color, 0.75)}` : "none",
+      transition:
+        "transform 150ms ease, box-shadow 150ms ease, filter 150ms ease, background-color 150ms ease",
+      border: "1px solid transparent",
+      width: "100%",
+      textAlign: "center",
+      fontWeight: 600,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: theme.align === "left" ? "flex-start" : "center",
+      gap: "10px",
+    };''',
+    '''    const shadow = cfg.buttonShadow ?? theme.buttonShadow;
+    const defaultPadding = compact
+      ? { x: 13, y: 10 }
+      : (sizePadding[theme.buttonSize] ?? sizePadding.md);
+    const paddingX = cfg.paddingXPx ?? theme.buttonPaddingX ?? defaultPadding.x;
+    const paddingY = cfg.paddingYPx ?? theme.buttonPaddingY ?? defaultPadding.y;
+    const width = cfg.widthPx ?? theme.buttonWidth;
+    const height = cfg.heightPx ?? theme.buttonHeight;
+    const radius = cfg.radiusPx ?? theme.buttonRadius;
+    const blockAlign = cfg.blockAlign;
+
+    const base: React.CSSProperties = {
+      borderRadius: radius !== undefined ? `${radius}px` : (shapeRadius[shape] ?? "14px"),
+      padding: `${paddingY}px ${paddingX}px`,
+      boxShadow: shadow ? `0 8px 20px -16px ${withAlpha(color, 0.75)}` : "none",
+      transition:
+        "transform 150ms ease, box-shadow 150ms ease, filter 150ms ease, background-color 150ms ease",
+      border: "1px solid transparent",
+      width: width !== undefined ? `${width}px` : "100%",
+      height: height !== undefined ? `${height}px` : undefined,
+      opacity: cfg.opacity,
+      alignSelf:
+        blockAlign === "left"
+          ? "flex-start"
+          : blockAlign === "right"
+            ? "flex-end"
+            : blockAlign === "center"
+              ? "center"
+              : blockAlign === "stretch"
+                ? "stretch"
+                : undefined,
+      textAlign: "center",
+      fontWeight: 600,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: theme.align === "left" ? "flex-start" : "center",
+      gap: "10px",
+    };''',
+    1,
+)
+replace(
+    "src/components/bio/BioPreview.tsx",
+    '''          maxWidth: `${panelWidth}px`,
+          minHeight: panelMinHeight,
+          maxHeight: panelMaxHeight,''',
+    '''          maxWidth: `${panelWidth}px`,
+          width: panelWidth === 0 ? "0px" : undefined,
+          height: theme.panelHeight !== undefined ? `${theme.panelHeight}px` : undefined,
+          minHeight: theme.panelHeight !== undefined ? undefined : panelMinHeight,
+          maxHeight: panelMaxHeight,
+          borderRadius: theme.panelRadius !== undefined ? `${theme.panelRadius}px` : undefined,
+          boxShadow:
+            theme.panelShadow === false
+              ? "none"
+              : theme.panelShadowBlur !== undefined
+                ? `0 20px ${theme.panelShadowBlur}px -42px rgba(0,0,0,0.72)`
+                : undefined,''',
+    1,
+)
+replace(
+    "src/components/bio/BioPreview.tsx",
+    '''            theme.align === "left" ? "items-start text-left" : "items-center text-center",
+          )}
+        >''',
+    '''            theme.align === "left" ? "items-start text-left" : "items-center text-center",
+          )}
+          style={{
+            ...(theme.panelPaddingX !== undefined
+              ? { paddingLeft: theme.panelPaddingX, paddingRight: theme.panelPaddingX }
+              : {}),
+            ...(theme.panelPaddingTop !== undefined ? { paddingTop: theme.panelPaddingTop } : {}),
+            ...(theme.panelPaddingBottom !== undefined
+              ? { paddingBottom: theme.panelPaddingBottom }
+              : {}),
+          }}
+        >''',
+    1,
+)
+replace(
+    "src/components/bio/BioPreview.tsx",
+    '              fontSize: `${(compact ? 16 : 24) * textScale}px`,',
+    '''              fontSize:
+                theme.nameFontSize !== undefined
+                  ? `${theme.nameFontSize}px`
+                  : `${(compact ? 16 : 24) * textScale}px`,''',
+    1,
+)
+replace(
+    "src/components/bio/BioPreview.tsx",
+    '''            <p className="opacity-70" style={{ fontSize: `${(compact ? 10 : 12) * textScale}px` }}>
+              @{username}
+            </p>''',
+    '''            <p
+              className="opacity-70"
+              style={{
+                fontSize:
+                  theme.usernameFontSize !== undefined
+                    ? `${theme.usernameFontSize}px`
+                    : `${(compact ? 10 : 12) * textScale}px`,
+              }}
+            >
+              @{username}
+            </p>''',
+    1,
+)
+replace(
+    "src/components/bio/BioPreview.tsx",
+    '''                fontSize: `${(compact ? 11 : 14) * textScale}px`,
+                lineHeight: 1.55,''',
+    '''                fontSize:
+                  theme.bioFontSize !== undefined
+                    ? `${theme.bioFontSize}px`
+                    : `${(compact ? 11 : 14) * textScale}px`,
+                lineHeight: 1.55,''',
+    1,
+)
+replace(
+    "src/components/bio/BioPreview.tsx",
+    '''              className={cn("flex flex-wrap items-center gap-2", compact ? "mt-3" : "mt-5")}
+              style={{ justifyContent: theme.align === "left" ? "flex-start" : "center" }}''',
+    '''              className={cn("flex flex-wrap items-center", compact ? "mt-3" : "mt-5")}
+              style={{
+                justifyContent: theme.align === "left" ? "flex-start" : "center",
+                gap: theme.socialGap !== undefined ? `${theme.socialGap}px` : "8px",
+              }}''',
+    1,
+)
+replace(
+    "src/components/bio/BioPreview.tsx",
+    '                    <Icon size={(compact ? 16 : 20) * textScale} color={theme.textColor} />',
+    '''                    <Icon
+                      size={
+                        theme.socialIconSize !== undefined
+                          ? theme.socialIconSize
+                          : (compact ? 16 : 20) * textScale
+                      }
+                      color={theme.textColor}
+                    />''',
+    1,
+)
+replace(
+    "src/components/bio/BioPreview.tsx",
+    '''            {mainBlocks.map((block) => {
+              if (block.type === "text") {''',
+    '''            {mainBlocks.map((block) => {
+              const cfg = block.config ?? {};
+              const blockAlign = cfg.blockAlign;
+              const blockLayoutStyle: React.CSSProperties = {
+                width: cfg.widthPx !== undefined ? `${cfg.widthPx}px` : undefined,
+                height: cfg.heightPx !== undefined ? `${cfg.heightPx}px` : undefined,
+                opacity: cfg.opacity,
+                alignSelf:
+                  blockAlign === "left"
+                    ? "flex-start"
+                    : blockAlign === "right"
+                      ? "flex-end"
+                      : blockAlign === "center"
+                        ? "center"
+                        : blockAlign === "stretch"
+                          ? "stretch"
+                          : undefined,
+              };
+
+              if (block.type === "text") {''',
+    1,
+)
+replace(
+    "src/components/bio/BioPreview.tsx",
+    '''                      color: theme.mutedColor,
+                      whiteSpace: "pre-line",
+                      fontSize: `${(compact ? 11 : 14) * textScale}px`,
+                      lineHeight: 1.55,''',
+    '''                      ...blockLayoutStyle,
+                      color: theme.mutedColor,
+                      whiteSpace: "pre-line",
+                      padding: `${cfg.paddingYPx ?? 0}px ${cfg.paddingXPx ?? 0}px`,
+                      borderRadius: cfg.radiusPx !== undefined ? `${cfg.radiusPx}px` : undefined,
+                      fontSize:
+                        cfg.fontSizePx !== undefined
+                          ? `${cfg.fontSizePx}px`
+                          : `${(compact ? 11 : 14) * textScale}px`,
+                      textAlign:
+                        blockAlign === "left" || blockAlign === "right" || blockAlign === "center"
+                          ? blockAlign
+                          : undefined,
+                      lineHeight: 1.55,''',
+    1,
+)
+replace(
+    "src/components/bio/BioPreview.tsx",
+    '''                    className="w-full object-cover"
+                    style={{ borderRadius: shapeRadius[theme.buttonShape] ?? "14px" }}''',
+    '''                    className="object-cover"
+                    style={{
+                      ...blockLayoutStyle,
+                      width: cfg.widthPx !== undefined ? `${cfg.widthPx}px` : "100%",
+                      borderRadius:
+                        cfg.radiusPx !== undefined
+                          ? `${cfg.radiusPx}px`
+                          : (shapeRadius[theme.buttonShape] ?? "14px"),
+                    }}''',
+    1,
+)
+replace(
+    "src/components/bio/BioPreview.tsx",
+    '''                  <Icon size={(compact ? 14 : 18) * textScale} className="shrink-0 opacity-90" />
+                  <span
+                    className="min-w-0 flex-1 truncate"
+                    style={{ fontSize: `${(compact ? 11 : 14) * textScale}px` }}''',
+    '''                  <Icon
+                    size={cfg.iconSizePx ?? theme.buttonIconSize ?? (compact ? 14 : 18) * textScale}
+                    className="shrink-0 opacity-90"
+                  />
+                  <span
+                    className="min-w-0 flex-1 truncate"
+                    style={{
+                      fontSize:
+                        cfg.fontSizePx !== undefined
+                          ? `${cfg.fontSizePx}px`
+                          : theme.buttonFontSize !== undefined
+                            ? `${theme.buttonFontSize}px`
+                            : `${(compact ? 11 : 14) * textScale}px`,
+                    }}''',
+    1,
+)
+
+# 6) Contextual product hints.
+hint = '''import { Link } from "@tanstack/react-router";
+import { Sparkles } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+export function AiPrecisionHint({ className }: { className?: string }) {
+  return (
+    <aside
+      className={cn(
+        "flex flex-col gap-3 rounded-xl border border-primary/15 bg-primary/[0.035] px-4 py-3 sm:flex-row sm:items-center",
+        className,
+      )}
+    >
+      <Sparkles className="h-4 w-4 shrink-0 text-primary" />
+      <p className="min-w-0 flex-1 text-xs leading-5 text-muted-foreground">
+        <strong className="font-semibold text-foreground">Quer um ajuste mais específico?</strong>{" "}
+        Use a Biofy AI para pedir mudanças avançadas em linguagem natural, inclusive medidas exatas,
+        espaçamentos e detalhes que não aparecem nos controles padrão.
+      </p>
+      <Link
+        to="/dashboard/ai"
+        className="shrink-0 text-xs font-semibold text-primary underline-offset-4 hover:underline"
+      >
+        Abrir Biofy AI
+      </Link>
+    </aside>
+  );
+}
+'''
+Path("src/components/dashboard/AiPrecisionHint.tsx").write_text(hint)
+
+replace(
+    "src/routes/dashboard.editor.tsx",
+    'import { ImageUploadButton } from "@/components/dashboard/ImageUploadButton";\n',
+    'import { AiPrecisionHint } from "@/components/dashboard/AiPrecisionHint";\nimport { ImageUploadButton } from "@/components/dashboard/ImageUploadButton";\n',
+    1,
+)
+replace(
+    "src/routes/dashboard.editor.tsx",
+    '''      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_390px]">''',
+    '''      </div>
+
+      <AiPrecisionHint />
+
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_390px]">''',
+    1,
+)
+replace(
+    "src/routes/dashboard.appearance.tsx",
+    'import { useBio } from "@/components/dashboard/BioContext";\n',
+    'import { AiPrecisionHint } from "@/components/dashboard/AiPrecisionHint";\nimport { useBio } from "@/components/dashboard/BioContext";\n',
+    1,
+)
+replace(
+    "src/routes/dashboard.appearance.tsx",
+    '''      </header>
+
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_500px]">''',
+    '''      </header>
+
+      <AiPrecisionHint />
+
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_500px]">''',
+    1,
+)
+replace(
+    "src/routes/dashboard.appearance.tsx",
+    '''        value={value}
+        onChange={(event) => onChange(Number(event.target.value))}''',
+    '''        value={Math.max(min, Math.min(max, value))}
+        onChange={(event) => onChange(Number(event.target.value))}''',
+    1,
+)
+replace(
+    "src/routes/dashboard.ai.tsx",
+    "          Descreva a mudança. A Biofy aplica e você confere o resultado ao lado.",
+    "          Descreva a mudança com a precisão que quiser — inclusive medidas exatas. A Biofy aplica e você confere o resultado ao lado.",
+    1,
+)
+
+print("AI precision patch complete")
