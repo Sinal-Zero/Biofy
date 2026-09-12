@@ -127,19 +127,25 @@ function SubscriptionPage() {
           <div>
             <span className="text-xs font-medium text-muted-foreground">Plano atual</span>
             <strong className="mt-1 block text-2xl tracking-[-0.03em]">
-              {loading ? "—" : planLabel(currentPlan)}
+              {loading || checking ? (
+  <span className="h-6 w-24 bg-background/50 rounded animate-pulse" />
+) : planLabel(currentPlan)}
             </strong>
           </div>
           <div>
             <span className="text-xs font-medium text-muted-foreground">Status</span>
             <strong className="mt-1 block text-sm font-medium">
-              {loading ? "—" : paidPlan ? statusLabel(subscription?.status) : "Gratuito"}
+              {loading || checking ? (
+                <span className="h-5 w-20 bg-background/50 rounded animate-pulse" />
+              ) : paidPlan ? statusLabel(subscription?.status) : "Gratuito"}
             </strong>
           </div>
           <div>
             <span className="text-xs font-medium text-muted-foreground">Renovação</span>
             <strong className="mt-1 block text-sm font-medium">
-              {subscription?.current_period_end && hasPaidSubscription
+              {loading || checking ? (
+  <span className="h-5 w-20 bg-background/50 rounded animate-pulse" />
+) : subscription?.current_period_end && hasPaidSubscription
                 ? new Date(subscription.current_period_end).toLocaleDateString("pt-BR")
                 : "—"}
             </strong>

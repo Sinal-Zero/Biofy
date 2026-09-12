@@ -105,16 +105,16 @@ function DashboardOverview() {
         </div>
       </section>
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {cards.map((card) => {
           const Icon = card.icon;
           return (
-            <article key={card.label} className="biofy-card p-5">
+            <article key={card.label} className="biofy-card p-4">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Icon className="h-4 w-4" />
-                <span className="text-sm">{card.label}</span>
+                <span className="text-xs">{card.label}</span>
               </div>
-              <strong className="mt-5 block text-3xl font-semibold tracking-[-0.035em]">
+              <strong className="mt-3 block text-2xl font-semibold tracking-[-0.02em]">
                 {card.value}
               </strong>
             </article>
