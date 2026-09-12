@@ -23,7 +23,7 @@ jobs:
       - name: Apply precision patch
         run: python3 .github/scripts/ai_precision.py
       - name: Fix strict index fallback
-        run: sed -i 's/sizePadding\.md/{ x: 18, y: 14 }/' src/components/bio/BioPreview.tsx
+        run: "sed -i 's/sizePadding\\.md/{ x: 18, y: 14 }/' src/components/bio/BioPreview.tsx"
       - name: Format
         run: bunx prettier --write src/lib/bio-types.ts src/lib/biofy-ai-prompt.ts src/routes/api.ai.bio.ts src/components/bio/BioPreview.tsx src/components/dashboard/BioAiAssistant.tsx src/components/dashboard/AiPrecisionHint.tsx src/routes/dashboard.editor.tsx src/routes/dashboard.appearance.tsx src/routes/dashboard.ai.tsx
       - name: Build and generate routes
