@@ -47,6 +47,12 @@ type ChatMessage = {
   tips?: string[];
 };
 
+const PRECISE_COMMAND_STARTERS = [
+  "Cartão com 480px de largura e 28px de radius",
+  "Deixe 14px de espaço entre os links",
+  "Botões com 48px de altura e radius de 14px",
+] as const;
+
 function nextFrame() {
   return new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 }
@@ -315,12 +321,23 @@ export function BioAiAssistant() {
         className="flex flex-1 flex-col px-4 py-5 sm:px-5"
       >
         {messages.length === 0 ? (
-          <div className="max-w-sm pt-2">
+          <div className="max-w-md pt-2">
             <p className="text-sm font-semibold">Diga o que você quer mudar.</p>
-            <p className="mt-2 text-xs leading-5 text-muted-foreground">
-              Peça mudanças simples ou avançadas. Medidas exatas, como “caixa com 420px de largura”,
-              são aplicadas como você escrever.
+            <p className="mt-2 max-w-sm text-xs leading-5 text-muted-foreground">
+              Peça mudanças simples ou avançadas. Medidas exatas são aplicadas como você escrever.
             </p>
+            <div className="mt-5 flex flex-wrap gap-2" aria-label="Exemplos de comandos precisos">
+              {PRECISE_COMMAND_STARTERS.map((starter) => (
+                <button
+                  key={starter}
+                  type="button"
+                  onClick={() => setInstruction(starter)}
+                  className="rounded-lg border border-border/80 bg-background/35 px-2.5 py-1.5 text-left text-[11px] leading-4 text-muted-foreground transition-[border-color,background-color,color] duration-150 hover:border-foreground/15 hover:bg-background/70 hover:text-foreground"
+                >
+                  {starter}
+                </button>
+              ))}
+            </div>
           </div>
         ) : (
           <div className="space-y-5">
