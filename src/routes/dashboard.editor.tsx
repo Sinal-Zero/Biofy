@@ -216,25 +216,14 @@ function BioEditor() {
             <div className="flex items-center justify-between gap-4">
               <h2 className="text-lg font-semibold">Links</h2>
               <div className="relative">
-                {blocks.length > 0 ? (
-                    <Button
-                      size="sm"
-                      onClick={() => setAddMenuOpen((open) => !open)}
-                      className="w-full mt-4 flex items-center justify-center gap-2"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Adicionar bloco
-                    </Button>
-                  ) : (
-                    <Button
-                      size="sm"
-                      onClick={() => setAddMenuOpen((open) => !open)}
-                      className="w-full mt-4 flex items-center justify-center gap-2"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Adicionar primeiro bloco
-                    </Button>
-                  )}
+                <Button
+                  size="sm"
+                  onClick={() => setAddMenuOpen((open) => !open)}
+                  className="flex items-center justify-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  {links.length > 0 ? "Adicionar bloco" : "Adicionar primeiro bloco"}
+                </Button>
                 {addMenuOpen ? (
                   <div className="absolute right-0 top-12 z-40 w-48 origin-top-right animate-pop rounded-xl border border-border/90 bg-popover p-2 shadow-panel">
                     <button

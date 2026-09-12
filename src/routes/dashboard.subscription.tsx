@@ -128,8 +128,10 @@ function SubscriptionPage() {
             <span className="text-xs font-medium text-muted-foreground">Plano atual</span>
             <strong className="mt-1 block text-2xl tracking-[-0.03em]">
               {loading || checking ? (
-  <span className="h-6 w-24 bg-background/50 rounded animate-pulse" />
-) : planLabel(currentPlan)}
+                <span className="h-6 w-24 bg-background/50 rounded animate-pulse" />
+              ) : (
+                planLabel(currentPlan)
+              )}
             </strong>
           </div>
           <div>
@@ -137,17 +139,23 @@ function SubscriptionPage() {
             <strong className="mt-1 block text-sm font-medium">
               {loading || checking ? (
                 <span className="h-5 w-20 bg-background/50 rounded animate-pulse" />
-              ) : paidPlan ? statusLabel(subscription?.status) : "Gratuito"}
+              ) : paidPlan ? (
+                statusLabel(subscription?.status)
+              ) : (
+                "Gratuito"
+              )}
             </strong>
           </div>
           <div>
             <span className="text-xs font-medium text-muted-foreground">Renovação</span>
             <strong className="mt-1 block text-sm font-medium">
               {loading || checking ? (
-  <span className="h-5 w-20 bg-background/50 rounded animate-pulse" />
-) : subscription?.current_period_end && hasPaidSubscription
-                ? new Date(subscription.current_period_end).toLocaleDateString("pt-BR")
-                : "—"}
+                <span className="h-5 w-20 bg-background/50 rounded animate-pulse" />
+              ) : subscription?.current_period_end && hasPaidSubscription ? (
+                new Date(subscription.current_period_end).toLocaleDateString("pt-BR")
+              ) : (
+                "—"
+              )}
             </strong>
           </div>
         </div>
@@ -196,7 +204,7 @@ function SubscriptionPage() {
             <article
               key={plan.id}
               className={`biofy-card flex h-full flex-col p-5 sm:p-6 ${
-                current ? "border-primary/55" : ""
+                current ? "border-primary/55 bg-primary/5" : ""
               }`}
             >
               <div className="flex items-start justify-between gap-3">

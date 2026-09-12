@@ -635,7 +635,6 @@ SISTEMA DE BLOCOS
 A página deve ser construída com blocos.
 
 Adicionar bloco:
-
 + Adicionar bloco
 
 Opções:
