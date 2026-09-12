@@ -3,6 +3,7 @@ import { Check, Lock, Monitor, Palette, SlidersHorizontal, Smartphone, Type } fr
 import { useEffect, useState } from "react";
 import { BioPreview } from "@/components/bio/BioPreview";
 import { PhoneFrame } from "@/components/bio/PhoneFrame";
+import { AiPrecisionHint } from "@/components/dashboard/AiPrecisionHint";
 import { useBio } from "@/components/dashboard/BioContext";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -118,7 +119,7 @@ function RangeControl({
         min={min}
         max={max}
         step={step}
-        value={value}
+        value={Math.max(min, Math.min(max, value))}
         onChange={(event) => onChange(Number(event.target.value))}
         className="mt-4 w-full accent-primary"
       />
@@ -185,6 +186,8 @@ function AppearancePage() {
         <h1 className="biofy-page-title">Aparência</h1>
         <p className="biofy-page-description">Cores, tipografia e proporção da sua página.</p>
       </header>
+
+      <AiPrecisionHint />
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_500px]">
         <div className="space-y-5">

@@ -33,10 +33,10 @@ const shapeRadius: Record<string, string> = {
   pill: "999px",
 };
 
-const sizePadding: Record<string, string> = {
-  sm: "10px 14px",
-  md: "14px 18px",
-  lg: "18px 22px",
+const sizePadding: Record<string, { x: number; y: number }> = {
+  sm: { x: 14, y: 10 },
+  md: { x: 18, y: 14 },
+  lg: { x: 22, y: 18 },
 };
 
 export function BioPreview({
@@ -53,11 +53,17 @@ export function BioPreview({
   className,
 }: BioPreviewProps) {
   const theme = useMemo(() => mergeTheme(rawTheme), [rawTheme]);
-  const textScale = Math.min(1.35, Math.max(0.8, Number(theme.textScale) || 1));
-  const panelWidth = Math.min(Math.max(Number(theme.width) || 480, 320), 620);
+  const numericTextScale = Number(theme.textScale);
+  const textScale = Number.isFinite(numericTextScale)
+    ? Math.min(5, Math.max(0.1, numericTextScale))
+    : 1;
+  const numericPanelWidth = Number(theme.width);
+  const panelWidth = Number.isFinite(numericPanelWidth)
+    ? Math.min(1600, Math.max(0, numericPanelWidth))
+    : 480;
   const panelMinHeight = compact ? "660px" : "min(800px, calc(100dvh - 40px))";
   const panelMaxHeight = undefined;
-  const panelBorderWidth = Math.min(6, Math.max(0, Number(theme.panelBorderWidth) || 0));
+  const panelBorderWidth = Math.min(50, Math.max(0, Number(theme.panelBorderWidth) || 0));
 
   const panelBackground =
     theme.bgType === "gradient"
@@ -81,15 +87,36 @@ export function BioPreview({
     const color = cfg.buttonColor || theme.buttonColor;
     const textColor = cfg.buttonTextColor || theme.buttonTextColor;
     const shadow = cfg.buttonShadow ?? theme.buttonShadow;
+    const defaultPadding = compact
+      ? { x: 13, y: 10 }
+      : (sizePadding[theme.buttonSize] ?? { x: 18, y: 14 });
+    const paddingX = cfg.paddingXPx ?? theme.buttonPaddingX ?? defaultPadding.x;
+    const paddingY = cfg.paddingYPx ?? theme.buttonPaddingY ?? defaultPadding.y;
+    const width = cfg.widthPx ?? theme.buttonWidth;
+    const height = cfg.heightPx ?? theme.buttonHeight;
+    const radius = cfg.radiusPx ?? theme.buttonRadius;
+    const blockAlign = cfg.blockAlign;
 
     const base: React.CSSProperties = {
-      borderRadius: shapeRadius[shape] ?? "14px",
-      padding: compact ? "10px 13px" : (sizePadding[theme.buttonSize] ?? sizePadding["md"]),
+      borderRadius: radius !== undefined ? `${radius}px` : (shapeRadius[shape] ?? "14px"),
+      padding: `${paddingY}px ${paddingX}px`,
       boxShadow: shadow ? `0 8px 20px -16px ${withAlpha(color, 0.75)}` : "none",
       transition:
         "transform 150ms ease, box-shadow 150ms ease, filter 150ms ease, background-color 150ms ease",
       border: "1px solid transparent",
-      width: "100%",
+      width: width !== undefined ? `${width}px` : "100%",
+      height: height !== undefined ? `${height}px` : undefined,
+      opacity: cfg.opacity,
+      alignSelf:
+        blockAlign === "left"
+          ? "flex-start"
+          : blockAlign === "right"
+            ? "flex-end"
+            : blockAlign === "center"
+              ? "center"
+              : blockAlign === "stretch"
+                ? "stretch"
+                : undefined,
       textAlign: "center",
       fontWeight: 600,
       display: "flex",
@@ -156,8 +183,17 @@ export function BioPreview({
         )}
         style={{
           maxWidth: `${panelWidth}px`,
-          minHeight: panelMinHeight,
+          width: panelWidth === 0 ? "0px" : undefined,
+          height: theme.panelHeight !== undefined ? `${theme.panelHeight}px` : undefined,
+          minHeight: theme.panelHeight !== undefined ? undefined : panelMinHeight,
           maxHeight: panelMaxHeight,
+          borderRadius: theme.panelRadius !== undefined ? `${theme.panelRadius}px` : undefined,
+          boxShadow:
+            theme.panelShadow === false
+              ? "none"
+              : theme.panelShadowBlur !== undefined
+                ? `0 20px ${theme.panelShadowBlur}px -42px rgba(0,0,0,0.72)`
+                : undefined,
           background: panelBackground,
           backgroundSize: "cover",
           backgroundPosition: "center",
@@ -174,6 +210,15 @@ export function BioPreview({
             compact ? "py-8" : "px-6 py-12 sm:px-9 sm:py-14",
             theme.align === "left" ? "items-start text-left" : "items-center text-center",
           )}
+          style={{
+            ...(theme.panelPaddingX !== undefined
+              ? { paddingLeft: theme.panelPaddingX, paddingRight: theme.panelPaddingX }
+              : {}),
+            ...(theme.panelPaddingTop !== undefined ? { paddingTop: theme.panelPaddingTop } : {}),
+            ...(theme.panelPaddingBottom !== undefined
+              ? { paddingBottom: theme.panelPaddingBottom }
+              : {}),
+          }}
         >
           {avatarUrl ? (
             <img
@@ -212,7 +257,10 @@ export function BioPreview({
             style={{
               color: theme.textColor,
               letterSpacing: "-0.01em",
-              fontSize: `${(compact ? 16 : 24) * textScale}px`,
+              fontSize:
+                theme.nameFontSize !== undefined
+                  ? `${theme.nameFontSize}px`
+                  : `${(compact ? 16 : 24) * textScale}px`,
               lineHeight: 1.2,
             }}
           >
@@ -220,7 +268,15 @@ export function BioPreview({
           </h1>
 
           {username ? (
-            <p className="opacity-70" style={{ fontSize: `${(compact ? 10 : 12) * textScale}px` }}>
+            <p
+              className="opacity-70"
+              style={{
+                fontSize:
+                  theme.usernameFontSize !== undefined
+                    ? `${theme.usernameFontSize}px`
+                    : `${(compact ? 10 : 12) * textScale}px`,
+              }}
+            >
               @{username}
             </p>
           ) : null}
@@ -230,7 +286,10 @@ export function BioPreview({
               className="mt-2 max-w-full whitespace-pre-line"
               style={{
                 color: theme.mutedColor,
-                fontSize: `${(compact ? 11 : 14) * textScale}px`,
+                fontSize:
+                  theme.bioFontSize !== undefined
+                    ? `${theme.bioFontSize}px`
+                    : `${(compact ? 11 : 14) * textScale}px`,
                 lineHeight: 1.55,
               }}
             >
@@ -240,8 +299,11 @@ export function BioPreview({
 
           {socials.length > 0 ? (
             <div
-              className={cn("flex flex-wrap items-center gap-2", compact ? "mt-3" : "mt-5")}
-              style={{ justifyContent: theme.align === "left" ? "flex-start" : "center" }}
+              className={cn("flex flex-wrap items-center", compact ? "mt-3" : "mt-5")}
+              style={{
+                justifyContent: theme.align === "left" ? "flex-start" : "center",
+                gap: theme.socialGap !== undefined ? `${theme.socialGap}px` : "8px",
+              }}
             >
               {socials.map((block) => {
                 const Icon = getBlockDef(block.type).icon;
@@ -260,7 +322,14 @@ export function BioPreview({
                     className="flex h-9 w-9 items-center justify-center rounded-full transition-[background-color,opacity,transform] duration-150 hover:bg-white/[0.07] hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 active:scale-[0.97]"
                     aria-label={block.title || getBlockDef(block.type).label}
                   >
-                    <Icon size={(compact ? 16 : 20) * textScale} color={theme.textColor} />
+                    <Icon
+                      size={
+                        theme.socialIconSize !== undefined
+                          ? theme.socialIconSize
+                          : (compact ? 16 : 20) * textScale
+                      }
+                      color={theme.textColor}
+                    />
                   </El>
                 );
               })}
@@ -275,14 +344,42 @@ export function BioPreview({
             }}
           >
             {mainBlocks.map((block) => {
+              const cfg = block.config ?? {};
+              const blockAlign = cfg.blockAlign;
+              const blockLayoutStyle: React.CSSProperties = {
+                width: cfg.widthPx !== undefined ? `${cfg.widthPx}px` : undefined,
+                height: cfg.heightPx !== undefined ? `${cfg.heightPx}px` : undefined,
+                opacity: cfg.opacity,
+                alignSelf:
+                  blockAlign === "left"
+                    ? "flex-start"
+                    : blockAlign === "right"
+                      ? "flex-end"
+                      : blockAlign === "center"
+                        ? "center"
+                        : blockAlign === "stretch"
+                          ? "stretch"
+                          : undefined,
+              };
+
               if (block.type === "text") {
                 return (
                   <p
                     key={block.id}
                     style={{
+                      ...blockLayoutStyle,
                       color: theme.mutedColor,
                       whiteSpace: "pre-line",
-                      fontSize: `${(compact ? 11 : 14) * textScale}px`,
+                      padding: `${cfg.paddingYPx ?? 0}px ${cfg.paddingXPx ?? 0}px`,
+                      borderRadius: cfg.radiusPx !== undefined ? `${cfg.radiusPx}px` : undefined,
+                      fontSize:
+                        cfg.fontSizePx !== undefined
+                          ? `${cfg.fontSizePx}px`
+                          : `${(compact ? 11 : 14) * textScale}px`,
+                      textAlign:
+                        blockAlign === "left" || blockAlign === "right" || blockAlign === "center"
+                          ? blockAlign
+                          : undefined,
                       lineHeight: 1.55,
                     }}
                   >
@@ -299,8 +396,15 @@ export function BioPreview({
                     key={block.id}
                     src={src}
                     alt={block.title || "Imagem"}
-                    className="w-full object-cover"
-                    style={{ borderRadius: shapeRadius[theme.buttonShape] ?? "14px" }}
+                    className="object-cover"
+                    style={{
+                      ...blockLayoutStyle,
+                      width: cfg.widthPx !== undefined ? `${cfg.widthPx}px` : "100%",
+                      borderRadius:
+                        cfg.radiusPx !== undefined
+                          ? `${cfg.radiusPx}px`
+                          : (shapeRadius[theme.buttonShape] ?? "14px"),
+                    }}
                     loading="lazy"
                   />
                 );
@@ -309,10 +413,20 @@ export function BioPreview({
               const Icon = getBlockDef(block.type).icon;
               const content = (
                 <>
-                  <Icon size={(compact ? 14 : 18) * textScale} className="shrink-0 opacity-90" />
+                  <Icon
+                    size={cfg.iconSizePx ?? theme.buttonIconSize ?? (compact ? 14 : 18) * textScale}
+                    className="shrink-0 opacity-90"
+                  />
                   <span
                     className="min-w-0 flex-1 truncate"
-                    style={{ fontSize: `${(compact ? 11 : 14) * textScale}px` }}
+                    style={{
+                      fontSize:
+                        cfg.fontSizePx !== undefined
+                          ? `${cfg.fontSizePx}px`
+                          : theme.buttonFontSize !== undefined
+                            ? `${theme.buttonFontSize}px`
+                            : `${(compact ? 11 : 14) * textScale}px`,
+                    }}
                   >
                     {block.title || "Novo link"}
                   </span>

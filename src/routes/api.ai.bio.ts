@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { buildBiofyAiPrompt } from "@/lib/biofy-ai-prompt";
-import type { BioTheme } from "@/lib/bio-types";
+import type { BioTheme, BlockConfig } from "@/lib/bio-types";
 
 const GEMINI_TIMEOUT_MS = 30000;
 const DEFAULT_GEMINI_MODEL = "gemini-3.5-flash-lite";
@@ -38,6 +38,8 @@ const ALLOWED_BLOCK_TYPES = new Set([
   "x",
   "email",
   "website",
+  "text",
+  "image",
 ]);
 
 const COLOR_FIELDS = new Set([
@@ -52,16 +54,34 @@ const COLOR_FIELDS = new Set([
   "buttonTextColor",
 ]);
 
-const BOOLEAN_FIELDS = new Set(["buttonShadow", "avatarBorder"]);
+const BOOLEAN_FIELDS = new Set(["buttonShadow", "avatarBorder", "panelShadow"]);
 
 const NUMBER_LIMITS: Record<string, [number, number]> = {
-  panelBorderWidth: [0, 8],
+  panelBorderWidth: [0, 50],
+  panelRadius: [0, 500],
+  panelPaddingX: [0, 300],
+  panelPaddingTop: [0, 500],
+  panelPaddingBottom: [0, 500],
+  panelHeight: [0, 2400],
+  panelShadowBlur: [0, 400],
   bgAngle: [0, 360],
-  textScale: [0.8, 1.35],
-  buttonBorderWidth: [0, 8],
-  gap: [0, 40],
-  width: [300, 760],
-  avatarSize: [40, 180],
+  textScale: [0.1, 5],
+  nameFontSize: [1, 300],
+  usernameFontSize: [1, 200],
+  bioFontSize: [1, 300],
+  socialIconSize: [0, 200],
+  socialGap: [0, 200],
+  buttonBorderWidth: [0, 50],
+  buttonRadius: [0, 500],
+  buttonPaddingX: [0, 300],
+  buttonPaddingY: [0, 300],
+  buttonWidth: [0, 1600],
+  buttonHeight: [0, 1600],
+  buttonFontSize: [1, 300],
+  buttonIconSize: [0, 200],
+  gap: [0, 300],
+  width: [0, 1600],
+  avatarSize: [0, 600],
 };
 
 const ENUM_FIELDS: Record<string, readonly string[]> = {
@@ -107,6 +127,8 @@ type CurrentBlock = {
   id: string;
   title: string;
   type: string;
+  url: string | null;
+  config: BlockConfig;
   isVisible: boolean;
   position: number;
 };
@@ -117,11 +139,22 @@ type SanitizedAgentResponse = {
   linkTitles: Array<{ id: string; title: string }>;
   profile: { displayName?: string };
   theme: Partial<BioTheme>;
-  blocks: Array<{ id: string; title?: string; url?: string | null; isVisible?: boolean }>;
+  blocks: Array<{
+    id: string;
+    title?: string;
+    url?: string | null;
+    isVisible?: boolean;
+    config?: BlockConfig;
+  }>;
   order: string[];
   removeBlockIds: string[];
   duplicateBlockIds: string[];
-  addBlocks: Array<{ type: string; title?: string | null; url?: string | null }>;
+  addBlocks: Array<{
+    type: string;
+    title?: string | null;
+    url?: string | null;
+    config?: BlockConfig;
+  }>;
   tips: string[];
 };
 
@@ -529,6 +562,149 @@ function sanitizeThemePatch(value: unknown): Partial<BioTheme> {
   return result as Partial<BioTheme>;
 }
 
+function sanitizeBlockConfigPatch(value: unknown): BlockConfig {
+  if (!isRecord(value)) return {};
+  const result: Record<string, unknown> = {};
+  const enums: Record<string, readonly string[]> = {
+    buttonStyle: ["solid", "outline", "glass", "transparent", "gradient", "inherit"],
+    buttonShape: ["square", "rounded", "pill", "inherit"],
+    animation: ["none", "lift", "scale", "glow", "inherit"],
+    blockAlign: ["left", "center", "right", "stretch"],
+  };
+  const numeric: Record<string, [number, number]> = {
+    widthPx: [0, 1600],
+    heightPx: [0, 1600],
+    radiusPx: [0, 500],
+    paddingXPx: [0, 300],
+    paddingYPx: [0, 300],
+    fontSizePx: [1, 300],
+    iconSizePx: [0, 200],
+    opacity: [0, 1],
+  };
+
+  for (const [key, raw] of Object.entries(value)) {
+    if (key === "text" && typeof raw === "string") {
+      result[key] = raw.slice(0, 1000);
+      continue;
+    }
+    if ((key === "buttonColor" || key === "buttonTextColor") && typeof raw === "string") {
+      if (/^#[0-9a-fA-F]{6}(?:[0-9a-fA-F]{2})?$/.test(raw)) result[key] = raw;
+      continue;
+    }
+    if (key === "buttonShadow" && typeof raw === "boolean") {
+      result[key] = raw;
+      continue;
+    }
+    const limits = numeric[key];
+    if (limits && typeof raw === "number" && Number.isFinite(raw)) {
+      result[key] = Math.max(limits[0], Math.min(limits[1], raw));
+      continue;
+    }
+    const allowed = enums[key];
+    if (allowed && typeof raw === "string" && allowed.includes(raw)) result[key] = raw;
+  }
+
+  return result as BlockConfig;
+}
+
+function normalizeMatchText(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+function pxNear(text: string, subject: string, property: string) {
+  const number = "([0-9]+(?:[.,][0-9]+)?)\\s*px";
+  const patterns = [
+    new RegExp(`${subject}.{0,40}${property}[^0-9]{0,16}${number}`, "i"),
+    new RegExp(`${property}.{0,40}${subject}[^0-9]{0,16}${number}`, "i"),
+    new RegExp(`${subject}[^0-9]{0,24}${number}.{0,24}${property}`, "i"),
+  ];
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (!match) continue;
+    const value = Number(match[1]?.replace(",", "."));
+    if (Number.isFinite(value)) return value;
+  }
+  return undefined;
+}
+
+function exactStandalonePx(text: string, phrase: string) {
+  const pattern = new RegExp(`${phrase}[^0-9]{0,18}([0-9]+(?:[.,][0-9]+)?)\\s*px`, "i");
+  const match = text.match(pattern);
+  if (!match) return undefined;
+  const value = Number(match[1]?.replace(",", "."));
+  return Number.isFinite(value) ? value : undefined;
+}
+
+function extractExplicitThemeMeasurements(instruction: string): Partial<BioTheme> {
+  const text = normalizeMatchText(instruction);
+  const patch: Record<string, number> = {};
+  const card = "(?:box|caixa|card|cartao|painel)(?:\\s+central)?";
+  const buttons = "(?:botao|botoes|link|links|bloco|blocos)";
+  const assign = (key: string, value: number | undefined, min: number, max: number) => {
+    if (value === undefined) return;
+    patch[key] = Math.max(min, Math.min(max, value));
+  };
+
+  assign("width", pxNear(text, card, "(?:largura|width)"), 0, 1600);
+  assign("panelHeight", pxNear(text, card, "(?:altura|height)"), 0, 2400);
+  assign("panelRadius", pxNear(text, card, "(?:raio|radius|arredondamento)"), 0, 500);
+  assign(
+    "panelBorderWidth",
+    pxNear(text, "(?:borda|contorno)(?:\\s+(?:da|do))?\\s*" + card, "(?:largura|espessura)"),
+    0,
+    50,
+  );
+  assign(
+    "panelPaddingX",
+    exactStandalonePx(text, "(?:padding|espacamento interno)\\s+horizontal"),
+    0,
+    300,
+  );
+  assign(
+    "panelPaddingTop",
+    exactStandalonePx(text, "(?:padding|espacamento interno)\\s+(?:de\\s+)?cima"),
+    0,
+    500,
+  );
+  assign(
+    "panelPaddingBottom",
+    exactStandalonePx(text, "(?:padding|espacamento interno)\\s+(?:de\\s+)?baixo"),
+    0,
+    500,
+  );
+  assign(
+    "gap",
+    exactStandalonePx(text, "(?:gap|espacamento)\\s+(?:entre\\s+)?(?:links|blocos|botoes)"),
+    0,
+    300,
+  );
+  assign(
+    "avatarSize",
+    pxNear(text, "(?:avatar|foto)", "(?:tamanho|diametro|largura|altura)"),
+    0,
+    600,
+  );
+  assign("buttonWidth", pxNear(text, buttons, "(?:largura|width)"), 0, 1600);
+  assign("buttonHeight", pxNear(text, buttons, "(?:altura|height)"), 0, 1600);
+  assign("buttonRadius", pxNear(text, buttons, "(?:raio|radius|arredondamento)"), 0, 500);
+  assign(
+    "buttonFontSize",
+    pxNear(text, "(?:fonte|texto)(?:\\s+(?:dos|do))?\\s*" + buttons, "(?:tamanho|size)"),
+    1,
+    300,
+  );
+  assign(
+    "buttonIconSize",
+    pxNear(text, "(?:icone|icones)(?:\\s+(?:dos|do))?\\s*" + buttons, "(?:tamanho|size)"),
+    0,
+    200,
+  );
+  return patch as Partial<BioTheme>;
+}
+
 function uniqueExistingIds(value: unknown, existingIds: Set<string>, max = 30) {
   if (!Array.isArray(value)) return [];
   return [
@@ -582,13 +758,19 @@ function sanitizeAgentResponse(
         .filter((item) => typeof item["id"] === "string" && existingIds.has(item["id"] as string))
         .slice(0, 30)
         .map((item) => {
-          const update: { id: string; title?: string; url?: string | null; isVisible?: boolean } = {
-            id: String(item["id"]),
-          };
+          const update: {
+            id: string;
+            title?: string;
+            url?: string | null;
+            isVisible?: boolean;
+            config?: BlockConfig;
+          } = { id: String(item["id"]) };
           if (typeof item["title"] === "string" && item["title"].trim()) {
             update.title = item["title"].trim().slice(0, 120);
           }
           if (typeof item["isVisible"] === "boolean") update.isVisible = item["isVisible"];
+          const config = sanitizeBlockConfigPatch(item["config"]);
+          if (Object.keys(config).length > 0) update.config = config;
           if (item["url"] === null) update.url = null;
           if (
             typeof item["url"] === "string" &&
@@ -616,11 +798,16 @@ function sanitizeAgentResponse(
         )
         .slice(0, 5)
         .map((item) => {
-          const block: { type: string; title?: string | null; url?: string | null } = {
-            type: String(item["type"]),
-          };
+          const block: {
+            type: string;
+            title?: string | null;
+            url?: string | null;
+            config?: BlockConfig;
+          } = { type: String(item["type"]) };
           if (item["title"] === null) block.title = null;
           if (typeof item["title"] === "string") block.title = item["title"].trim().slice(0, 120);
+          const config = sanitizeBlockConfigPatch(item["config"]);
+          if (Object.keys(config).length > 0) block.config = config;
           if (item["url"] === null) block.url = null;
           if (
             typeof item["url"] === "string" &&
@@ -648,7 +835,10 @@ function sanitizeAgentResponse(
     bio,
     linkTitles,
     profile: displayName ? { displayName } : {},
-    theme: sanitizeThemePatch(parsed["theme"]),
+    theme: {
+      ...sanitizeThemePatch(parsed["theme"]),
+      ...extractExplicitThemeMeasurements(instruction),
+    },
     blocks,
     order,
     removeBlockIds,
@@ -776,6 +966,8 @@ export const Route = createFileRoute("/api/ai/bio")({
             type?: string;
             isVisible?: boolean;
             position?: number;
+            url?: string | null;
+            config?: Record<string, unknown>;
           }>;
           history?: Array<{ role?: string; text?: string }>;
         } | null;
@@ -795,6 +987,8 @@ export const Route = createFileRoute("/api/ai/bio")({
               id: String(link.id ?? "").slice(0, 100),
               title: String(link.title ?? "").slice(0, 120),
               type: String(link.type ?? "link").slice(0, 40),
+              url: typeof link.url === "string" ? link.url.slice(0, 2048) : null,
+              config: sanitizeBlockConfigPatch(link.config),
               isVisible: link.isVisible !== false,
               position:
                 typeof link.position === "number" && Number.isFinite(link.position)

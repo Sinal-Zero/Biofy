@@ -1,7 +1,7 @@
 import { ArrowUp, Bot } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import type { BioTheme } from "@/lib/bio-types";
+import type { BioTheme, BlockConfig } from "@/lib/bio-types";
 import { useBio } from "./BioContext";
 
 type AiBlockUpdate = {
@@ -9,12 +9,14 @@ type AiBlockUpdate = {
   title?: string;
   url?: string | null;
   isVisible?: boolean;
+  config?: BlockConfig;
 };
 
 type AiNewBlock = {
   type: string;
   title?: string | null;
   url?: string | null;
+  config?: BlockConfig;
 };
 
 type AiResult = {
@@ -120,6 +122,9 @@ export function BioAiAssistant() {
         ...(typeof update.title === "string" ? { title: update.title.slice(0, 120) } : {}),
         ...(update.url !== undefined ? { url: update.url } : {}),
         ...(typeof update.isVisible === "boolean" ? { is_visible: update.isVisible } : {}),
+        ...(update.config && Object.keys(update.config).length > 0
+          ? { config: update.config }
+          : {}),
       });
       appliedMutations += 1;
     }
@@ -144,6 +149,7 @@ export function BioAiAssistant() {
       const createdId = await addBlock(block.type, {
         ...(block.title !== undefined ? { title: block.title } : {}),
         ...(block.url !== undefined ? { url: block.url } : fallbackUrl ? { url: fallbackUrl } : {}),
+        ...(block.config && Object.keys(block.config).length > 0 ? { config: block.config } : {}),
       });
       if (createdId) appliedMutations += 1;
       await nextFrame();
@@ -208,6 +214,8 @@ export function BioAiAssistant() {
             id: block.id,
             title: block.title,
             type: block.type,
+            url: block.url,
+            config: block.config,
             isVisible: block.is_visible,
             position: block.position,
           })),
@@ -310,8 +318,8 @@ export function BioAiAssistant() {
           <div className="max-w-sm pt-2">
             <p className="text-sm font-semibold">Diga o que você quer mudar.</p>
             <p className="mt-2 text-xs leading-5 text-muted-foreground">
-              A Biofy pode ajustar texto, visual, ordem e blocos compatíveis diretamente na sua
-              página.
+              Peça mudanças simples ou avançadas. Medidas exatas, como “caixa com 420px de largura”,
+              são aplicadas como você escrever.
             </p>
           </div>
         ) : (

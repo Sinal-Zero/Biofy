@@ -73,7 +73,8 @@ function AiPage() {
         <p className="biofy-page-kicker">Assistente</p>
         <h1 className="biofy-page-title">Biofy AI</h1>
         <p className="biofy-page-description">
-          Descreva a mudança. A Biofy aplica e você confere o resultado ao lado.
+          Descreva a mudança com a precisão que quiser — inclusive medidas exatas. A Biofy aplica e
+          você confere o resultado ao lado.
         </p>
       </header>
 

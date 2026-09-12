@@ -22,6 +22,13 @@ export interface BioTheme {
   pageBgColor: string;
   panelBorderColor: string;
   panelBorderWidth: number;
+  panelRadius?: number;
+  panelPaddingX?: number;
+  panelPaddingTop?: number;
+  panelPaddingBottom?: number;
+  panelHeight?: number;
+  panelShadow?: boolean;
+  panelShadowBlur?: number;
   bgType: BgType;
   bgColor: string;
   bgFrom: string;
@@ -39,12 +46,24 @@ export interface BioTheme {
   buttonShadow: boolean;
   buttonSize: ButtonSize;
   buttonBorderWidth: number;
+  buttonRadius?: number;
+  buttonPaddingX?: number;
+  buttonPaddingY?: number;
+  buttonWidth?: number;
+  buttonHeight?: number;
+  buttonFontSize?: number;
+  buttonIconSize?: number;
   gap: number;
   width: number;
   align: "left" | "center";
   avatarSize: number;
   avatarShape: AvatarShape;
   avatarBorder: boolean;
+  nameFontSize?: number;
+  usernameFontSize?: number;
+  bioFontSize?: number;
+  socialIconSize?: number;
+  socialGap?: number;
   hoverAnim: HoverAnim;
 }
 
@@ -58,6 +77,15 @@ export interface BlockConfig {
   buttonShape?: ButtonShape | "inherit";
   buttonShadow?: boolean;
   animation?: HoverAnim | "inherit";
+  widthPx?: number;
+  heightPx?: number;
+  radiusPx?: number;
+  paddingXPx?: number;
+  paddingYPx?: number;
+  fontSizePx?: number;
+  iconSizePx?: number;
+  opacity?: number;
+  blockAlign?: "left" | "center" | "right" | "stretch";
   countryCode?: string;
   areaCode?: string;
   phoneNumber?: string;

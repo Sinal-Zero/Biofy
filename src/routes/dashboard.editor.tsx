@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { BioPreview } from "@/components/bio/BioPreview";
 import { PhoneFrame } from "@/components/bio/PhoneFrame";
 import { useBio } from "@/components/dashboard/BioContext";
+import { AiPrecisionHint } from "@/components/dashboard/AiPrecisionHint";
 import { ImageUploadButton } from "@/components/dashboard/ImageUploadButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -170,6 +171,8 @@ function BioEditor() {
           {links.length} {links.length === 1 ? "link" : "links"}
         </div>
       </div>
+
+      <AiPrecisionHint />
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_390px]">
         <div className="space-y-5">
