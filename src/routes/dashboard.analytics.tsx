@@ -2,6 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { BarChart3, Link2, MousePointerClick, Percent } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useBio } from "@/components/dashboard/BioContext";
+import { StatsGrid } from "@/components/dashboard/StatCard";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { fetchAnalytics, type AnalyticsSummary } from "@/lib/bio-data";
 
 export const Route = createFileRoute("/dashboard/analytics")({
@@ -78,32 +80,17 @@ function AnalyticsPage() {
       </header>
 
       {!bundle.page.is_published ? (
-        <div className="rounded-xl border border-amber-400/20 bg-amber-400/[0.05] p-4 text-sm leading-6 text-amber-100">
-          Sua Bio precisa estar online para registrar acessos.
-        </div>
+        <Alert className="border-amber-400/20 bg-amber-400/[0.05] text-amber-100">
+          <AlertDescription>Sua Bio precisa estar online para registrar acessos.</AlertDescription>
+        </Alert>
       ) : null}
 
       {error ? (
-        <div className="rounded-xl border border-destructive/30 bg-destructive/[0.08] p-5 text-sm leading-6">
-          Não foi possível carregar os analytics agora.
-        </div>
+        <Alert variant="destructive">
+          <AlertDescription>Não foi possível carregar os analytics agora.</AlertDescription>
+        </Alert>
       ) : (
-        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {cards.map((card) => {
-            const Icon = card.icon;
-            return (
-              <article key={card.label} className="biofy-card p-5">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Icon className="h-4 w-4" />
-                  <span className="text-sm">{card.label}</span>
-                </div>
-                <strong className="mt-5 block truncate text-2xl font-semibold tracking-[-0.03em]">
-                  {loading ? "—" : card.value}
-                </strong>
-              </article>
-            );
-          })}
-        </section>
+        <StatsGrid cards={cards} loading={loading} />
       )}
 
       <p className="text-xs leading-5 text-muted-foreground">

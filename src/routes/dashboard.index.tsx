@@ -10,6 +10,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useBio } from "@/components/dashboard/BioContext";
+import { StatsGrid } from "@/components/dashboard/StatCard";
 import { Button } from "@/components/ui/button";
 import { fetchAnalytics, type AnalyticsSummary } from "@/lib/bio-data";
 import { getPublicBioDisplay, getPublicBioUrl } from "@/lib/public-url";
@@ -110,22 +111,7 @@ function DashboardOverview() {
         </div>
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {cards.map((card) => {
-          const Icon = card.icon;
-          return (
-            <article key={card.label} className="biofy-card p-4">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Icon className="h-4 w-4" />
-                <span className="text-xs">{card.label}</span>
-              </div>
-              <strong className="mt-3 block text-2xl font-semibold tracking-[-0.02em]">
-                {card.value}
-              </strong>
-            </article>
-          );
-        })}
-      </section>
+      <StatsGrid cards={cards} />
     </div>
   );
 }

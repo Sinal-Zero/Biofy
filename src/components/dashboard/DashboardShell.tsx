@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchSubscription } from "@/lib/bio-data";
 import { isMasterSubscription } from "@/lib/subscription";
 import { useBio } from "./BioContext";
+import { CommandPalette } from "./CommandPalette";
 
 type DashboardRoute =
   | "/dashboard"
@@ -188,6 +189,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-dvh bg-background text-foreground">
+      <CommandPalette showAi={isMaster} />
       <header className="sticky top-0 z-40 border-b border-border/75 bg-background/96 lg:hidden">
         <div className="flex h-16 items-center justify-between gap-3 px-4 sm:px-5">
           <Logo />
@@ -264,7 +266,12 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       <main className="lg:pl-[200px]">
         <div className="mx-auto max-w-[1400px] px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-7 xl:px-10">
           <div className="mb-7 hidden min-h-10 items-center justify-between gap-4 lg:flex">
-            <span className="min-w-20 text-xs text-muted-foreground">{saveLabel}</span>
+            <div className="flex items-center gap-3">
+              <span className="min-w-20 text-xs text-muted-foreground">{saveLabel}</span>
+              <kbd className="rounded-[6px] border border-border/80 bg-card px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                ⌘K
+              </kbd>
+            </div>
             {renderProfileMenu(desktopMenuRef)}
           </div>
           <div className="min-w-0">{children}</div>
