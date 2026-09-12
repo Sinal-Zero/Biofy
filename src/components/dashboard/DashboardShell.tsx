@@ -35,7 +35,7 @@ type NavigationItem = {
 
 const baseNavigation: NavigationItem[] = [
   { to: "/dashboard", label: "Visão geral", icon: LayoutDashboard },
-  { to: "/dashboard/editor", label: "Minha Bio", icon: Sparkles },
+  { to: "/dashboard/editor", label: "Editor", icon: Sparkles },
   { to: "/dashboard/appearance", label: "Aparência", icon: Paintbrush },
   { to: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/dashboard/subscription", label: "Assinatura", icon: CreditCard },

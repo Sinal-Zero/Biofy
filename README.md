@@ -1,0 +1,5 @@
+- [~] Alterar label da Sidebar para "Editor"
+- [~] Alterar CTA do Dashboard para "Editar minha página"
+- [~] Remover CTAs genéricos redundantes (Settings, Analytics, Appearance) - nenhum encontrado
+- [~] Garantir que templates não tenham botões genéricos de editor - confirmado
+- [~] Validar rotas após limpeza

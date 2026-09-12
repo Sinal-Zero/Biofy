@@ -105,7 +105,7 @@ function DashboardOverview() {
               </Button>
             ) : null}
             <Button asChild className="col-span-2 sm:col-auto">
-              <Link to="/dashboard/editor">Editar Bio</Link>
+              <Link to="/dashboard/editor">Editar minha página</Link>
             </Button>
           </div>
         </div>
