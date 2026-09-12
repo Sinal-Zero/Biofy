@@ -12,15 +12,17 @@ export function AiPrecisionHint({ className }: { className?: string }) {
     >
       <Sparkles className="h-4 w-4 shrink-0 text-primary" />
       <p className="min-w-0 flex-1 text-xs leading-5 text-muted-foreground">
-        <strong className="font-semibold text-foreground">Quer um ajuste mais específico?</strong>{" "}
-        Use a Biofy AI para pedir mudanças avançadas em linguagem natural, inclusive medidas exatas,
-        espaçamentos e detalhes que não aparecem nos controles padrão.
+        <strong className="font-semibold text-foreground">
+          Para mudanças mais específicas ou significativas, use a Biofy AI.
+        </strong>{" "}
+        Ela entende medidas exatas, espaçamentos, proporções e ajustes que não aparecem nos
+        controles padrão.
       </p>
       <Link
         to="/dashboard/ai"
         className="shrink-0 text-xs font-semibold text-primary underline-offset-4 hover:underline"
       >
-        Abrir Biofy AI
+        Editar com Biofy AI
       </Link>
     </aside>
   );
