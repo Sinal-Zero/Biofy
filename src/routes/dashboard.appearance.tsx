@@ -430,18 +430,22 @@ function AppearancePage() {
                   </PhoneFrame>
                 </div>
               ) : (
-                <div className="flex min-h-[610px] w-full items-center justify-center overflow-hidden rounded-2xl border border-border/65 bg-background/25">
-                  <BioPreview
-                    displayName={bundle.profile.display_name}
-                    username={bundle.profile.username}
-                    bio={bundle.profile.bio}
-                    avatarUrl={bundle.profile.avatar_url}
-                    theme={theme}
-                    blocks={bundle.blocks}
-                    compact
-                    showBranding={!paid}
-                    className="min-h-full"
-                  />
+                <div className="min-h-[610px] w-full overflow-auto rounded-2xl border border-border/65 bg-background/25">
+                  <div
+                    className="flex min-h-[610px] items-center justify-center p-2"
+                    style={{ minWidth: `${Math.max(theme.width + 64, 500)}px` }}
+                  >
+                    <BioPreview
+                      displayName={bundle.profile.display_name}
+                      username={bundle.profile.username}
+                      bio={bundle.profile.bio}
+                      avatarUrl={bundle.profile.avatar_url}
+                      theme={theme}
+                      blocks={bundle.blocks}
+                      showBranding={!paid}
+                      className="min-h-[610px]"
+                    />
+                  </div>
                 </div>
               )}
             </div>
