@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { buildBiofyAiPrompt } from "@/lib/biofy-ai-prompt";
+import { normalizeUrl } from "@/lib/url";
 import type { BioTheme, BlockConfig } from "@/lib/bio-types";
 
 const GEMINI_TIMEOUT_MS = 30000;
@@ -772,12 +773,11 @@ function sanitizeAgentResponse(
           const config = sanitizeBlockConfigPatch(item["config"]);
           if (Object.keys(config).length > 0) update.config = config;
           if (item["url"] === null) update.url = null;
-          if (
-            typeof item["url"] === "string" &&
-            item["url"].trim() &&
-            canUseRequestedUrl(item["url"].trim(), instruction)
-          ) {
-            update.url = item["url"].trim();
+          if (typeof item["url"] === "string" && item["url"].trim()) {
+            const normalized = normalizeUrl(item["url"].trim());
+            if (normalized && canUseRequestedUrl(normalized, instruction)) {
+              update.url = normalized;
+            }
           }
           return update;
         })
@@ -814,7 +814,7 @@ function sanitizeAgentResponse(
             item["url"].trim() &&
             canUseRequestedUrl(item["url"].trim(), instruction)
           ) {
-            block.url = item["url"].trim();
+            block.url = normalizeUrl(item["url"].trim());
           }
           return block;
         })
