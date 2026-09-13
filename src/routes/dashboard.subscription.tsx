@@ -14,37 +14,25 @@ type Subscription = Awaited<ReturnType<typeof fetchSubscription>>;
 
 const plans = [
   {
-    name: "Assinado",
-    id: "free",
-    price: "R$ 0",
-    checkoutUrl: null,
-    features: ["1 página", "Links essenciais", "3 estilos base", "Branding Biofy"],
+    name: "Starter",
+    id: "starter",
+    price: "R$ 9,90/mês",
+    checkoutUrl: "https://www.asaas.com/c/2rzp3lp6bqbf7p9l",
+    features: ["1 página", "Links essenciais", "3 estilos base"],
   },
   {
     name: "Pro",
     id: "pro",
     price: "R$ 21,90/mês",
-    checkoutUrl: "https://www.asaas.com/c/2rzp3lp6bqbf7p9l",
-    features: [
-      "Até 3 páginas",
-      "Links ilimitados",
-      "Personalização completa",
-      "Analytics",
-      "Sem branding",
-    ],
+    checkoutUrl: "https://www.asaas.com/c/5a65xpt3sm57axni",
+    features: ["Até 3 páginas", "Links ilimitados", "Personalização completa", "Analytics", "Sem branding"],
   },
   {
     name: "Master",
-    id: "business",
+    id: "master",
     price: "R$ 41,90/mês",
-    checkoutUrl: "https://www.asaas.com/c/2rzp3lp6bqbf7p9l",
-    features: [
-      "Até 5 páginas",
-      "Tudo do Pro",
-      "Biofy AI",
-      "Analytics avançado",
-      "Recursos profissionais",
-    ],
+    checkoutUrl: "https://www.asaas.com/c/5a65xpt3sm57axni",
+    features: ["Até 5 páginas", "Tudo do Pro", "Biofy AI", "Analytics avançado", "Recursos profissionais"],
   },
 ] as const;
 
@@ -197,7 +185,7 @@ function SubscriptionPage() {
 
       <section className="grid gap-4 lg:grid-cols-3">
         {plans.map((plan) => {
-          const current = currentPlan === plan.id && (plan.id === "free" || hasPaidSubscription);
+          const current = currentPlan === plan.id && (plan.id === "starter" || hasPaidSubscription);
           const canCheckout = Boolean(plan.checkoutUrl) && !hasPaidSubscription;
 
           return (
@@ -237,7 +225,7 @@ function SubscriptionPage() {
                   Assinar {plan.name}
                   <ExternalLink className="ml-1 h-4 w-4" />
                 </Button>
-              ) : plan.id === "free" ? (
+              ) : plan.id === "starter" ? (
                 <Button className="mt-6 w-full" variant="outline" disabled>
                   Assinatura paga
                 </Button>

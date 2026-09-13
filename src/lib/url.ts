@@ -14,5 +14,5 @@ export function normalizeUrl(raw: string): string {
 
 export function isValidUrl(u: string): boolean {
   const n = normalizeUrl(u);
-  return n.length > 0 && n !== u || /^https?:\/\//i.test(u);
+  return n.length > 0;
 }
