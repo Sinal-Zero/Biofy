@@ -199,7 +199,7 @@ function AppearancePage() {
                   <p className="mt-1 text-xs text-muted-foreground">Escolha um ponto de partida.</p>
                 </div>
                 <span className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground">
-                  Free
+                  Assinado
                 </span>
               </div>
               <div className="mt-4 grid gap-3 sm:grid-cols-3">

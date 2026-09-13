@@ -129,7 +129,7 @@ function SignupPage() {
             />
           </div>
           <Button type="submit" variant="hero" size="lg" className="w-full" disabled={loading}>
-            {loading ? "Criando..." : "Começar grátis"}
+            {loading ? "Criando..." : "Assinar Biofy"}
           </Button>
         </form>
         <p className="text-center text-[11px] leading-5 text-muted-foreground">

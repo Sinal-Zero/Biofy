@@ -14,7 +14,7 @@ type Subscription = Awaited<ReturnType<typeof fetchSubscription>>;
 
 const plans = [
   {
-    name: "Free",
+    name: "Assinado",
     id: "free",
     price: "R$ 0",
     checkoutUrl: null,
@@ -51,7 +51,7 @@ const plans = [
 function planLabel(plan: string) {
   if (plan === "business") return "Master";
   if (plan === "pro") return "Pro";
-  return "Free";
+  return "Assinado";
 }
 
 function statusLabel(status: string | null | undefined) {
@@ -142,7 +142,7 @@ function SubscriptionPage() {
               ) : paidPlan ? (
                 statusLabel(subscription?.status)
               ) : (
-                "Gratuito"
+                "Assinado"
               )}
             </strong>
           </div>
@@ -239,7 +239,7 @@ function SubscriptionPage() {
                 </Button>
               ) : plan.id === "free" ? (
                 <Button className="mt-6 w-full" variant="outline" disabled>
-                  Plano gratuito
+                  Assinatura paga
                 </Button>
               ) : (
                 <Button

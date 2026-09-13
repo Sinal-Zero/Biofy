@@ -93,7 +93,7 @@ const resources = [
 
 const plans = [
   {
-    name: "Free",
+    name: "Assinado",
     price: "R$ 0",
     text: "Para começar",
     checkoutUrl: null,
@@ -324,7 +324,7 @@ function HomePage() {
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
                 <Button size="lg" asChild>
                   <Link to={user ? "/dashboard/editor" : "/signup"}>
-                    {user ? "Editar minha Bio" : "Criar Bio grátis"}
+                    {user ? "Editar minha página" : "Criar Bio (assinado)"}
                     <ArrowRight className="ml-1 h-4 w-4" />
                   </Link>
                 </Button>
@@ -336,7 +336,7 @@ function HomePage() {
               <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1.5">
                   <Check className="h-3.5 w-3.5 text-primary" />
-                  Comece no plano Free
+                  Comece no plano pago
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Check className="h-3.5 w-3.5 text-primary" />
@@ -523,7 +523,7 @@ function HomePage() {
                 Comece simples. Evolua quando fizer sentido.
               </h2>
               <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                O plano Free resolve o começo. Pro e Master liberam mais personalização, dados e
+                O plano pago resolve o começo. Pro e Master liberam mais personalização, dados e
                 automação.
               </p>
             </div>
@@ -551,7 +551,7 @@ function HomePage() {
 
                   {index === 0 ? (
                     <Button className="mt-7 w-full" asChild>
-                      <Link to={user ? "/dashboard" : "/signup"}>Começar grátis</Link>
+                      <Link to={user ? "/dashboard" : "/signup"}>Assinar Biofy</Link>
                     </Button>
                   ) : user && plan.checkoutUrl ? (
                     <Button className="mt-7 w-full" variant="outline" asChild>
@@ -582,7 +582,7 @@ function HomePage() {
               </p>
               <Button size="lg" className="mt-7" asChild>
                 <Link to={user ? "/dashboard/editor" : "/signup"}>
-                  {user ? "Editar minha Bio" : "Criar Bio grátis"}
+                  {user ? "Editar minha página" : "Criar Bio (assinado)"}
                   <ArrowRight className="ml-1 h-4 w-4" />
                 </Link>
               </Button>
