@@ -24,7 +24,7 @@ const plans = [
     name: "Pro",
     id: "pro",
     price: "R$ 21,90/mês",
-    checkoutUrl: "https://www.asaas.com/c/5a65xpt3sm57axni",
+    checkoutUrl: "https://www.asaas.com/c/2rzp3lp6bqbf7p9l",
     features: [
       "Até 3 páginas",
       "Links ilimitados",
@@ -37,7 +37,7 @@ const plans = [
     name: "Master",
     id: "business",
     price: "R$ 41,90/mês",
-    checkoutUrl: "https://www.asaas.com/c/ynze63vc9bunge8g",
+    checkoutUrl: "https://www.asaas.com/c/2rzp3lp6bqbf7p9l",
     features: [
       "Até 5 páginas",
       "Tudo do Pro",
