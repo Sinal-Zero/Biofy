@@ -18,7 +18,7 @@ export function PhoneFrame({
         className,
       )}
     >
-      <div className="pointer-events-none absolute left-1/2 top-15 z-20 flex h-22 w-84 -translate-x-1/2 items-center justify-end rounded-full bg-black/94 px-2.5 shadow-sm ring-1 ring-white/[0.04]">
+      <div className="pointer-events-none absolute left-1/2 top-2 z-20 flex h-6 w-[84px] -translate-x-1/2 items-center justify-center rounded-full bg-black/94 px-2 shadow-sm ring-1 ring-white/[0.04]">
         <span className="h-1.5 w-1.5 rounded-full bg-white/20" />
       </div>
       <div className="relative aspect-[9/19] w-full overflow-hidden rounded-inner_frame bg-black ring-1 ring-white/[0.055]">

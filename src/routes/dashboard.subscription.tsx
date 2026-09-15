@@ -4,7 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { useBio } from "@/components/dashboard/BioContext";
 import { Button } from "@/components/ui/button";
 import { fetchSubscription } from "@/lib/bio-data";
-import { isPaidSubscription } from "@/lib/subscription";
+import { plans } from "@/lib/plans";
+import { isPaidSubscription, isSubscriptionActive } from "@/lib/subscription";
 
 export const Route = createFileRoute("/dashboard/subscription")({
   component: SubscriptionPage,
@@ -12,34 +13,11 @@ export const Route = createFileRoute("/dashboard/subscription")({
 
 type Subscription = Awaited<ReturnType<typeof fetchSubscription>>;
 
-const plans = [
-  {
-    name: "Starter",
-    id: "starter",
-    price: "R$ 9,90/mês",
-    checkoutUrl: "https://www.asaas.com/c/2rzp3lp6bqbf7p9l",
-    features: ["1 página", "Links essenciais", "3 estilos base"],
-  },
-  {
-    name: "Pro",
-    id: "pro",
-    price: "R$ 21,90/mês",
-    checkoutUrl: "https://www.asaas.com/c/5a65xpt3sm57axni",
-    features: ["Até 3 páginas", "Links ilimitados", "Personalização completa", "Analytics", "Sem branding"],
-  },
-  {
-    name: "Master",
-    id: "master",
-    price: "R$ 41,90/mês",
-    checkoutUrl: "https://www.asaas.com/c/5a65xpt3sm57axni",
-    features: ["Até 5 páginas", "Tudo do Pro", "Biofy AI", "Analytics avançado", "Recursos profissionais"],
-  },
-] as const;
-
 function planLabel(plan: string) {
-  if (plan === "business") return "Master";
+  if (plan === "starter") return "Starter";
   if (plan === "pro") return "Pro";
-  return "Assinado";
+  if (plan === "business") return "Master";
+  return "Sem plano ativo";
 }
 
 function statusLabel(status: string | null | undefined) {
@@ -93,6 +71,7 @@ function SubscriptionPage() {
 
   const currentPlan = subscription?.plan ?? "free";
   const paidPlan = currentPlan === "pro" || currentPlan === "business";
+  const starterPlan = currentPlan === "starter" && isSubscriptionActive(subscription);
   const hasPaidSubscription = isPaidSubscription(subscription);
 
   function startCheckout(planName: string, checkoutUrl: string) {
@@ -129,8 +108,10 @@ function SubscriptionPage() {
                 <span className="h-5 w-20 bg-background/50 rounded animate-pulse" />
               ) : paidPlan ? (
                 statusLabel(subscription?.status)
+              ) : subscription ? (
+                statusLabel(subscription.status)
               ) : (
-                "Assinado"
+                "Sem plano ativo"
               )}
             </strong>
           </div>
@@ -185,7 +166,9 @@ function SubscriptionPage() {
 
       <section className="grid gap-4 lg:grid-cols-3">
         {plans.map((plan) => {
-          const current = currentPlan === plan.id && (plan.id === "starter" || hasPaidSubscription);
+          const current =
+            (starterPlan && !hasPaidSubscription) ||
+            (paidPlan && hasPaidSubscription);
           const canCheckout = Boolean(plan.checkoutUrl) && !hasPaidSubscription;
 
           return (
@@ -214,7 +197,7 @@ function SubscriptionPage() {
 
               {current ? (
                 <div className="mt-6 rounded-[10px] border border-border/80 bg-background/35 px-3 py-2.5 text-center text-xs font-semibold text-muted-foreground">
-                  Plano ativo
+                  {paidPlan ? "Plano ativo" : "Starter"}
                 </div>
               ) : canCheckout && plan.checkoutUrl ? (
                 <Button

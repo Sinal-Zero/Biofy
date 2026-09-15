@@ -18,6 +18,7 @@ import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
 import { supabase } from "@/integrations/supabase/client";
+import { plans } from "@/lib/plans";
 import type { BioBlock } from "@/lib/bio-types";
 import { templates } from "@/lib/templates";
 
@@ -90,43 +91,6 @@ const resources = [
     text: "No Master, descreva a mudança em linguagem natural e deixe a Biofy aplicar na página.",
   },
 ];
-
-const plans = [
-  {
-    name: "Assinado",
-    price: "R$ 0",
-    text: "Para começar",
-    checkoutUrl: null,
-    features: ["Até 1 página", "Username", "Links básicos", "Templates básicos"],
-  },
-  {
-    name: "Pro",
-    price: "R$ 21,90/mês",
-    text: "Para crescer",
-    checkoutUrl: "https://www.asaas.com/c/2rzp3lp6bqbf7p9l",
-    features: [
-      "Até 3 páginas",
-      "Links ilimitados",
-      "Todos os templates",
-      "Personalização avançada",
-      "Analytics",
-    ],
-  },
-  {
-    name: "Master",
-    price: "R$ 41,90/mês",
-    text: "Para marcas e negócios",
-    checkoutUrl: "https://www.asaas.com/c/2rzp3lp6bqbf7p9l",
-    features: [
-      "Até 5 páginas",
-      "Tudo do Pro",
-      "Biofy AI",
-      "Recursos profissionais",
-      "Analytics avançado",
-      "Base para domínio próprio",
-    ],
-  },
-] as const;
 
 function HomePage() {
   const navigate = useNavigate();
@@ -531,7 +495,7 @@ function HomePage() {
             <div className="mt-10 grid gap-4 lg:grid-cols-3">
               {plans.map((plan, index) => (
                 <article
-                  key={plan.name}
+                  key={plan.id}
                   className={`biofy-card flex h-full flex-col p-6 ${index === 1 ? "border-primary/45 bg-primary/5" : ""}`}
                 >
                   <div>
@@ -549,7 +513,7 @@ function HomePage() {
                     ))}
                   </ul>
 
-                  {index === 0 ? (
+                  {plan.id === "starter" ? (
                     <Button className="mt-7 w-full" asChild>
                       <Link to={user ? "/dashboard" : "/signup"}>Assinar Biofy</Link>
                     </Button>

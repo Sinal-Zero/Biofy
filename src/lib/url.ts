@@ -1,4 +1,4 @@
-const DANGEROUS = /^javascript:/i;
+const DANGEROUS = /^(javascript|data|vbscript):/i;
 const SAFE_SCHEMA = /^(https?:|mailto:|tel:|sms:|wa\.me|whatsapp)/i;
 
 export function normalizeUrl(raw: string): string {
