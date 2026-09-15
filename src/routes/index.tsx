@@ -513,11 +513,7 @@ function HomePage() {
                     ))}
                   </ul>
 
-                  {plan.id === "starter" ? (
-                    <Button className="mt-7 w-full" asChild>
-                      <Link to={user ? "/dashboard" : "/signup"}>Assinar Biofy</Link>
-                    </Button>
-                  ) : user && plan.checkoutUrl ? (
+                  {user && plan.checkoutUrl ? (
                     <Button className="mt-7 w-full" variant="outline" asChild>
                       <a href={plan.checkoutUrl} target="_blank" rel="noreferrer noopener">
                         Assinar {plan.name}
