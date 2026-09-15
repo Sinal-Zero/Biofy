@@ -20,7 +20,7 @@ export const plans = [
     id: "master",
     price: "R$ 41,90/mês",
     text: "Para marcas e negócios",
-    checkoutUrl: "https://www.asaas.com/c/5a65xpt3sm57axni",
+    checkoutUrl: "https://www.asaas.com/c/ynze63vc9bunge8g",
     features: ["Até 5 páginas", "Tudo do Pro", "Biofy AI", "Analytics avançado", "Recursos profissionais"],
   },
 ] as const;
