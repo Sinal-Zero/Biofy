@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 export function PhoneFrame({
   children,
   className,
-  glow = true,
+  glow = false,
 }: {
   children: ReactNode;
   className?: string;
