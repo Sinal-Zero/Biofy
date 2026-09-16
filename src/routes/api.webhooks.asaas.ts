@@ -71,13 +71,11 @@ function asaasHeaders(apiKey: string) {
 
 function inferPlan(input: { name?: string; description?: string | null; value?: number }) {
   const text = `${input.name ?? ""} ${input.description ?? ""}`.toLowerCase();
-  if (text.includes("biofy master")) return "business" as const;
-  if (text.includes("biofy pro")) return "pro" as const;
-  if (text.includes("biofy")) {
-    if (Math.abs(Number(input.value ?? 0) - 41.9) < 0.01) return "business" as const;
-    if (Math.abs(Number(input.value ?? 0) - 21.9) < 0.01) return "pro" as const;
-  }
-  return null;
+  const val = Math.round((Number(input.value ?? 0) + 1e-6) * 100) / 100;
+  const textPlan = text.includes("biofy master") ? "business" : text.includes("biofy pro") ? "pro" : text.includes("biofy starter") ? "starter" : null;
+  const valPlan = Math.abs(val - 41.9) < 0.01 ? "business" : Math.abs(val - 21.9) < 0.01 ? "pro" : Math.abs(val - 9.9) < 0.01 ? "starter" : null;
+  if (textPlan && valPlan && textPlan !== valPlan) return "conflict" as const;
+  return (textPlan || valPlan) as "business" | "pro" | "starter" | null;
 }
 
 function nextMonthlyPeriod(dueDate?: string) {
@@ -144,7 +142,7 @@ async function findBiofyUserByEmail(email: string, supabaseUrl: string, serviceK
 async function syncSubscription(
   input: {
     userId: string;
-    plan?: "pro" | "business" | undefined;
+    plan?: "starter" | "pro" | "business" | undefined;
     status: "active" | "past_due" | "canceled";
     currentPeriodEnd?: string | undefined;
     customerId?: string | undefined;
@@ -255,8 +253,8 @@ export const Route = createFileRoute("/api/webhooks/asaas")({
           if (body.payment && (PAID_EVENTS.has(event) || BLOCKED_EVENTS.has(event))) {
             const payment = body.payment;
             if (!payment.customer) {
-              await markProcessed(eventId, event, supabaseUrl, serviceKey);
-              return Response.json({ ok: true, ignored: "missing_customer" });
+              console.error("[Biofy billing] missing_customer", { traceId: crypto.randomUUID(), eventId, paymentId: payment.id ?? null, reason: "missing_customer" });
+              return Response.json({ error: "Billing webhook retryable failure: missing_customer", traceId: crypto.randomUUID() }, { status: 500, headers: { "Cache-Control": "no-store" } });
             }
 
             const customer = await asaasGet<AsaasCustomer>(
@@ -265,29 +263,33 @@ export const Route = createFileRoute("/api/webhooks/asaas")({
             );
             const email = customer.email?.trim().toLowerCase();
             if (!email) {
-              await markProcessed(eventId, event, supabaseUrl, serviceKey);
-              return Response.json({ ok: true, ignored: "customer_without_email" });
+              console.error("[Biofy billing] customer_without_email", { traceId: crypto.randomUUID(), eventId, paymentId: payment.id ?? null, reason: "customer_without_email" });
+              return Response.json({ error: "Billing webhook retryable failure: customer_without_email", traceId: crypto.randomUUID() }, { status: 500, headers: { "Cache-Control": "no-store" } });
             }
 
             const userId = await findBiofyUserByEmail(email, supabaseUrl, serviceKey);
             if (!userId) {
-              await markProcessed(eventId, event, supabaseUrl, serviceKey);
-              return Response.json({ ok: true, ignored: "biofy_user_not_found" });
+              console.error("[Biofy billing] biofy_user_not_found", { traceId: crypto.randomUUID(), eventId, paymentId: (subscription.id ?? subscription.customer ?? null) as string, maskedEmail: email ? email.slice(0,2)+"***" : null, reason: "biofy_user_not_found" });
+              return Response.json({ error: "Billing webhook retryable failure: biofy_user_not_found", traceId: crypto.randomUUID() }, { status: 500, headers: { "Cache-Control": "no-store" } });
             }
 
-            let plan = inferPlan(payment);
+            let plan = inferPlan(payment); if (plan === "conflict") { console.error("conflict",{traceId:crypto.randomUUID(),eventId,paymentId:payment.id??null}); return Response.json({error:"plan_conflict",traceId:crypto.randomUUID()},{status:500}); }
+            if (plan === "conflict") {
+              console.error("[Biofy billing] plan_conflict", { traceId: crypto.randomUUID(), eventId, paymentId: payment.id ?? null, reason: "plan_conflict" });
+              return Response.json({ error: "Billing webhook retryable failure: plan_conflict", traceId: crypto.randomUUID() }, { status: 500, headers: { "Cache-Control": "no-store" } });
+            }
             if (payment.paymentLink) {
               const paymentLink = await asaasGet<AsaasPaymentLink>(
                 `/paymentLinks/${encodeURIComponent(payment.paymentLink)}`,
                 asaasApiKey,
               );
-              plan = inferPlan(paymentLink) ?? plan;
+              plan = (inferPlan(paymentLink) ?? plan) === "conflict" ? undefined : (inferPlan(paymentLink) ?? plan);
             }
 
             if (PAID_EVENTS.has(event)) {
               if (!plan) {
-                await markProcessed(eventId, event, supabaseUrl, serviceKey);
-                return Response.json({ ok: true, ignored: "unknown_biofy_plan" });
+                console.error("[Biofy billing] unknown_biofy_plan", { traceId: crypto.randomUUID(), eventId, paymentId: payment.id ?? null, reason: "unknown_biofy_plan" });
+                return Response.json({ error: "Billing webhook retryable failure: unknown_biofy_plan", traceId: crypto.randomUUID() }, { status: 500, headers: { "Cache-Control": "no-store" } });
               }
 
               await syncSubscription(
@@ -340,14 +342,14 @@ export const Route = createFileRoute("/api/webhooks/asaas")({
             );
             const email = customer.email?.trim().toLowerCase();
             if (!email) {
-              await markProcessed(eventId, event, supabaseUrl, serviceKey);
-              return Response.json({ ok: true, ignored: "customer_without_email" });
+              console.error("[Biofy billing] customer_without_email", { traceId: crypto.randomUUID(), eventId, paymentId: payment.id ?? null, reason: "customer_without_email" });
+              return Response.json({ error: "Billing webhook retryable failure: customer_without_email", traceId: crypto.randomUUID() }, { status: 500, headers: { "Cache-Control": "no-store" } });
             }
 
             const userId = await findBiofyUserByEmail(email, supabaseUrl, serviceKey);
             if (!userId) {
-              await markProcessed(eventId, event, supabaseUrl, serviceKey);
-              return Response.json({ ok: true, ignored: "biofy_user_not_found" });
+              console.error("[Biofy billing] biofy_user_not_found", { traceId: crypto.randomUUID(), eventId, paymentId: (subscription.id ?? subscription.customer ?? null) as string, maskedEmail: email ? email.slice(0,2)+"***" : null, reason: "biofy_user_not_found" });
+              return Response.json({ error: "Billing webhook retryable failure: biofy_user_not_found", traceId: crypto.randomUUID() }, { status: 500, headers: { "Cache-Control": "no-store" } });
             }
 
             await syncSubscription(
