@@ -394,44 +394,30 @@ function HomePage() {
 
             <div className="mt-10 grid gap-4 md:grid-cols-3">
               {templates.map((template) => (
-                <article key={template.id} className="biofy-card overflow-hidden p-3">
+                <article
+                  key={template.id}
+                  className="biofy-card biofy-card-interactive group overflow-hidden p-3 transition-transform duration-200 motion-safe:hover:-translate-y-1"
+                >
                   <div
-                    className="relative h-52 overflow-hidden rounded-xl border border-border/70"
-                    style={{
-                      backgroundColor: template.theme.pageBgColor,
-                      borderColor: template.theme.panelBorderColor,
-                    }}
+                    className="flex h-[340px] items-center justify-center overflow-hidden rounded-xl border border-border/70 py-6"
+                    style={{ backgroundColor: template.theme.pageBgColor }}
                   >
-                    <div
-                      className="absolute inset-x-[14%] bottom-5 top-5 rounded-xl border p-4"
-                      style={{
-                        background:
-                          template.theme.bgType === "gradient"
-                            ? `linear-gradient(${template.theme.bgAngle}deg, ${template.theme.bgFrom}, ${template.theme.bgTo})`
-                            : template.theme.bgColor,
-                        borderColor: template.theme.panelBorderColor,
-                      }}
-                    >
-                      <div
-                        className="mx-auto h-9 w-9 rounded-full"
-                        style={{ backgroundColor: template.theme.textColor, opacity: 0.16 }}
+                    <PhoneFrame glow={false} className="max-w-[172px]">
+                      <BioPreview
+                        displayName="Marina Costa"
+                        username="marina"
+                        bio="Design, fotografia e projetos que eu gosto de criar."
+                        avatarUrl={null}
+                        theme={template.theme}
+                        blocks={demoBlocks}
+                        compact
                       />
-                      <div
-                        className="mx-auto mt-3 h-2 w-20 rounded-full"
-                        style={{ backgroundColor: template.theme.textColor, opacity: 0.45 }}
-                      />
-                      <div
-                        className="mt-5 h-8 rounded-lg border"
-                        style={{ borderColor: template.theme.buttonColor, opacity: 0.7 }}
-                      />
-                      <div
-                        className="mt-2 h-8 rounded-lg border"
-                        style={{ borderColor: template.theme.buttonColor, opacity: 0.55 }}
-                      />
-                    </div>
+                    </PhoneFrame>
                   </div>
                   <div className="px-1 pb-1 pt-4">
-                    <h3 className="text-sm font-semibold">{template.name}</h3>
+                    <h3 className="text-sm font-semibold transition-colors duration-150 group-hover:text-foreground">
+                      {template.name}
+                    </h3>
                     <p className="mt-1 text-xs leading-5 text-muted-foreground">
                       {template.description}
                     </p>
