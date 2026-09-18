@@ -273,11 +273,13 @@ function HomePage() {
       </header>
 
       <main>
-        <section className="px-4 pb-24 pt-28 sm:px-6 sm:pb-24 sm:pt-36 lg:px-8 lg:pb-32">
-          <div className="mx-auto grid max-w-7xl gap-14 lg:grid-cols-[1.02fr_.98fr] lg:items-center">
-            <div className="max-w-3xl biofy-page">
+        <section className="relative px-4 pb-24 pt-32 sm:px-6 sm:pt-40 lg:px-8 lg:pb-32">
+          {/* Central radial halo behind phone */}
+          <div className="pointer-events-none absolute left-1/2 top-16 h-[460px] w-[min(760px,90vw)] -translate-x-1/2 rounded-full bg-primary/12 blur-[130px]" />
+          <div className="mx-auto grid max-w-7xl gap-14 lg:grid-cols-[1.05fr_.95fr] lg:items-center">
+            <div className="max-w-3xl animate-rise">
               <p className="biofy-section-label">Biofy para sua presença digital</p>
-              <h1 className="mt-4 max-w-3xl text-[clamp(3.2rem,10vw,6rem)] font-bold leading-[0.96] tracking-[-0.04em]">
+              <h1 className="mt-4 max-w-3xl text-[clamp(2.8rem,9vw,4.5rem)] font-bold leading-[0.98] tracking-[-0.05em]">
                 Um link para mostrar o que realmente importa.
               </h1>
               <p className="mt-6 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg">
@@ -288,12 +290,12 @@ function HomePage() {
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
                 <Button size="lg" asChild>
                   <Link to={user ? "/dashboard/editor" : "/signup"}>
-                    {user ? "Editar minha página" : "Criar Bio (assinado)"}
-                    <ArrowRight className="ml-1 h-4 w-4" />
+                    {user ? "Editar minha Bio" : "Criar minha Bio"}
+                    <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
                 <Button size="lg" variant="outline" asChild>
-                  <a href="#como-funciona">Ver como funciona</a>
+                  <a href="#templates">Ver templates</a>
                 </Button>
               </div>
 
@@ -313,18 +315,10 @@ function HomePage() {
               </div>
             </div>
 
-            <div className="biofy-product-stage mx-auto w-full max-w-[560px] p-5 sm:p-7 lg:p-8">
-              <div className="mb-5 flex items-center justify-between gap-4 border-b border-border/70 pb-4">
-                <div>
-                  <p className="text-sm font-semibold">Prévia da página</p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">bio-fy.vercel.app/marina</p>
-                </div>
-                <span className="biofy-status">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                  Online
-                </span>
-              </div>
-              <PhoneFrame glow={false} className="max-w-[332px]">
+            {/* Free-floating phone with its own halo */}
+            <div className="relative mx-auto w-full max-w-md animate-rise [animation-delay:100ms]">
+              <div className="absolute -inset-10 rounded-full bg-brand-2/12 blur-3xl" />
+              <PhoneFrame className="relative">
                 <BioPreview
                   displayName="Marina Costa"
                   username="marina"
